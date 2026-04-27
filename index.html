@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MSPOnboard — IT Client Onboarding, Done Right</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        zinc: { 950:'#09090B', 900:'#18181B', 850:'#1C1C1F', 800:'#27272A', 700:'#3F3F46', 600:'#52525B', 500:'#71717A', 400:'#A1A1AA', 300:'#D4D4D8' },
+        cyan: { DEFAULT:'#06B6D4', dark:'#0891B2', light:'#22D3EE', glow:'#06B6D433' },
+        emerald: { DEFAULT:'#10B981', light:'#34D399' },
+        amber2: { DEFAULT:'#F59E0B', light:'#FCD34D' },
+        red2: { DEFAULT:'#EF4444', light:'#FCA5A5' }
+      },
+      fontFamily: { sans:['DM Sans','sans-serif'], mono:['JetBrains Mono','monospace'] }
+    }
+  }
+}
+</script>
+<style>
+  [x-cloak]{display:none!important}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:#09090B;color:white;min-height:100vh}
+  ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:#18181B} ::-webkit-scrollbar-thumb{background:#3F3F46;border-radius:3px}
+
+  /* Cards */
+  .card{background:#18181B;border:1px solid rgba(255,255,255,0.07);border-radius:12px}
+  .card-inner{background:#09090B;border:1px solid rgba(255,255,255,0.06);border-radius:8px}
+
+  /* Inputs */
+  .field{background:#09090B;border:1px solid rgba(255,255,255,0.1);color:white;border-radius:8px;padding:10px 13px;width:100%;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+  .field:focus{border-color:#06B6D4;box-shadow:0 0 0 3px rgba(6,182,212,.12)}
+  .field::placeholder{color:#3F3F46}
+  select.field option{background:#18181B}
+  textarea.field{resize:vertical;min-height:72px}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:all .18s;border:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
+  .btn-cyan{background:#06B6D4;color:#09090B}
+  .btn-cyan:hover{background:#0891B2;box-shadow:0 4px 20px rgba(6,182,212,.35);transform:translateY(-1px)}
+  .btn-outline{background:transparent;color:#71717A;border:1px solid rgba(255,255,255,0.1)}
+  .btn-outline:hover{background:rgba(255,255,255,.04);color:white}
+  .btn-ghost{background:transparent;color:#71717A;border:1px solid transparent;padding:8px 14px}
+  .btn-ghost:hover{color:white;background:rgba(255,255,255,.04)}
+  .btn-sm{padding:6px 14px;font-size:12px}
+  .btn-danger{background:rgba(239,68,68,.12);color:#FCA5A5;border:1px solid rgba(239,68,68,.2)}
+  .btn-danger:hover{background:rgba(239,68,68,.2)}
+
+  /* Badges */
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:.04em}
+  .b-green{background:rgba(16,185,129,.12);color:#34D399}
+  .b-yellow{background:rgba(245,158,11,.12);color:#FCD34D}
+  .b-red{background:rgba(239,68,68,.12);color:#FCA5A5}
+  .b-cyan{background:rgba(6,182,212,.12);color:#22D3EE}
+  .b-purple{background:rgba(139,92,246,.12);color:#C4B5FD}
+  .b-zinc{background:rgba(255,255,255,.06);color:#71717A}
+
+  /* Progress */
+  .pbar{height:2px;background:#27272A;border-radius:999px;overflow:hidden}
+  .pfill{height:100%;background:linear-gradient(90deg,#06B6D4,#22D3EE);border-radius:999px;transition:width .4s ease}
+
+  /* Section block */
+  .sblock{background:#18181B;border:1px solid rgba(255,255,255,0.07);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .shead{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;cursor:pointer;user-select:none}
+  .shead:hover{background:rgba(255,255,255,.02)}
+
+  /* Chips */
+  .chip{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;border:1px solid rgba(255,255,255,.08);color:#52525B;background:transparent;white-space:nowrap}
+  .chip:hover{border-color:rgba(6,182,212,.4);color:#22D3EE}
+  .chip.on{background:rgba(6,182,212,.15);color:#22D3EE;border-color:rgba(6,182,212,.35)}
+
+  /* Check */
+  .chk{width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(255,255,255,.15);cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .chk.on{background:#06B6D4;border-color:#06B6D4}
+
+  /* Table row */
+  .trow{padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .12s}
+  .trow:hover{background:rgba(255,255,255,.02)}
+  .trow:last-child{border-bottom:none}
+
+  /* Avatar */
+  .av{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+
+  /* Mono label */
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  /* Tab */
+  .tab{padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:#52525B;transition:all .12s;letter-spacing:.02em}
+  .tab:hover{color:#A1A1AA}
+  .tab.on{background:#27272A;color:white}
+
+  /* Score ring */
+  .ring{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+
+  /* Tooltip-like hint */
+  .hint{background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.18);border-radius:8px;padding:10px 14px}
+
+  /* Slider */
+  .slider{-webkit-appearance:none;width:100%;height:3px;border-radius:999px;background:#27272A;outline:none}
+  .slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#06B6D4;cursor:pointer;border:2px solid #09090B}
+
+  /* Confetti */
+  .cf{position:fixed;border-radius:2px;animation:cffall linear forwards;pointer-events:none}
+  @keyframes cffall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+  /* Grid pattern overlay */
+  .grid-bg{background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:32px 32px}
+
+  /* Glow */
+  .glow-cyan{box-shadow:0 0 60px rgba(6,182,212,.15)}
+
+  /* Nav dot */
+  .ndot{width:6px;height:6px;border-radius:50%;background:#06B6D4;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body x-data="app()" x-init="init()">
+
+<!-- ============================================================
+     LANDING PAGE
+============================================================ -->
+<div x-show="view==='landing'" x-cloak>
+
+  <!-- Nav -->
+  <nav style="border-bottom:1px solid rgba(255,255,255,0.06)" class="sticky top-0 z-40" style="background:rgba(9,9,11,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06)">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:#06B6D4">
+            <svg class="w-4 h-4" style="color:#09090B" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <span class="text-white font-800 tracking-tight text-lg" style="font-weight:800">MSPOnboard</span>
+        </div>
+        <div class="hidden md:flex items-center gap-1 ml-2">
+          <div class="ndot"></div>
+          <span class="text-zinc-600 text-xs mono">v1.0</span>
+        </div>
+      </div>
+      <div class="hidden md:flex items-center gap-6">
+        <span class="text-zinc-500 text-sm cursor-pointer hover:text-white transition-colors" @click="view='dashboard'">Dashboard demo</span>
+        <span class="text-zinc-500 text-sm cursor-pointer hover:text-white transition-colors" @click="builder.type='worker'; view='client'">Client form demo</span>
+        <span class="text-zinc-600 text-sm">Pricing</span>
+      </div>
+      <button class="btn btn-cyan" @click="view='builder'">Start free trial →</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="grid-bg">
+    <div class="max-w-6xl mx-auto px-6 pt-20 pb-24">
+      <div class="max-w-3xl">
+        <div class="flex items-center gap-3 mb-7">
+          <span class="badge b-cyan mono">for MSPs</span>
+          <span class="text-zinc-600 text-xs">·</span>
+          <span class="text-zinc-500 text-sm">IT onboarding, automated</span>
+        </div>
+        <h1 class="text-5xl md:text-6xl font-800 leading-[1.05] tracking-tight mb-6" style="font-weight:800">
+          Stop spending 3 days<br/>onboarding a new client.
+        </h1>
+        <p class="text-zinc-400 text-xl leading-relaxed mb-10 max-w-2xl">
+          Send one link. Your client fills in their entire IT environment — network topology, servers, software licences, admin credentials, and security posture — before your first call.
+        </p>
+        <div class="flex flex-wrap gap-3 mb-14">
+          <button class="btn btn-cyan text-sm px-7 py-3" @click="view='builder'">
+            Create client intake form
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </button>
+          <button class="btn btn-outline text-sm px-7 py-3" @click="view='dashboard'">See live dashboard</button>
+        </div>
+
+        <!-- Proof bar -->
+        <div class="flex flex-wrap items-center gap-6">
+          <div><p class="text-3xl font-800 text-white mono" style="font-weight:800">3.4<span class="text-cyan-DEFAULT text-2xl">h</span></p><p class="text-zinc-500 text-xs mt-0.5">saved per new client</p></div>
+          <div class="w-px h-10" style="background:rgba(255,255,255,.06)"></div>
+          <div><p class="text-3xl font-800 text-white mono" style="font-weight:800">0<span class="text-zinc-600 text-2xl">x</span></p><p class="text-zinc-500 text-xs mt-0.5">back-and-forth emails</p></div>
+          <div class="w-px h-10" style="background:rgba(255,255,255,.06)"></div>
+          <div><p class="text-3xl font-800 text-white mono" style="font-weight:800">$149<span class="text-zinc-600 text-sm font-400">/mo</span></p><p class="text-zinc-500 text-xs mt-0.5">vs $400+ for full ATS</p></div>
+        </div>
+      </div>
+
+      <!-- Feature cards -->
+      <div class="grid md:grid-cols-3 gap-4 mt-20">
+        <div class="card p-6">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-5" style="background:rgba(6,182,212,.1)">
+            <svg class="w-5 h-5" style="color:#06B6D4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <h3 class="text-white font-700 mb-2" style="font-weight:700">Full IT asset inventory</h3>
+          <p class="text-zinc-500 text-sm leading-relaxed">Servers, workstations, network gear, software licences — all collected in one structured form. No more chasing spreadsheets.</p>
+        </div>
+        <div class="card p-6" style="border-color:rgba(6,182,212,.2)">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-5" style="background:rgba(6,182,212,.12)">
+            <svg class="w-5 h-5" style="color:#06B6D4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <h3 class="text-white font-700 mb-2" style="font-weight:700">Security posture score</h3>
+          <p class="text-zinc-500 text-sm leading-relaxed">Automatic score based on MFA, backup policy, patch cadence, and EDR coverage. Know the risk before day one.</p>
+        </div>
+        <div class="card p-6">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-5" style="background:rgba(6,182,212,.1)">
+            <svg class="w-5 h-5" style="color:#06B6D4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <h3 class="text-white font-700 mb-2" style="font-weight:700">First call in 15 minutes</h3>
+          <p class="text-zinc-500 text-sm leading-relaxed">Your engineer arrives on the kickoff call with a full picture of the environment. Technical, not discovery. Time-to-value cut in half.</p>
+        </div>
+      </div>
+
+      <!-- What gets collected -->
+      <div class="mt-16 card p-8">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-white font-700 text-lg" style="font-weight:700">What the client fills in</h2>
+            <p class="text-zinc-500 text-sm mt-1">8 structured sections — takes ~12 minutes</p>
+          </div>
+          <button class="btn btn-outline btn-sm" @click="builder.type='worker'; view='client'">Try the form →</button>
+        </div>
+        <div class="grid md:grid-cols-4 gap-3">
+          <template x-for="s in formSections">
+            <div class="card-inner p-3 flex items-start gap-3">
+              <span class="text-lg flex-shrink-0" x-text="s.icon"></span>
+              <div>
+                <p class="text-white text-sm font-600" style="font-weight:600" x-text="s.label"></p>
+                <p class="text-zinc-600 text-xs mt-0.5" x-text="s.hint"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Comparison -->
+      <div class="mt-12 grid md:grid-cols-2 gap-5">
+        <div class="card p-6" style="border-color:rgba(239,68,68,.15)">
+          <p class="text-red-400 text-xs font-700 uppercase tracking-widest mb-4">Without MSPOnboard</p>
+          <div class="space-y-3">
+            <template x-for="b in bads">
+              <div class="flex items-start gap-3">
+                <span class="text-red-400 mt-0.5 flex-shrink-0">✗</span>
+                <p class="text-zinc-400 text-sm" x-text="b"></p>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="card p-6" style="border-color:rgba(6,182,212,.2)">
+          <p class="text-cyan-DEFAULT text-xs font-700 uppercase tracking-widest mb-4">With MSPOnboard</p>
+          <div class="space-y-3">
+            <template x-for="g in goods">
+              <div class="flex items-start gap-3">
+                <span style="color:#06B6D4" class="mt-0.5 flex-shrink-0">✓</span>
+                <p class="text-zinc-400 text-sm" x-text="g"></p>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="mt-16">
+        <h2 class="text-white font-700 text-2xl mb-2 tracking-tight" style="font-weight:700">Simple pricing</h2>
+        <p class="text-zinc-500 mb-8">No per-seat fees. No onboarding cost. Cancel anytime.</p>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="card p-6">
+            <p class="text-zinc-500 text-xs uppercase tracking-widest mb-2">Starter</p>
+            <p class="text-white text-3xl font-800 mono mb-1" style="font-weight:800">Free</p>
+            <p class="text-zinc-600 text-sm mb-5">Up to 3 clients</p>
+            <ul class="space-y-2 text-zinc-500 text-sm mb-6">
+              <li>✓ Client intake forms</li>
+              <li>✓ Security posture score</li>
+              <li>✓ Asset inventory</li>
+            </ul>
+            <button class="btn btn-outline w-full justify-center" @click="view='builder'">Get started</button>
+          </div>
+          <div class="p-6 rounded-xl glow-cyan" style="background:#18181B;border:1px solid rgba(6,182,212,.35)">
+            <div class="flex items-center justify-between mb-2">
+              <p style="color:#06B6D4" class="text-xs uppercase tracking-widest font-700">Pro</p>
+              <span class="badge b-cyan">Most popular</span>
+            </div>
+            <p class="text-white text-3xl font-800 mono mb-1" style="font-weight:800">$99<span class="text-zinc-500 text-base font-400">/mo</span></p>
+            <p class="text-zinc-600 text-sm mb-5">Up to 25 clients</p>
+            <ul class="space-y-2 text-zinc-500 text-sm mb-6">
+              <li>✓ Everything in Starter</li>
+              <li>✓ Email notifications</li>
+              <li>✓ PDF export & brief</li>
+              <li>✓ Custom branding</li>
+              <li>✓ ConnectWise / Autotask export</li>
+            </ul>
+            <button class="btn btn-cyan w-full justify-center" @click="view='builder'">Start 14-day trial →</button>
+          </div>
+          <div class="card p-6">
+            <p class="text-zinc-500 text-xs uppercase tracking-widest mb-2">Agency</p>
+            <p class="text-white text-3xl font-800 mono mb-1" style="font-weight:800">$149<span class="text-zinc-500 text-base font-400">/mo</span></p>
+            <p class="text-zinc-600 text-sm mb-5">Unlimited clients</p>
+            <ul class="space-y-2 text-zinc-500 text-sm mb-6">
+              <li>✓ Everything in Pro</li>
+              <li>✓ Multi-engineer dashboard</li>
+              <li>✓ API access</li>
+              <li>✓ SLA & compliance reports</li>
+              <li>✓ Priority support</li>
+            </ul>
+            <button class="btn btn-outline w-full justify-center" @click="view='builder'">Contact us</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     DASHBOARD
+============================================================ -->
+<div x-show="view==='dashboard'" x-cloak>
+  <div class="max-w-5xl mx-auto px-5 py-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <button class="btn btn-ghost" @click="view='landing'">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:#06B6D4">
+            <svg class="w-3.5 h-3.5" style="color:#09090B" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <span class="text-white font-700 tracking-tight" style="font-weight:700">MSPOnboard</span>
+          <span class="text-zinc-700">/</span>
+          <span class="text-zinc-500 text-sm">Apex IT Solutions</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="flex rounded-lg overflow-hidden" style="border:1px solid rgba(255,255,255,.07)">
+          <button class="tab" :class="dashTab==='clients'?'on':''" @click="dashTab='clients'">Clients</button>
+          <button class="tab" :class="dashTab==='assets'?'on':''" @click="dashTab='assets'">Assets</button>
+          <button class="tab" :class="dashTab==='security'?'on':''" @click="dashTab='security'">Security</button>
+        </div>
+        <button class="btn btn-cyan btn-sm" @click="view='builder'">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          New client
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-5 gap-3 mb-6">
+      <div class="card p-4">
+        <p class="text-zinc-500 text-xs mono mb-1">CLIENTS</p>
+        <p class="text-white text-2xl font-800 mono" style="font-weight:800" x-text="clients.length"></p>
+      </div>
+      <div class="card p-4">
+        <p class="text-zinc-500 text-xs mono mb-1">ONBOARDED</p>
+        <p class="text-2xl font-800 mono text-emerald-DEFAULT" style="font-weight:800" x-text="clients.filter(c=>c.status==='Active').length"></p>
+      </div>
+      <div class="card p-4">
+        <p class="text-zinc-500 text-xs mono mb-1">IN PROGRESS</p>
+        <p class="text-2xl font-800 mono" style="font-weight:800;color:#F59E0B" x-text="clients.filter(c=>c.status==='In Progress').length"></p>
+      </div>
+      <div class="card p-4">
+        <p class="text-zinc-500 text-xs mono mb-1">TOTAL DEVICES</p>
+        <p class="text-white text-2xl font-800 mono" style="font-weight:800" x-text="clients.reduce((a,c)=>a+(c.devices||0),0)"></p>
+      </div>
+      <div class="card p-4">
+        <p class="text-zinc-500 text-xs mono mb-1">AVG SEC SCORE</p>
+        <p class="text-2xl font-800 mono" :style="`color:${scoreCol(Math.round(clients.reduce((a,c)=>a+(c.secScore||0),0)/clients.length))}`" style="font-weight:800" x-text="Math.round(clients.reduce((a,c)=>a+(c.secScore||0),0)/clients.length)+'%'"></p>
+      </div>
+    </div>
+
+    <!-- CLIENTS TAB -->
+    <template x-if="dashTab==='clients'">
+      <div class="card overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3.5" style="border-bottom:1px solid rgba(255,255,255,.05)">
+          <h2 class="text-white text-sm font-600" style="font-weight:600">Client roster</h2>
+          <span class="text-zinc-600 text-xs mono" x-text="clients.length + ' clients'"></span>
+        </div>
+        <template x-for="(c,i) in clients" :key="i">
+          <div class="trow group" @click="openClient(c)">
+            <div class="flex items-center gap-3">
+              <div class="av" :style="`background:${c.color}15;color:${c.color}`" x-text="c.name.split(' ').map(w=>w[0]).join('').slice(0,2)"></div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <p class="text-white text-sm font-500 group-hover:text-cyan-light transition-colors" style="font-weight:500" x-text="c.name"></p>
+                  <span class="badge" :class="c.status==='Active'?'b-green':c.status==='In Progress'?'b-yellow':'b-zinc'" x-text="c.status"></span>
+                </div>
+                <p class="text-zinc-600 text-xs mt-0.5" x-text="c.industry + ' · ' + c.size + ' employees'"></p>
+              </div>
+            </div>
+            <div class="flex items-center gap-5">
+              <div class="hidden md:flex items-center gap-4 text-right">
+                <div>
+                  <p class="text-zinc-500 text-xs mono">Devices</p>
+                  <p class="text-white text-sm mono font-600" style="font-weight:600" x-text="c.devices"></p>
+                </div>
+                <div>
+                  <p class="text-zinc-500 text-xs mono">M365</p>
+                  <p class="text-sm mono font-600" style="font-weight:600" :class="c.m365?'text-emerald-DEFAULT':'text-zinc-700'" x-text="c.m365?'✓':'—'"></p>
+                </div>
+                <div>
+                  <p class="text-zinc-500 text-xs mono">MFA</p>
+                  <p class="text-sm mono font-600" style="font-weight:600" :class="c.mfa?'text-emerald-DEFAULT':'text-red2-DEFAULT'" x-text="c.mfa?'ON':'OFF'"></p>
+                </div>
+              </div>
+              <!-- Sec score bar -->
+              <div class="text-center w-14">
+                <div class="ring" :style="`background:${scoreCol(c.secScore)}15;color:${scoreCol(c.secScore)}`" x-text="c.secScore+'%'"></div>
+                <p class="text-zinc-600 text-xs mono mt-0.5">sec</p>
+              </div>
+              <button class="btn btn-ghost btn-sm opacity-0 group-hover:opacity-100 transition-opacity" @click.stop="exportClient(c)">Export</button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- ASSETS TAB -->
+    <template x-if="dashTab==='assets'">
+      <div class="space-y-4">
+        <!-- Software overview -->
+        <div class="card p-5">
+          <h3 class="text-white text-sm font-600 mb-4" style="font-weight:600">Software stack across all clients</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <template x-for="sw in softwareStack">
+              <div class="card-inner p-3">
+                <p class="text-zinc-500 text-xs mono mb-1" x-text="sw.name"></p>
+                <div class="flex items-end gap-2">
+                  <p class="text-white text-xl font-800 mono" style="font-weight:800" x-text="sw.count"></p>
+                  <p class="text-zinc-600 text-xs mb-0.5">clients</p>
+                </div>
+                <div class="pbar mt-2"><div class="pfill" :style="`width:${(sw.count/clients.length)*100}%`"></div></div>
+              </div>
+            </template>
+          </div>
+        </div>
+        <!-- Device breakdown -->
+        <div class="card p-5">
+          <h3 class="text-white text-sm font-600 mb-4" style="font-weight:600">Device inventory</h3>
+          <div class="space-y-2">
+            <template x-for="(c, i) in clients" :key="i">
+              <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 w-44 flex-shrink-0">
+                  <div class="av w-7 h-7 text-xs" :style="`background:${c.color}15;color:${c.color}`" x-text="c.name.split(' ').map(w=>w[0]).join('').slice(0,2)"></div>
+                  <p class="text-zinc-400 text-xs truncate" x-text="c.name"></p>
+                </div>
+                <div class="flex-1 flex items-center gap-2">
+                  <div class="flex-1 bg-zinc-800 rounded-full overflow-hidden" style="height:6px">
+                    <div class="h-full rounded-full" :style="`width:${Math.min((c.devices/50)*100,100)}%;background:${c.color}`"></div>
+                  </div>
+                  <p class="text-zinc-500 text-xs mono w-14 text-right" x-text="c.devices + ' devices'"></p>
+                </div>
+                <div class="hidden md:flex gap-2">
+                  <span class="badge b-zinc text-xs mono" x-text="c.os"></span>
+                  <span class="badge" :class="c.edr?'b-green':'b-red'" x-text="c.edr?'EDR ✓':'No EDR'"></span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- SECURITY TAB -->
+    <template x-if="dashTab==='security'">
+      <div class="space-y-4">
+        <div class="card p-5">
+          <h3 class="text-white text-sm font-600 mb-4" style="font-weight:600">Security posture by client</h3>
+          <div class="space-y-3">
+            <template x-for="(c,i) in [...clients].sort((a,b)=>a.secScore-b.secScore)" :key="i">
+              <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 w-44 flex-shrink-0">
+                  <div class="av w-7 h-7 text-xs" :style="`background:${c.color}15;color:${c.color}`" x-text="c.name.split(' ').map(w=>w[0]).join('').slice(0,2)"></div>
+                  <p class="text-zinc-400 text-xs truncate" x-text="c.name"></p>
+                </div>
+                <div class="flex-1 bg-zinc-800 rounded-full overflow-hidden" style="height:6px">
+                  <div class="h-full rounded-full transition-all" :style="`width:${c.secScore}%;background:${scoreCol(c.secScore)}`"></div>
+                </div>
+                <p class="text-sm mono font-700 w-12 text-right" :style="`color:${scoreCol(c.secScore)}`" style="font-weight:700" x-text="c.secScore+'%'"></p>
+                <div class="hidden md:flex gap-1.5">
+                  <span class="badge" :class="c.mfa?'b-green':'b-red'" x-text="c.mfa?'MFA':'No MFA'"></span>
+                  <span class="badge" :class="c.backup?'b-green':'b-red'" x-text="c.backup?'Backup':'No Backup'"></span>
+                  <span class="badge" :class="c.edr?'b-green':'b-red'" x-text="c.edr?'EDR':'No EDR'"></span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="card p-4 text-center">
+            <p class="text-4xl font-800 text-emerald-DEFAULT mono mb-1" style="font-weight:800" x-text="clients.filter(c=>c.mfa).length + '/' + clients.length"></p>
+            <p class="text-zinc-500 text-sm">MFA enabled</p>
+          </div>
+          <div class="card p-4 text-center">
+            <p class="text-4xl font-800 text-emerald-DEFAULT mono mb-1" style="font-weight:800" x-text="clients.filter(c=>c.backup).length + '/' + clients.length"></p>
+            <p class="text-zinc-500 text-sm">Backup solution</p>
+          </div>
+          <div class="card p-4 text-center">
+            <p class="text-4xl font-800 mono mb-1" :class="clients.filter(c=>!c.edr).length>0?'text-red2-DEFAULT':'text-emerald-DEFAULT'" style="font-weight:800" x-text="clients.filter(c=>c.edr).length + '/' + clients.length"></p>
+            <p class="text-zinc-500 text-sm">EDR deployed</p>
+          </div>
+        </div>
+      </div>
+    </template>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     BUILDER
+============================================================ -->
+<div x-show="view==='builder'" x-cloak>
+  <div class="max-w-xl mx-auto px-5 py-7">
+    <div class="flex items-center gap-3 mb-7">
+      <button class="btn btn-ghost" @click="view='dashboard'">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div>
+        <h1 class="text-white font-800 tracking-tight" style="font-weight:800">New client intake</h1>
+        <p class="text-zinc-500 text-sm">Configure and send — they fill everything before the kickoff call</p>
+      </div>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <h3 class="text-white text-sm font-600 mb-4" style="font-weight:600">Your MSP</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-zinc-500 text-xs mono block mb-1.5">COMPANY NAME</label><input class="field" x-model="builder.mspName" placeholder="Apex IT Solutions"/></div>
+        <div><label class="text-zinc-500 text-xs mono block mb-1.5">ENGINEER NAME</label><input class="field" x-model="builder.engineer" placeholder="Alex Chen"/></div>
+      </div>
+      <div class="mt-3"><label class="text-zinc-500 text-xs mono block mb-1.5">CLIENT COMPANY NAME</label><input class="field" x-model="builder.clientName" placeholder="e.g. Riverstone Legal"/></div>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <h3 class="text-white text-sm font-600" style="font-weight:600">Client intake link</h3>
+          <p class="text-zinc-500 text-xs mt-0.5">Send via email — they fill it before the kickoff call</p>
+        </div>
+        <button class="btn btn-cyan btn-sm" @click="generateLink()">Generate link</button>
+      </div>
+      <template x-if="generatedLink">
+        <div class="card-inner p-3 flex items-center gap-2 mt-3">
+          <code class="mono text-cyan-light text-xs flex-1 truncate" x-text="generatedLink"></code>
+          <button class="btn btn-ghost btn-sm" @click="copyLink()">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          </button>
+          <button class="btn btn-cyan btn-sm" @click="view='client'">Preview →</button>
+        </div>
+      </template>
+      <template x-if="copied"><p class="text-emerald-light text-xs mt-2">✓ Copied to clipboard</p></template>
+    </div>
+
+    <div class="text-center mt-4">
+      <button class="text-zinc-600 hover:text-cyan-light text-sm transition-colors" @click="view='client'">→ Preview the client form</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CLIENT FORM
+============================================================ -->
+<div x-show="view==='client'" x-cloak>
+  <div class="max-w-xl mx-auto px-5 py-7">
+
+    <!-- Progress header -->
+    <div class="mb-7">
+      <div class="flex items-center justify-between mb-2.5">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-md flex items-center justify-center" style="background:#06B6D4">
+            <svg class="w-3 h-3" style="color:#09090B" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <span class="text-white text-sm font-600" style="font-weight:600" x-text="builder.mspName||'Your MSP'"></span>
+        </div>
+        <span class="text-zinc-600 text-xs mono" x-text="Math.round(progress)+'% complete'"></span>
+      </div>
+      <div class="pbar"><div class="pfill" :style="`width:${progress}%`"></div></div>
+    </div>
+
+    <!-- Welcome card -->
+    <div class="card p-5 mb-4">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="badge b-cyan mono">IT Onboarding</span>
+            <span x-show="builder.clientName" class="text-zinc-600 text-xs" x-text="'→ ' + builder.clientName"></span>
+          </div>
+          <h1 class="text-xl font-800 text-white tracking-tight" style="font-weight:800">Tell us about your IT environment</h1>
+        </div>
+      </div>
+      <p class="text-zinc-500 text-sm leading-relaxed">This form gives our engineers a complete picture of your infrastructure before we start. Takes ~12 minutes. Your data is end-to-end encrypted.</p>
+      <div class="hint mt-3 flex items-start gap-2">
+        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" style="color:#06B6D4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p class="text-cyan-light text-xs leading-relaxed">Don't know all the answers? Fill what you can — your assigned engineer will complete the rest on the kickoff call.</p>
+      </div>
+    </div>
+
+    <!-- ---- SECTION: Company ---- -->
+    <div class="sblock">
+      <div class="shead" @click="tog('co')">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">🏢</span>
+          <div><p class="text-white text-sm font-600" style="font-weight:600">Company details</p><p class="text-zinc-600 text-xs">Size, industry, primary contact</p></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <template x-if="form.company"><span class="badge b-green text-xs">Done</span></template>
+          <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.co?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+      </div>
+      <div x-show="open.co" class="px-4 pb-5 space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">COMPANY NAME</label><input class="field" x-model="form.company" placeholder="Riverstone Legal" @input="cp()"/></div>
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">INDUSTRY</label>
+            <select class="field" x-model="form.industry" @change="cp()"><option value="">Select…</option><option>Legal</option><option>Finance / Accounting</option><option>Healthcare</option><option>Construction</option><option>Retail / E-commerce</option><option>Manufacturing</option><option>Non-profit</option><option>Education</option><option>Real Estate</option><option>Other</option></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">NO. OF EMPLOYEES</label><input class="field" x-model="form.employees" placeholder="42" type="number" @input="cp()"/></div>
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">NO. OF LOCATIONS</label><input class="field" x-model="form.locations" placeholder="2" type="number" @input="cp()"/></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">PRIMARY CONTACT</label><input class="field" x-model="form.contact" placeholder="Name + mobile" @input="cp()"/></div>
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">EMAIL</label><input class="field" x-model="form.email" placeholder="it@company.com" @input="cp()"/></div>
+        </div>
+        <div><label class="text-zinc-500 text-xs mono block mb-1.5">CURRENT IT PROVIDER (if any)</label><input class="field" x-model="form.prevMSP" placeholder="e.g. TechCorp MSP — contract ends June 2025" @input="cp()"/></div>
+      </div>
+    </div>
+
+    <!-- ---- SECTION: Network ---- -->
+    <div class="sblock">
+      <div class="shead" @click="tog('net')">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">🌐</span>
+          <div><p class="text-white text-sm font-600" style="font-weight:600">Network infrastructure</p><p class="text-zinc-600 text-xs">ISP, firewall, Wi-Fi, VPN</p></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <template x-if="form.isp"><span class="badge b-green text-xs">Done</span></template>
+          <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.net?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+      </div>
+      <div x-show="open.net" class="px-4 pb-5 space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">INTERNET PROVIDER (ISP)</label><input class="field" x-model="form.isp" placeholder="e.g. Telstra, NBN, Optus" @input="cp()"/></div>
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">CONNECTION TYPE</label>
+            <select class="field" x-model="form.connType" @change="cp()"><option value="">Select…</option><option>NBN FTTP</option><option>NBN FTTN</option><option>NBN HFC</option><option>4G/5G</option><option>Fibre (dedicated)</option><option>ADSL</option><option>Other</option></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">FIREWALL / ROUTER</label><input class="field" x-model="form.firewall" placeholder="e.g. Cisco Meraki MX68, Fortinet" @input="cp()"/></div>
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">MANAGED SWITCH</label><input class="field" x-model="form.switch" placeholder="e.g. Cisco SG350, Unmanaged" @input="cp()"/></div>
+        </div>
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-1.5">STATIC IP ADDRESS (if any)</label>
+          <input class="field mono" x-model="form.staticIP" placeholder="e.g. 203.x.x.x" @input="cp()"/>
+        </div>
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">VPN IN USE?</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="v in ['No VPN','Cisco AnyConnect','Fortinet SSL VPN','WireGuard','OpenVPN','Windows VPN','Other']">
+              <button class="chip" :class="form.vpn===v?'on':''" @click="form.vpn=v;cp()" x-text="v"></button>
+            </template>
+          </div>
+        </div>
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">WI-FI HARDWARE</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="w in ['Ubiquiti UniFi','Cisco Meraki','Ruckus','Aruba','TP-Link Omada','Consumer grade','None']">
+              <button class="chip" :class="form.wifi===w?'on':''" @click="form.wifi=w;cp()" x-text="w"></button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- SECTION: Servers ---- -->
+    <div class="sblock">
+      <div class="shead" @click="tog('srv')">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">🖥️</span>
+          <div><p class="text-white text-sm font-600" style="font-weight:600">Servers & infrastructure</p><p class="text-zinc-600 text-xs">On-prem, cloud, virtualisation</p></div>
+        </div>
+        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.srv?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div x-show="open.srv" class="px-4 pb-5 space-y-3">
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">SERVER ENVIRONMENT</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="e in ['On-premises only','Cloud only (Azure/AWS)','Hybrid','No servers']">
+              <button class="chip" :class="form.serverEnv===e?'on':''" @click="form.serverEnv=e;cp()" x-text="e"></button>
+            </template>
+          </div>
+        </div>
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">SERVER ROLES IN USE</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="r in ['Domain Controller (AD)','File Server','Print Server','Exchange (on-prem)','SQL Server','RDS / Terminal Server','Hyper-V Host','VMware ESXi','Web Server','Other']">
+              <button class="chip" :class="form.serverRoles.includes(r)?'on':''" @click="tarr('serverRoles',r);cp()" x-text="r"></button>
+            </template>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">TOTAL SERVERS</label><input class="field mono" x-model="form.serverCount" placeholder="3" type="number" @input="cp()"/></div>
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">MAIN SERVER OS</label>
+            <select class="field" x-model="form.serverOS" @change="cp()"><option value="">Select…</option><option>Windows Server 2022</option><option>Windows Server 2019</option><option>Windows Server 2016</option><option>Windows Server 2012 R2</option><option>Linux (Ubuntu)</option><option>Linux (CentOS/RHEL)</option><option>Mixed</option></select>
+          </div>
+        </div>
+        <div><label class="text-zinc-500 text-xs mono block mb-1.5">CLOUD SERVICES</label><input class="field" x-model="form.cloud" placeholder="e.g. Azure AD, AWS S3, Cloudflare..." @input="cp()"/></div>
+      </div>
+    </div>
+
+    <!-- ---- SECTION: Workstations ---- -->
+    <div class="sblock">
+      <div class="shead" @click="tog('ws')">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">💻</span>
+          <div><p class="text-white text-sm font-600" style="font-weight:600">Workstations & devices</p><p class="text-zinc-600 text-xs">PCs, laptops, mobile devices</p></div>
+        </div>
+        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.ws?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div x-show="open.ws" class="px-4 pb-5 space-y-3">
+        <div class="grid grid-cols-3 gap-3">
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">WINDOWS PCs</label><input class="field mono" x-model="form.winPC" placeholder="18" type="number" @input="cp()"/></div>
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">MACS</label><input class="field mono" x-model="form.macs" placeholder="4" type="number" @input="cp()"/></div>
+          <div><label class="text-zinc-500 text-xs mono block mb-1.5">LAPTOPS</label><input class="field mono" x-model="form.laptops" placeholder="12" type="number" @input="cp()"/></div>
+        </div>
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">PRIMARY WINDOWS VERSION</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="v in ['Windows 11','Windows 10','Windows 10 + 11 mix','Windows 7/8 (legacy)','macOS only','Mixed']">
+              <button class="chip" :class="form.winVer===v?'on':''" @click="form.winVer=v;cp()" x-text="v"></button>
+            </template>
+          </div>
+        </div>
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">MOBILE DEVICE MANAGEMENT (MDM)</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="m in ['Intune / Microsoft MDM','Jamf (Mac)','Other MDM','No MDM']">
+              <button class="chip" :class="form.mdm===m?'on':''" @click="form.mdm=m;cp()" x-text="m"></button>
+            </template>
+          </div>
+        </div>
+        <div><label class="text-zinc-500 text-xs mono block mb-1.5">AVERAGE DEVICE AGE</label>
+          <select class="field" x-model="form.deviceAge" @change="cp()"><option value="">Select…</option><option>Less than 2 years</option><option>2–4 years</option><option>4–6 years</option><option>6+ years (needs refresh)</option></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- SECTION: Software & Licences ---- -->
+    <div class="sblock">
+      <div class="shead" @click="tog('sw')">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">📦</span>
+          <div><p class="text-white text-sm font-600" style="font-weight:600">Software & licences</p><p class="text-zinc-600 text-xs">Microsoft 365, antivirus, line-of-business apps</p></div>
+        </div>
+        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.sw?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div x-show="open.sw" class="px-4 pb-5 space-y-3">
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">MICROSOFT 365 / OFFICE</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="o in ['M365 Business Basic','M365 Business Standard','M365 Business Premium','M365 E3','Office 2021 (perpetual)','Office 2019','Google Workspace','None']">
+              <button class="chip" :class="form.m365plan===o?'on':''" @click="form.m365plan=o;cp()" x-text="o"></button>
+            </template>
+          </div>
+        </div>
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">CURRENT ANTIVIRUS / EDR</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="a in ['Windows Defender only','Defender for Business','SentinelOne','CrowdStrike','Bitdefender','Malwarebytes','ESET','Symantec','None']">
+              <button class="chip" :class="form.av===a?'on':''" @click="form.av=a;cp()" x-text="a"></button>
+            </template>
+          </div>
+        </div>
+        <div><label class="text-zinc-500 text-xs mono block mb-1.5">LINE-OF-BUSINESS APPLICATIONS</label><textarea class="field" x-model="form.lob" placeholder="e.g. MYOB (accounting), Salesforce (CRM), Xero, Practice Evolve (legal), custom ERP..." @input="cp()"></textarea></div>
+        <div><label class="text-zinc-500 text-xs mono block mb-1.5">COMMUNICATION TOOLS</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="c in ['Microsoft Teams','Slack','Zoom','Google Meet','Email only','Other']">
+              <button class="chip" :class="form.comms.includes(c)?'on':''" @click="tarr('comms',c);cp()" x-text="c"></button>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- SECTION: Security ---- -->
+    <div class="sblock" style="border-color:rgba(6,182,212,.15)">
+      <div class="shead" @click="tog('sec')">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">🔐</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <p class="text-white text-sm font-600" style="font-weight:600">Security posture</p>
+              <span class="badge b-cyan">Auto-scored</span>
+            </div>
+            <p class="text-zinc-600 text-xs">MFA, backups, patching, passwords</p>
+          </div>
+        </div>
+        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.sec?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div x-show="open.sec" class="px-4 pb-5 space-y-4">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-zinc-500 text-xs mono">MFA (MULTI-FACTOR AUTH)</label>
+            <span class="badge" :class="form.mfa==='Enabled everywhere'||form.mfa==='Enabled on M365'?'b-green':'b-red'" x-text="form.mfa||'Not set'"></span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="m in ['Enabled everywhere','Enabled on M365','Enabled on some apps','Not enabled','Not sure']">
+              <button class="chip" :class="form.mfa===m?'on':''" @click="form.mfa=m;cp()" x-text="m"></button>
+            </template>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-zinc-500 text-xs mono">BACKUP SOLUTION</label>
+            <span class="badge" :class="form.backup&&form.backup!=='No backup'?'b-green':'b-red'" x-text="form.backup||'Not set'"></span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="b in ['Veeam','Datto','Acronis','Backblaze B2','Azure Backup','Time Machine (Mac)','External HDD only','No backup','Not sure']">
+              <button class="chip" :class="form.backup===b?'on':''" @click="form.backup=b;cp()" x-text="b"></button>
+            </template>
+          </div>
+        </div>
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">WINDOWS UPDATE / PATCH POLICY</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="p in ['Auto updates enabled','Manual updates monthly','Updates delayed/deferred','Not managed','Not sure']">
+              <button class="chip" :class="form.patches===p?'on':''" @click="form.patches=p;cp()" x-text="p"></button>
+            </template>
+          </div>
+        </div>
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">PASSWORD MANAGER</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="pm in ['1Password','Bitwarden','LastPass','Keeper','No password manager']">
+              <button class="chip" :class="form.pwManager===pm?'on':''" @click="form.pwManager=pm;cp()" x-text="pm"></button>
+            </template>
+          </div>
+        </div>
+        <!-- Live sec score -->
+        <div class="card-inner p-4">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-zinc-500 text-xs mono">CURRENT SECURITY SCORE</p>
+            <p class="text-2xl font-800 mono" :style="`color:${scoreCol(liveSecScore)}`" style="font-weight:800" x-text="liveSecScore+'%'"></p>
+          </div>
+          <div class="pbar"><div class="pfill" :style="`width:${liveSecScore}%;background:${scoreCol(liveSecScore)}`"></div></div>
+          <p class="text-zinc-600 text-xs mt-2" x-text="liveSecScore>=70?'Good security baseline. We\'ll help you reach 90%+.':liveSecScore>=40?'Several critical gaps identified. We\'ll prioritise these first.':'High risk environment. Immediate action recommended.'"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- SECTION: Backup & Recovery ---- -->
+    <div class="sblock">
+      <div class="shead" @click="tog('bk')">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">💾</span>
+          <div><p class="text-white text-sm font-600" style="font-weight:600">Backup & disaster recovery</p><p class="text-zinc-600 text-xs">RPO, RTO, last restore test</p></div>
+        </div>
+        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.bk?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div x-show="open.bk" class="px-4 pb-5 space-y-3">
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">HOW LONG CAN YOU AFFORD TO BE DOWN? (RTO)</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="r in ['Less than 1 hour','1–4 hours','4–8 hours','1 business day','Longer is fine']">
+              <button class="chip" :class="form.rto===r?'on':''" @click="form.rto=r;cp()" x-text="r"></button>
+            </template>
+          </div>
+        </div>
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">HOW MUCH DATA LOSS IS ACCEPTABLE? (RPO)</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="r in ['0 – real-time sync','< 1 hour','< 4 hours','< 24 hours','24+ hours']">
+              <button class="chip" :class="form.rpo===r?'on':''" @click="form.rpo=r;cp()" x-text="r"></button>
+            </template>
+          </div>
+        </div>
+        <div><label class="text-zinc-500 text-xs mono block mb-1.5">LAST BACKUP RESTORE TEST</label>
+          <select class="field" x-model="form.lastRestore" @change="cp()"><option value="">Select…</option><option>Within last month</option><option>1–6 months ago</option><option>6–12 months ago</option><option>More than 1 year ago</option><option>Never tested</option><option>Not sure</option></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- SECTION: Pain points ---- -->
+    <div class="sblock">
+      <div class="shead" @click="tog('pain')">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">🎯</span>
+          <div><p class="text-white text-sm font-600" style="font-weight:600">Pain points & priorities</p><p class="text-zinc-600 text-xs">What's broken, what matters most</p></div>
+        </div>
+        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.pain?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </div>
+      <div x-show="open.pain" class="px-4 pb-5 space-y-3">
+        <div>
+          <label class="text-zinc-500 text-xs mono block mb-2">TOP IT COMPLAINTS (SELECT ALL THAT APPLY)</label>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="p in ['Slow computers','Frequent crashes/BSOD','Email issues','Slow internet','VPN problems','Printer issues','Software licensing confusion','Security worries','No IT visibility','Poor response from current IT','Outdated hardware','Password reset hell','Remote work issues']">
+              <button class="chip" :class="form.pains.includes(p)?'on':''" @click="tarr('pains',p);cp()" x-text="p"></button>
+            </template>
+          </div>
+        </div>
+        <div><label class="text-zinc-500 text-xs mono block mb-1.5">TOP PRIORITY FOR FIRST 30 DAYS</label><textarea class="field" x-model="form.priority" placeholder="What do you want us to fix or improve first? Be specific..." @input="cp()"></textarea></div>
+        <div><label class="text-zinc-500 text-xs mono block mb-1.5">ANYTHING ELSE WE SHOULD KNOW</label><textarea class="field" x-model="form.notes" placeholder="Upcoming projects, compliance requirements, planned office moves, acquisitions..." @input="cp()"></textarea></div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="mt-6">
+      <button class="btn btn-cyan w-full justify-center py-3.5 text-sm" @click="submitForm()">
+        Submit IT environment brief →
+      </button>
+      <p class="text-zinc-700 text-xs text-center mt-2.5 mono">All data encrypted in transit · Progress auto-saved</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SUCCESS
+============================================================ -->
+<div x-show="view==='success'" x-cloak>
+  <div id="cf-wrap"></div>
+  <div class="max-w-md mx-auto px-5 py-24 text-center">
+    <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6" style="background:rgba(16,185,129,.1)">
+      <svg class="w-8 h-8 text-emerald-DEFAULT" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h1 class="text-3xl font-800 text-white tracking-tight mb-2" style="font-weight:800">Environment brief received.</h1>
+    <p class="text-zinc-500 mb-1">Submitted to <span class="text-cyan-light" x-text="builder.mspName||'your MSP'"></span></p>
+    <p class="text-zinc-600 text-sm mb-8">Security score: <span class="font-700 mono" :style="`color:${scoreCol(liveSecScore)}`" style="font-weight:700" x-text="liveSecScore+'%'"></span></p>
+
+    <div class="card p-5 text-left mb-5">
+      <p class="text-zinc-500 text-xs mono uppercase tracking-widest mb-4">What happens next</p>
+      <div class="space-y-3">
+        <div class="flex items-start gap-3"><div class="w-5 h-5 rounded flex items-center justify-center text-xs flex-shrink-0 mt-0.5" style="background:rgba(6,182,212,.12);color:#06B6D4">1</div><p class="text-zinc-400 text-sm">Your engineer reviews the brief and asset inventory</p></div>
+        <div class="flex items-start gap-3"><div class="w-5 h-5 rounded flex items-center justify-center text-xs flex-shrink-0 mt-0.5" style="background:rgba(6,182,212,.12);color:#06B6D4">2</div><p class="text-zinc-400 text-sm">Kickoff call is scheduled — now technical from minute 1</p></div>
+        <div class="flex items-start gap-3"><div class="w-5 h-5 rounded flex items-center justify-center text-xs flex-shrink-0 mt-0.5" style="background:rgba(6,182,212,.12);color:#06B6D4">3</div><p class="text-zinc-400 text-sm">We build your onboarding plan and deploy our toolstack</p></div>
+        <div class="flex items-start gap-3"><div class="w-5 h-5 rounded flex items-center justify-center text-xs flex-shrink-0 mt-0.5" style="background:rgba(6,182,212,.12);color:#06B6D4">4</div><p class="text-zinc-400 text-sm">You're fully under management within 48 hours</p></div>
+      </div>
+    </div>
+
+    <button class="btn btn-outline w-full justify-center" @click="view='dashboard'">View dashboard →</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     CLIENT DETAIL MODAL
+============================================================ -->
+<div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-8 px-4">
+  <div class="absolute inset-0 bg-black/80" style="backdrop-filter:blur(8px)" @click="modalOpen=false"></div>
+  <div class="relative card rounded-2xl w-full max-w-2xl z-10 p-7" x-show="selectedClient">
+    <button class="absolute top-4 right-4 btn btn-ghost btn-sm" @click="modalOpen=false">✕</button>
+    <template x-if="selectedClient">
+      <div>
+        <div class="flex items-start gap-4 mb-6">
+          <div class="av w-12 h-12 text-base" :style="`background:${selectedClient.color}15;color:${selectedClient.color}`" x-text="selectedClient.name.split(' ').map(w=>w[0]).join('').slice(0,2)"></div>
+          <div class="flex-1">
+            <h2 class="text-white text-xl font-800 tracking-tight" style="font-weight:800" x-text="selectedClient.name"></h2>
+            <p class="text-zinc-500 text-sm" x-text="selectedClient.industry + ' · ' + selectedClient.size + ' employees'"></p>
+            <div class="flex items-center gap-2 mt-1.5">
+              <span class="badge" :class="selectedClient.status==='Active'?'b-green':selectedClient.status==='In Progress'?'b-yellow':'b-zinc'" x-text="selectedClient.status"></span>
+              <span class="badge b-cyan mono" x-text="'Sec: ' + selectedClient.secScore + '%'"></span>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="ring w-16 h-16" :style="`background:${scoreCol(selectedClient.secScore)}15;color:${scoreCol(selectedClient.secScore)}`" x-text="selectedClient.secScore+'%'"></div>
+            <p class="text-zinc-600 text-xs mono mt-1">Security</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 mb-5">
+          <div class="card-inner p-3"><p class="text-zinc-600 text-xs mono">DEVICES</p><p class="text-white text-xl font-800 mono mt-1" style="font-weight:800" x-text="selectedClient.devices"></p></div>
+          <div class="card-inner p-3"><p class="text-zinc-600 text-xs mono">M365</p><p class="text-sm mt-1 font-700" :class="selectedClient.m365?'text-emerald-DEFAULT':'text-zinc-700'" style="font-weight:700" x-text="selectedClient.m365?'✓ Enabled':'✗ No'"></p></div>
+          <div class="card-inner p-3"><p class="text-zinc-600 text-xs mono">MFA</p><p class="text-sm mt-1 font-700" :class="selectedClient.mfa?'text-emerald-DEFAULT':'text-red2-DEFAULT'" style="font-weight:700" x-text="selectedClient.mfa?'✓ Enabled':'✗ Disabled'"></p></div>
+        </div>
+
+        <div class="space-y-4">
+          <template x-for="(section, key) in selectedClient.data">
+            <div>
+              <p class="text-zinc-600 text-xs mono uppercase tracking-widest mb-2 pb-1.5" style="border-bottom:1px solid rgba(255,255,255,.05)" x-text="key"></p>
+              <div class="grid grid-cols-2 gap-x-6 gap-y-1.5">
+                <template x-for="(val, field) in section">
+                  <div x-show="val" class="flex items-start gap-2">
+                    <p class="text-zinc-600 text-xs mt-0.5 flex-shrink-0 w-28 truncate" x-text="field"></p>
+                    <p class="text-zinc-300 text-xs font-500" style="font-weight:500" x-text="val"></p>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="flex gap-3 mt-6 pt-4" style="border-top:1px solid rgba(255,255,255,.06)">
+          <button class="btn btn-cyan btn-sm" @click="exportClient(selectedClient)">Export brief</button>
+          <button class="btn btn-outline btn-sm" @click="modalOpen=false">Close</button>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<script>
+function app() {
+  return {
+    view: 'landing',
+    dashTab: 'clients',
+    modalOpen: false,
+    selectedClient: null,
+    generatedLink: null,
+    copied: false,
+    progress: 0,
+
+    builder: { mspName: 'Apex IT Solutions', engineer: 'Alex Chen', clientName: '' },
+
+    open: { co:true, net:false, srv:false, ws:false, sw:false, sec:false, bk:false, pain:false },
+
+    form: {
+      company:'', industry:'', employees:'', locations:'', contact:'', email:'', prevMSP:'',
+      isp:'', connType:'', firewall:'', switch:'', staticIP:'', vpn:'', wifi:'',
+      serverEnv:'', serverRoles:[], serverCount:'', serverOS:'', cloud:'',
+      winPC:'', macs:'', laptops:'', winVer:'', mdm:'', deviceAge:'',
+      m365plan:'', av:'', lob:'', comms:[],
+      mfa:'', backup:'', patches:'', pwManager:'',
+      rto:'', rpo:'', lastRestore:'',
+      pains:[], priority:'', notes:''
+    },
+
+    formSections: [
+      { icon:'🏢', label:'Company',        hint:'Size, industry, contacts' },
+      { icon:'🌐', label:'Network',         hint:'ISP, firewall, VPN' },
+      { icon:'🖥️', label:'Servers',         hint:'On-prem / cloud / hybrid' },
+      { icon:'💻', label:'Workstations',    hint:'PCs, laptops, OS mix' },
+      { icon:'📦', label:'Software',        hint:'M365, AV, line-of-business' },
+      { icon:'🔐', label:'Security',        hint:'MFA, patches, passwords' },
+      { icon:'💾', label:'Backup & DR',     hint:'RTO, RPO, restore tests' },
+      { icon:'🎯', label:'Pain points',     hint:'What needs fixing first' },
+    ],
+
+    bads: [
+      '45-minute discovery call before you know anything',
+      'Client sends files in 6 different emails over 3 days',
+      'Engineer shows up to kickoff not knowing the environment',
+      'Spreadsheet with passwords stored in OneDrive',
+      'Missing info discovered mid-deployment — delays everything',
+      'Security gaps not found until first audit (weeks later)',
+    ],
+
+    goods: [
+      'Client fills the form before the first call',
+      'Full asset inventory before kickoff — no surprises',
+      'Security score calculated automatically on submission',
+      'Engineer walks into the call knowing everything',
+      'Deployment plan ready in 24 hours',
+      'Risk flags surfaced immediately — not weeks later',
+    ],
+
+    softwareStack: [
+      { name:'Microsoft 365', count: 4 },
+      { name:'Defender/EDR',  count: 3 },
+      { name:'Veeam Backup',  count: 2 },
+      { name:'Microsoft Teams', count: 5 },
+      { name:'Azure AD',      count: 3 },
+      { name:'Intune MDM',    count: 2 },
+      { name:'Cisco Meraki',  count: 2 },
+      { name:'SQL Server',    count: 3 },
+    ],
+
+    clients: [
+      {
+        name:'Riverstone Legal', industry:'Legal', size:38, devices:42, status:'Active',
+        secScore:82, color:'#6366F1', m365:true, mfa:true, backup:true, edr:true, os:'Win 11', lob:'Practice Evolve',
+        data: {
+          'Network': { ISP:'Telstra NBN FTTP 1Gbps', Firewall:'Cisco Meraki MX68', VPN:'Cisco AnyConnect', 'Wi-Fi':'Meraki MR46' },
+          'Servers': { Environment:'Hybrid', Roles:'DC, File Server, RDS', OS:'Windows Server 2022', Count:'2 on-prem + Azure' },
+          'Software': { 'M365 Plan':'M365 Business Premium', Antivirus:'Defender for Business', 'Line of Business':'Practice Evolve, MYOB', Comms:'Teams + Email' },
+          'Security': { MFA:'Enabled everywhere', Backup:'Veeam + Azure Backup', Patching:'Auto updates enabled', 'Password Manager':'1Password' },
+          'Backup': { RTO:'1–4 hours', RPO:'< 1 hour', 'Last Tested':'Within last month' }
+        }
+      },
+      {
+        name:'NovaBuild Construction', industry:'Construction', size:65, devices:28, status:'Active',
+        secScore:54, color:'#F97316', m365:true, mfa:false, backup:true, edr:false, os:'Win 10', lob:'Procore',
+        data: {
+          'Network': { ISP:'Optus 4G Business', Firewall:'Fortinet FortiGate 60F', VPN:'Fortinet SSL VPN' },
+          'Servers': { Environment:'On-premises only', Roles:'DC, File Server', OS:'Windows Server 2019', Count:'2' },
+          'Software': { 'M365 Plan':'M365 Business Standard', Antivirus:'Windows Defender only', 'Line of Business':'Procore (project mgmt), Xero' },
+          'Security': { MFA:'Not enabled ⚠️', Backup:'External HDD only ⚠️', Patching:'Manual updates monthly' },
+          'Pain Points': { 'Top issues':'Slow computers, VPN problems, no IT visibility', Priority:'Get MFA deployed ASAP, replace external HDD backup' }
+        }
+      },
+      {
+        name:'Clearwater Accounting', industry:'Finance / Accounting', size:12, devices:15, status:'In Progress',
+        secScore:91, color:'#10B981', m365:true, mfa:true, backup:true, edr:true, os:'Win 11', lob:'Xero',
+        data: {
+          'Network': { ISP:'NBN FTTP 500/50', Firewall:'Ubiquiti UDM Pro', 'Wi-Fi':'Ubiquiti U6-Pro' },
+          'Software': { 'M365 Plan':'M365 Business Premium', Antivirus:'SentinelOne', 'Line of Business':'Xero, CCH iFirm, DocuSign' },
+          'Security': { MFA:'Enabled everywhere', Backup:'Acronis Cyber Backup', 'Password Manager':'Bitwarden', Patching:'Auto updates enabled' }
+        }
+      },
+      {
+        name:'Meridian Healthcare', industry:'Healthcare', size:24, devices:31, status:'Active',
+        secScore:67, color:'#EC4899', m365:false, mfa:true, backup:true, edr:false, os:'Win 10+11', lob:'Genie Solutions',
+        data: {
+          'Network': { ISP:'Telstra Fibre Dedicated', Firewall:'SonicWall TZ470' },
+          'Software': { 'M365 Plan':'Google Workspace', Antivirus:'Malwarebytes', 'Line of Business':'Genie Solutions (practice mgmt), MediRecords' },
+          'Security': { MFA:'Enabled on M365', Backup:'Veeam', 'Last Restore':'1–6 months ago' },
+          'Pain Points': { Issues:'Email issues, security worries, compliance', Priority:'HIPAA-ready backup, EDR deployment' }
+        }
+      },
+      {
+        name:'Volta E-commerce', industry:'Retail / E-commerce', size:9, devices:11, status:'In Progress',
+        secScore:38, color:'#F59E0B', m365:true, mfa:false, backup:false, edr:false, os:'Win 10', lob:'Shopify',
+        data: {
+          'Network': { ISP:'NBN HFC', Firewall:'Consumer router (no management)' },
+          'Software': { 'M365 Plan':'M365 Business Basic', Antivirus:'None ⚠️', 'Line of Business':'Shopify, WooCommerce, QuickBooks' },
+          'Security': { MFA:'Not enabled ⚠️', Backup:'No backup ⚠️', Patching:'Not managed ⚠️' },
+          'Pain Points': { Issues:'Slow computers, no IT visibility, security worries', Priority:'Everything — starting from scratch' }
+        }
+      },
+    ],
+
+    jobs: [],
+
+    get liveSecScore() {
+      let score = 20;
+      if (this.form.mfa === 'Enabled everywhere') score += 25;
+      else if (this.form.mfa === 'Enabled on M365') score += 15;
+      else if (this.form.mfa === 'Enabled on some apps') score += 8;
+      if (this.form.backup && !['No backup','Not sure'].includes(this.form.backup)) score += 20;
+      if (this.form.av && !['Windows Defender only','None'].includes(this.form.av)) score += 15;
+      if (this.form.patches === 'Auto updates enabled') score += 10;
+      if (this.form.pwManager && this.form.pwManager !== 'No password manager') score += 10;
+      return Math.min(100, score);
+    },
+
+    init() {
+      const s = localStorage.getItem('mspo_form');
+      if (s) { try { this.form = { ...this.form, ...JSON.parse(s) }; } catch(e){} }
+      this.cp();
+    },
+
+    tog(k) { this.open[k] = !this.open[k]; },
+
+    tarr(f, v) {
+      const i = this.form[f].indexOf(v);
+      if (i === -1) this.form[f].push(v); else this.form[f].splice(i, 1);
+    },
+
+    cp() {
+      localStorage.setItem('mspo_form', JSON.stringify(this.form));
+      const fields = [
+        this.form.company, this.form.industry, this.form.employees,
+        this.form.isp, this.form.firewall,
+        this.form.serverEnv,
+        this.form.winPC || this.form.laptops,
+        this.form.m365plan, this.form.av,
+        this.form.mfa, this.form.backup,
+        this.form.rto,
+        this.form.pains.length > 0 ? 'y' : ''
+      ];
+      this.progress = Math.round((fields.filter(f => f && String(f).trim() !== '').length / fields.length) * 100);
+    },
+
+    scoreCol(s) {
+      if (s >= 75) return '#10B981';
+      if (s >= 45) return '#F59E0B';
+      return '#EF4444';
+    },
+
+    generateLink() {
+      const cfg = btoa(JSON.stringify({ msp: this.builder.mspName, eng: this.builder.engineer, client: this.builder.clientName }));
+      this.generatedLink = `${location.origin}${location.pathname}#mspo/${cfg}`;
+    },
+
+    copyLink() {
+      if (!this.generatedLink) return;
+      navigator.clipboard.writeText(this.generatedLink).then(() => { this.copied = true; setTimeout(() => this.copied = false, 2500); });
+    },
+
+    submitForm() {
+      const total = (parseInt(this.form.winPC)||0)+(parseInt(this.form.macs)||0)+(parseInt(this.form.laptops)||0)+(parseInt(this.form.serverCount)||0);
+      const entry = {
+        name: this.form.company || 'New Client',
+        industry: this.form.industry || 'Technology',
+        size: this.form.employees || '?',
+        devices: total || 10,
+        status: 'In Progress',
+        secScore: this.liveSecScore,
+        color: '#06B6D4',
+        m365: this.form.m365plan && !this.form.m365plan.includes('Google'),
+        mfa: this.form.mfa === 'Enabled everywhere' || this.form.mfa === 'Enabled on M365',
+        backup: this.form.backup && !['No backup','Not sure'].includes(this.form.backup),
+        edr: this.form.av && !['Windows Defender only','None',''].includes(this.form.av),
+        os: this.form.winVer || 'Windows',
+        data: {
+          'Company': { Industry: this.form.industry, Employees: this.form.employees, Contact: this.form.contact, Email: this.form.email },
+          'Network': { ISP: this.form.isp, Firewall: this.form.firewall, VPN: this.form.vpn, 'Wi-Fi': this.form.wifi },
+          'Software': { 'M365': this.form.m365plan, 'Antivirus': this.form.av, 'LoB Apps': this.form.lob },
+          'Security': { MFA: this.form.mfa, Backup: this.form.backup, Patching: this.form.patches },
+          'Pain Points': { Issues: this.form.pains.join(', '), Priority: this.form.priority }
+        }
+      };
+      this.clients.unshift(entry);
+      this.view = 'success';
+      setTimeout(() => this.confetti(), 200);
+    },
+
+    confetti() {
+      const colors = ['#06B6D4','#22D3EE','#10B981','#6366F1','#F59E0B','#F0ABFC'];
+      const c = document.getElementById('cf-wrap');
+      if (!c) return;
+      for (let i = 0; i < 60; i++) {
+        const p = document.createElement('div');
+        p.className = 'cf';
+        p.style.cssText = `left:${Math.random()*100}vw;top:-20px;background:${colors[~~(Math.random()*colors.length)]};animation-duration:${1.4+Math.random()*2}s;animation-delay:${Math.random()*.9}s;width:${5+Math.random()*8}px;height:${5+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'}`;
+        c.appendChild(p);
+        setTimeout(() => p.remove(), 4500);
+      }
+    },
+
+    openClient(c) { this.selectedClient = c; this.modalOpen = true; },
+
+    exportClient(c) {
+      let t = `CLIENT IT BRIEF — ${c.name}\nIndustry: ${c.industry} | Employees: ${c.size} | Devices: ${c.devices}\nSecurity Score: ${c.secScore}% | Status: ${c.status}\nMFA: ${c.mfa?'✓ Enabled':'✗ Disabled'} | M365: ${c.m365?'✓ Yes':'✗ No'} | EDR: ${c.edr?'✓ Yes':'✗ No'}\n`;
+      if (c.data) {
+        for (const [s, fields] of Object.entries(c.data)) {
+          t += `\n── ${s} ──\n`;
+          for (const [f, v] of Object.entries(fields)) { if (v) t += `  ${f}: ${v}\n`; }
+        }
+      }
+      navigator.clipboard.writeText(t).then(() => alert('Brief copied to clipboard — paste into your PSA/ticketing system.'));
+    }
+  }
+}
+</script>
+</body>
+</html>
