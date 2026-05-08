@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOYS — Centre de contrôle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --brun:#2C2420;--brun-mid:#3D312B;--terra:#C4623A;--terra-dark:#A04E2B;
+  --or:#D4A853;--or-clair:#F0D78C;--or-dark:#B8964E;--creme:#FAF7F2;
+  --blanc:#FFFFFF;--gris:#5C5350;--gris-clair:#8A8280;
+  --green:#5C9E5E;--blue:#3866b7;--red:#c62828;--pink:#E1306C;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,sans-serif;
+  --sidebar-w:224px;--radius:12px;
+  --shadow:0 4px 24px -6px rgba(44,36,32,0.11);
+  --shadow-hover:0 8px 32px -8px rgba(44,36,32,0.18);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--sans);background:var(--creme);color:var(--brun);-webkit-font-smoothing:antialiased;}
+
+/* ── APP SHELL ── */
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--brun);display:flex;flex-direction:column;height:100vh;overflow-y:auto;z-index:10;transition:width .25s var(--ease);}
+.sidebar-brand{padding:26px 22px 20px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.brand-logo{font-family:var(--serif);font-weight:700;font-size:26px;background:linear-gradient(135deg,var(--or),var(--or-clair),var(--or));background-size:300%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 6s linear infinite;display:block;line-height:1;}
+.brand-sub{font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--terra);font-weight:500;margin-top:4px;display:block;}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:300%}}
+.sidebar-nav{flex:1;padding:14px 10px;}
+.nav-section-label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,0.28);font-weight:600;padding:10px 12px 6px;display:block;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background .2s var(--ease),color .2s var(--ease),transform .15s var(--ease);font-size:13px;font-weight:500;color:rgba(255,255,255,0.52);user-select:none;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.92);transform:translateX(2px);}
+.nav-item.active{background:rgba(196,98,58,0.24);color:var(--blanc);}
+.nav-item.active .nav-icon{color:var(--terra);}
+.nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.nav-label{flex:1;}
+.nav-badge{font-size:10px;font-weight:700;background:var(--terra);color:#fff;border-radius:10px;padding:1px 7px;min-width:18px;text-align:center;}
+.sidebar-footer{padding:12px 22px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.26);line-height:1.7;}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.topbar{height:60px;padding:0 28px;background:var(--blanc);border-bottom:1px solid rgba(44,36,32,0.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:16px;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-title{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--brun);}
+.topbar-date{font-size:11px;color:var(--gris-clair);padding:3px 10px;background:var(--creme);border-radius:20px;font-weight:500;}
+.btn-add{display:inline-flex;align-items:center;gap:7px;background:var(--terra);color:var(--blanc);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:background .2s var(--ease),transform .15s var(--ease),box-shadow .2s;font-family:var(--sans);box-shadow:0 2px 8px rgba(196,98,58,0.3);}
+.btn-add:hover{background:var(--terra-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(196,98,58,0.4);}
+.btn-add:active{transform:translateY(0) scale(.97);}
+.btn-add svg{width:13px;height:13px;flex-shrink:0;}
+.content{flex:1;overflow-y:auto;padding:24px 28px;scroll-behavior:smooth;}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-bottom:20px;}
+.kpi-card{background:var(--blanc);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border:1px solid rgba(44,36,32,0.06);position:relative;overflow:hidden;transition:transform .2s var(--ease),box-shadow .2s var(--ease);}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--terra);}
+.kpi-card.kpi-gold::before{background:var(--or);}
+.kpi-card.kpi-brun::before{background:var(--brun);}
+.kpi-card.kpi-green::before{background:var(--green);}
+.kpi-card.kpi-blue::before{background:var(--blue);}
+.kpi-card.kpi-pink::before{background:var(--pink);}
+.kpi-card.kpi-profit::before{background:linear-gradient(90deg,var(--green),#3a7d40);}
+.kpi-label{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gris);font-weight:600;margin-bottom:8px;}
+.kpi-value{font-family:var(--serif);font-size:28px;font-weight:700;color:var(--brun);line-height:1;margin-bottom:5px;}
+.kpi-sub{font-size:11.5px;color:var(--gris-clair);}
+.kpi-trend{position:absolute;top:14px;right:14px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;}
+.kpi-trend.up{background:#e8f5e9;color:#2e7d32;}
+.kpi-trend.down{background:#fce4ec;color:#c62828;}
+
+/* ── SECTION GRIDS ── */
+.section-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+.section-grid.wide{grid-template-columns:2fr 1fr;}
+.section-grid.full{grid-template-columns:1fr;}
+.section-grid.thirds{grid-template-columns:1fr 1fr 1fr;}
+
+/* ── CARDS ── */
+.card{background:var(--blanc);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);border:1px solid rgba(44,36,32,0.06);transition:box-shadow .2s var(--ease);}
+.card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--brun);margin-bottom:2px;}
+.card-sub{font-size:11.5px;color:var(--gris-clair);margin-bottom:14px;}
+.chart-wrap{position:relative;height:200px;}
+.chart-wrap.tall{height:260px;}
+.chart-wrap.sm{height:160px;}
+
+/* ── ACTIONS PRIORITAIRES ── */
+.actions-card{border-left:3px solid var(--terra);}
+.action-list{display:flex;flex-direction:column;gap:8px;}
+.action-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;font-size:13px;transition:background .15s;}
+.action-item:hover{background:var(--creme);}
+.action-item.warn{border-left:3px solid #f59e0b;}
+.action-item.danger{border-left:3px solid var(--red);}
+.action-item.success{border-left:3px solid var(--green);}
+.action-item.info{border-left:3px solid var(--blue);}
+.action-icon{font-size:16px;flex-shrink:0;width:24px;text-align:center;}
+.action-text{flex:1;font-weight:500;color:var(--brun);}
+.action-cta{font-size:11px;font-weight:600;color:var(--terra);padding:3px 10px;border:1px solid rgba(196,98,58,0.3);border-radius:20px;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.action-cta:hover{background:var(--terra);color:#fff;}
+
+/* ── TOP PRODUITS ── */
+.top-list{display:flex;flex-direction:column;gap:6px;}
+.top-item{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:8px;transition:background .15s;}
+.top-item:hover{background:var(--creme);}
+.top-rank{width:24px;height:24px;border-radius:50%;background:var(--creme);font-size:11px;font-weight:700;color:var(--gris);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.top-rank.gold{background:rgba(212,168,83,0.18);color:var(--or-dark);}
+.top-rank.silver{background:rgba(92,83,80,0.10);color:var(--gris);}
+.top-rank.bronze{background:rgba(196,98,58,0.12);color:var(--terra);}
+.top-info{flex:1;min-width:0;}
+.top-name{font-size:13px;font-weight:600;color:var(--brun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.top-meta{font-size:11px;color:var(--gris-clair);}
+.top-value{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--brun);flex-shrink:0;}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap;}
+.data-table th{text-align:left;padding:8px 12px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gris);font-weight:600;border-bottom:1px solid rgba(44,36,32,0.09);background:var(--creme);}
+.data-table td{padding:10px 12px;border-bottom:1px solid rgba(44,36,32,0.05);color:var(--brun);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tbody tr{transition:background .12s;}
+.data-table tbody tr:hover td{background:rgba(250,247,242,0.8);}
+.data-table .amount{font-weight:700;font-family:var(--serif);font-size:13.5px;}
+.data-table .muted{color:var(--gris-clair);font-size:11.5px;}
+.data-table .subline{font-size:11px;color:var(--gris-clair);margin-top:2px;}
+.table-actions{display:flex;gap:5px;}
+.btn-icon{width:27px;height:27px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(44,36,32,0.12);background:none;color:var(--gris);transition:all .18s var(--ease);font-size:11.5px;}
+.btn-icon:hover{border-color:var(--terra);color:var(--terra);background:rgba(196,98,58,0.06);}
+.btn-icon.del:hover{border-color:var(--red);color:var(--red);background:rgba(198,40,40,0.06);}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge-terra{background:rgba(196,98,58,0.12);color:var(--terra);}
+.badge-gold{background:rgba(212,168,83,0.15);color:var(--or-dark);}
+.badge-brun{background:rgba(44,36,32,0.08);color:var(--brun);}
+.badge-green{background:rgba(92,158,94,0.14);color:#3a7d40;}
+.badge-blue{background:rgba(56,102,183,0.11);color:var(--blue);}
+.badge-pink{background:rgba(225,48,108,0.11);color:var(--pink);}
+.badge-grey{background:rgba(92,83,80,0.08);color:var(--gris);}
+.badge-red{background:rgba(198,40,40,0.10);color:var(--red);}
+.pt{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px;}
+.pt-meta{background:#e8ecf7;color:#3b5bdb;}
+.pt-tiktok{background:#f0f0f0;color:#111;}
+.pt-google{background:#fce8e8;color:#d93025;}
+.pt-instagram{background:rgba(225,48,108,0.10);color:var(--pink);}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:1px;background:rgba(44,36,32,0.08);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
+.stat-box{background:var(--blanc);padding:14px 16px;transition:background .15s;}
+.stat-box:hover{background:var(--creme);}
+.stat-num{font-family:var(--serif);font-size:24px;font-weight:700;color:var(--brun);line-height:1;margin-bottom:4px;}
+.stat-lbl{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gris);}
+
+/* ── PROGRESS BAR ── */
+.prog-bar{height:5px;background:rgba(44,36,32,0.08);border-radius:10px;overflow:hidden;margin-top:6px;}
+.prog-fill{height:100%;border-radius:10px;transition:width .6s var(--ease);}
+
+/* ── CONTENU / VIDEO ── */
+.video-kpi{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.video-card{background:var(--blanc);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);border:1px solid rgba(44,36,32,0.06);position:relative;overflow:hidden;transition:transform .2s var(--ease),box-shadow .2s;}
+.video-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.perf-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
+.perf-dot.high{background:var(--green);}
+.perf-dot.mid{background:var(--or);}
+.perf-dot.low{background:var(--terra);}
+
+/* ── PULSE ANIMATION ── */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulse{animation:pulse 2s ease-in-out infinite;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .35s var(--ease) both;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(44,36,32,0.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .2s;}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--blanc);border-radius:16px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 24px 80px -16px rgba(44,36,32,0.32);animation:fadeIn .25s var(--ease);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.modal-title{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--brun);}
+.modal-close{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(44,36,32,0.12);background:none;font-size:15px;color:var(--gris);transition:all .18s;}
+.modal-close:hover{border-color:var(--terra);color:var(--terra);}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid rgba(44,36,32,0.08);}
+.btn-cancel{padding:8px 18px;border-radius:8px;border:1px solid rgba(44,36,32,0.14);background:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--gris);font-family:var(--sans);transition:all .18s;}
+.btn-cancel:hover{border-color:var(--brun);color:var(--brun);}
+.btn-save{padding:8px 22px;border-radius:8px;border:none;background:var(--terra);color:var(--blanc);cursor:pointer;font-size:13px;font-weight:500;font-family:var(--sans);transition:background .18s,transform .15s;box-shadow:0 2px 8px rgba(196,98,58,0.3);}
+.btn-save:hover{background:var(--terra-dark);transform:translateY(-1px);}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.span-2{grid-column:span 2;}
+label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gris);}
+input[type="text"],input[type="email"],input[type="number"],input[type="date"],select,textarea{padding:8px 11px;border:1px solid rgba(44,36,32,0.16);border-radius:7px;font-family:var(--sans);font-size:13px;color:var(--brun);background:var(--blanc);transition:border-color .18s,box-shadow .18s;width:100%;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--terra);box-shadow:0 0 0 3px rgba(196,98,58,0.10);}
+textarea{min-height:64px;resize:vertical;}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:48px 20px;color:var(--gris-clair);}
+.empty-icon{font-size:34px;margin-bottom:10px;opacity:.32;}
+.empty p{font-size:13px;}
+
+/* ── DIVIDER ── */
+.section-label{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gris);font-weight:600;margin-bottom:12px;margin-top:4px;}
+
+/* ── MOBILE ── */
+@media(max-width:960px){
+  .sidebar{width:58px;}
+  .brand-sub,.nav-label,.nav-section-label,.sidebar-footer,.nav-badge{display:none;}
+  .nav-item{justify-content:center;padding:11px 0;}
+  .content{padding:14px 14px 80px;}
+  .topbar{padding:0 14px;height:54px;}
+  .topbar-date{display:none;}
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .section-grid,.section-grid.wide,.section-grid.thirds{grid-template-columns:1fr;gap:12px;}
+  .video-kpi{grid-template-columns:1fr 1fr;gap:10px;}
+  .form-group.span-2{grid-column:span 1;}
+  .form-grid{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:600px){
+  .kpi-grid{grid-template-columns:1fr;}
+  .kpi-value{font-size:24px;}
+  .video-kpi{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .data-table{font-size:12px;}
+  .topbar-title{font-size:17px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-logo">JOYS</span>
+      <span class="brand-sub">Centre de contrôle</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-tab="dashboard" onclick="setTab('dashboard')"><span class="nav-icon">◈</span><span class="nav-label">Dashboard</span></div>
+      <div class="nav-item" data-tab="orders" onclick="setTab('orders')"><span class="nav-icon">🛍</span><span class="nav-label">Commandes</span><span class="nav-badge" id="nb-orders" style="display:none">0</span></div>
+      <div class="nav-item" data-tab="products" onclick="setTab('products')"><span class="nav-icon">📦</span><span class="nav-label">Produits</span><span class="nav-badge" id="nb-stock" style="display:none">0</span></div>
+      <div class="nav-item" data-tab="clients" onclick="setTab('clients')"><span class="nav-icon">👥</span><span class="nav-label">Clients</span></div>
+      <span class="nav-section-label">Marketing</span>
+      <div class="nav-item" data-tab="content" onclick="setTab('content')"><span class="nav-icon">🎬</span><span class="nav-label">Contenu</span></div>
+      <div class="nav-item" data-tab="social" onclick="setTab('social')"><span class="nav-icon">📱</span><span class="nav-label">Réseaux sociaux</span></div>
+      <div class="nav-item" data-tab="ads" onclick="setTab('ads')"><span class="nav-icon">📣</span><span class="nav-label">Publicités</span></div>
+    </nav>
+    <div class="sidebar-footer">JOYS · Menton 06500<br><span style="opacity:.5">local · v2.0</span></div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="page-title">Dashboard</div>
+        <div class="topbar-date" id="topbar-date"></div>
+      </div>
+      <button class="btn-add" id="btn-add" style="display:none" onclick="openAdd()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        <span id="btn-add-label">Ajouter</span>
+      </button>
+    </div>
+    <div class="content" id="main-content"></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Ajouter</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-save" onclick="saveModal()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── UTILS ── */
+function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
+function today(){return new Date().toISOString().slice(0,10);}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmt(n){const x=Number(n);return isNaN(x)?'—':new Intl.NumberFormat('fr-FR').format(x);}
+function fmtEur(n){const x=Number(n);return isNaN(x)?'—':new Intl.NumberFormat('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:0}).format(x)+' €';}
+function fmtDate(d){if(!d)return'—';const p=d.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d;}
+function pct(a,b){return b>0?Math.round(a/b*100):0;}
+
+/* ── SAMPLE DATA ── */
+const SAMPLE={
+  orders:[],
+  products:[],
+  clients:[],
+  content:[],
+  social:[],
+  ads:[]
+};
+
+/* ── STATE ── */
+let state={orders:[],products:[],clients:[],content:[],social:[],ads:[]};
+let activeTab='dashboard',editingId=null;
+const charts={};
+
+const TITLES={dashboard:'Dashboard',orders:'Commandes & CA',products:'Produits',clients:'Clients',content:'Contenu TikTok / IG',social:'Réseaux sociaux',ads:'Publicités'};
+const ADD_LABELS={orders:'Commande',products:'Produit',clients:'Client',content:'Vidéo',social:'Semaine',ads:'Campagne'};
+const SRC_LABEL={instagram:'Instagram',tiktok:'TikTok',etsy:'Etsy',direct:'Direct',ads_meta:'Meta Ads',ads_tiktok:'TikTok Ads',recommandation:'Bouche à oreille'};
+const SRC_BADGE={instagram:'badge-pink',tiktok:'badge-brun',etsy:'badge-terra',direct:'badge-green',ads_meta:'badge-blue',ads_tiktok:'badge-grey',recommandation:'badge-grey'};
+const STATUS_LABEL={pending:'En attente',printing:'En impression',shipped:'Expédié',delivered:'Livré'};
+const STATUS_BADGE={pending:'badge-grey',printing:'badge-gold',shipped:'badge-blue',delivered:'badge-green'};
+const CAT_LABEL={lampes:'Lampes',moules:'Moules','porte-cles':'Porte-clés',figurines:'Figurines',trophees:'Trophées',gaming:'Gaming',autre:'Autre'};
+const PLAT_TAG={meta:'<span class="pt pt-meta">Meta</span>',tiktok:'<span class="pt pt-tiktok">TikTok</span>',google:'<span class="pt pt-google">Google</span>',instagram:'<span class="pt pt-instagram">Instagram</span>'};
+const AD_STATUS={active:['badge-green','Actif'],paused:['badge-gold','Pausé'],ended:['badge-grey','Terminé']};
+const PLAT_CONTENT={tiktok:'<span class="pt pt-tiktok">🎵 TikTok</span>',instagram:'<span class="pt pt-instagram">📸 Instagram</span>'};
+
+function srcBadge(s){return`<span class="badge ${SRC_BADGE[s]||'badge-grey'}">${esc(SRC_LABEL[s]||s)}</span>`;}
+
+/* ── PERSIST ── */
+function loadState(){
+  try{
+    const r=localStorage.getItem('joys_perso_v1');
+    state=r?JSON.parse(r):JSON.parse(JSON.stringify(SAMPLE));
+    ['orders','products','clients','content','social','ads'].forEach(k=>{if(!state[k])state[k]=[];});
+    if(!r)saveState();
+  }catch(e){state=JSON.parse(JSON.stringify(SAMPLE));}
+}
+function saveState(){localStorage.setItem('joys_perso_v1',JSON.stringify(state));}
+
+/* ── CALCULATIONS ── */
+function caInDays(d){const c=new Date();c.setDate(c.getDate()-d);return state.orders.filter(o=>new Date(o.date)>=c).reduce((s,o)=>s+Number(o.amount||0),0);}
+function monthlyCAData(n){return Array.from({length:n},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-(n-1-i));const k=d.toISOString().slice(0,7);return state.orders.filter(o=>o.date.slice(0,7)===k).reduce((s,o)=>s+Number(o.amount||0),0);});}
+function monthLabels(n){return Array.from({length:n},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-(n-1-i));return d.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'});});}
+
+function calcOrderProfit(o){
+  const p=state.products.find(x=>x.name===o.product);
+  const cost=p?Number(p.materialCost||0):0;
+  return Number(o.amount||0)-cost;
+}
+function totalProfit(){return state.orders.reduce((s,o)=>s+calcOrderProfit(o),0);}
+function totalCA(){return state.orders.reduce((s,o)=>s+Number(o.amount||0),0);}
+function marginPct(){const ca=totalCA();return ca>0?Math.round(totalProfit()/ca*100):0;}
+
+function topProductsBySales(){
+  const cnt={},rev={};
+  state.orders.forEach(o=>{cnt[o.product]=(cnt[o.product]||0)+1;rev[o.product]=(rev[o.product]||0)+Number(o.amount||0);});
+  return Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([name,count])=>({name,count,revenue:rev[name]||0}));
+}
+function topProductsByMargin(){
+  return state.products.map(p=>{
+    const sp=Number(p.sellingPrice||0);const mc=Number(p.materialCost||0);
+    const m=sp>0?Math.round((sp-mc)/sp*100):0;
+    return{name:p.name,margin:m,sellingPrice:sp};
+  }).sort((a,b)=>b.margin-a.margin);
+}
+function bestContent(){
+  return [...state.content].sort((a,b)=>Number(b.views||0)-Number(a.views||0))[0]||null;
+}
+function bestAdROAS(){
+  const ads=state.ads.filter(a=>Number(a.spend||0)>0);
+  return ads.sort((a,b)=>(Number(b.revenue)/Number(b.spend))-(Number(a.revenue)/Number(a.spend)))[0]||null;
+}
+
+/* ── ACTIONS GENERATOR ── */
+function generateActions(){
+  const actions=[];
+  // Stock faible
+  state.products.filter(p=>Number(p.stock||0)<3&&Number(p.stock||0)>=0).forEach(p=>{
+    actions.push({type:Number(p.stock)===0?'danger':'warn',icon:'⚠',text:`Stock ${Number(p.stock)===0?'épuisé':'faible'} — ${p.name} (${p.stock||0} restant${(p.stock||0)>1?'s':''})`,cta:'Gérer',tab:'products'});
+  });
+  // Commandes en attente
+  const pend=state.orders.filter(o=>o.status==='pending');
+  if(pend.length>0)actions.push({type:'info',icon:'📦',text:`${pend.length} commande${pend.length>1?'s':''} en attente de traitement`,cta:'Voir',tab:'orders'});
+  // Campagnes actives sous-performantes
+  state.ads.filter(a=>a.status==='active').forEach(a=>{
+    const roas=Number(a.spend||0)>0?Number(a.revenue||0)/Number(a.spend||0):0;
+    if(roas<2&&Number(a.spend||0)>0)actions.push({type:'danger',icon:'📉',text:`Campagne "${a.name}" — ROAS faible (${roas.toFixed(1)}×)`,cta:'Analyser',tab:'ads'});
+    else if(roas>=3)actions.push({type:'success',icon:'🔥',text:`Campagne "${a.name}" performe (ROAS ${roas.toFixed(1)}×)`,cta:'Voir',tab:'ads'});
+  });
+  // Meilleur contenu
+  const bc=bestContent();
+  if(bc)actions.push({type:'success',icon:'🎬',text:`Vidéo virale — "${bc.title}" (${fmt(bc.views)} vues, ${bc.ordersGenerated} ventes)`,cta:'Analyser',tab:'content'});
+  // Produits sans vente
+  const soldNames=new Set(state.orders.map(o=>o.product));
+  state.products.filter(p=>!soldNames.has(p.name)).forEach(p=>{
+    actions.push({type:'warn',icon:'💡',text:`"${p.name}" — aucune vente enregistrée`,cta:'',tab:''});
+  });
+  if(actions.length===0)actions.push({type:'success',icon:'✅',text:'Tout roule — aucune alerte active',cta:'',tab:''});
+  return actions.slice(0,6);
+}
+
+/* ── NAVBAR BADGES ── */
+function updateBadges(){
+  const pend=state.orders.filter(o=>o.status==='pending'||o.status==='printing').length;
+  const nb=document.getElementById('nb-orders');
+  if(nb){nb.textContent=pend;nb.style.display=pend>0?'':'none';}
+  const low=state.products.filter(p=>Number(p.stock||0)<3).length;
+  const ns=document.getElementById('nb-stock');
+  if(ns){ns.textContent=low;ns.style.display=low>0?'':'none';}
+}
+
+/* ── DATE DISPLAY ── */
+function updateDate(){
+  const el=document.getElementById('topbar-date');
+  if(el)el.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+}
+
+/* ── TAB ROUTING ── */
+function setTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.tab===tab));
+  document.getElementById('page-title').textContent=TITLES[tab];
+  const b=document.getElementById('btn-add');
+  if(tab==='dashboard'){b.style.display='none';}
+  else{b.style.display='';document.getElementById('btn-add-label').textContent=ADD_LABELS[tab]||'Ajouter';}
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
+  Object.keys(charts).forEach(k=>delete charts[k]);
+  renderTab();
+  updateBadges();
+}
+function renderTab(){
+  const el=document.getElementById('main-content');
+  const r={dashboard:renderDashboard,orders:renderOrders,products:renderProducts,clients:renderClients,content:renderContent,social:renderSocial,ads:renderAds};
+  el.innerHTML=(r[activeTab]||(() =>''))();
+  el.querySelectorAll('.card,.kpi-card,.stat-box').forEach((c,i)=>{c.style.animationDelay=`${i*0.03}s`;c.classList.add('fade-in');});
+  setTimeout(initCharts,40);
+}
+function emptyState(icon,msg){return`<div class="empty"><div class="empty-icon">${icon}</div><p>${msg}</p></div>`;}
+
+/* ── RENDER DASHBOARD ── */
+function renderDashboard(){
+  const ca=totalCA(),pr=totalProfit(),mg=marginPct();
+  const ca30=caInDays(30),ca7=caInDays(7);
+  const o30=state.orders.filter(o=>{const c=new Date();c.setDate(c.getDate()-30);return new Date(o.date)>=c;}).length;
+  const pending=state.orders.filter(o=>o.status!=='delivered').length;
+  const lIG=[...state.social].filter(s=>s.platform==='instagram').sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const lTT=[...state.social].filter(s=>s.platform==='tiktok').sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const followers=(lIG?.followers||0)+(lTT?.followers||0);
+  const adSpend=state.ads.reduce((s,a)=>s+Number(a.spend||0),0);
+  const adRev=state.ads.reduce((s,a)=>s+Number(a.revenue||0),0);
+  const roas=adSpend>0?(adRev/adSpend).toFixed(2):'—';
+  const recent=[...state.orders].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
+  const actions=generateActions();
+  const topsales=topProductsBySales().slice(0,5);
+  const topmarg=topProductsByMargin().slice(0,5);
+
+  const topSalesHTML=topsales.length?topsales.map((p,i)=>{
+    const rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    return`<div class="top-item"><div class="top-rank ${rankClass}">${i+1}</div><div class="top-info"><div class="top-name">${esc(p.name)}</div><div class="top-meta">${p.count} vente${p.count>1?'s':''}</div></div><div class="top-value">${fmtEur(p.revenue)}</div></div>`;
+  }).join(''):emptyState('📦','Aucune vente');
+
+  const topMargHTML=topmarg.length?topmarg.map((p,i)=>{
+    const rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const colorClass=p.margin>=70?'badge-green':p.margin>=50?'badge-gold':'badge-terra';
+    return`<div class="top-item"><div class="top-rank ${rankClass}">${i+1}</div><div class="top-info"><div class="top-name">${esc(p.name)}</div><div class="top-meta">Prix vente ${fmtEur(p.sellingPrice)}</div></div><span class="badge ${colorClass}">${p.margin}%</span></div>`;
+  }).join(''):emptyState('📦','Aucun produit');
+
+  const actionsHTML=actions.map(a=>`
+    <div class="action-item ${a.type}">
+      <div class="action-icon">${a.icon}</div>
+      <div class="action-text">${esc(a.text)}</div>
+      ${a.cta&&a.tab?`<div class="action-cta" onclick="setTab('${a.tab}')">${esc(a.cta)}</div>`:''}
+    </div>`).join('');
+
+  return`
+  <div class="kpi-grid">
+    <div class="kpi-card"><span class="kpi-trend up">+12%</span><div class="kpi-label">CA total</div><div class="kpi-value">${fmtEur(ca)}</div><div class="kpi-sub">${fmtEur(ca30)} ce mois · ${fmtEur(ca7)} cette semaine</div></div>
+    <div class="kpi-card kpi-profit"><div class="kpi-label">Profit net</div><div class="kpi-value" style="color:${pr>0?'#3a7d40':'var(--red)'}">${fmtEur(pr)}</div><div class="kpi-sub">Marge globale ${mg}%</div></div>
+    <div class="kpi-card kpi-gold"><div class="kpi-label">Commandes</div><div class="kpi-value">${state.orders.length}</div><div class="kpi-sub">${o30} ce mois · <span style="color:var(--terra);font-weight:600">${pending} en cours</span></div></div>
+    <div class="kpi-card kpi-brun"><div class="kpi-label">Clients</div><div class="kpi-value">${state.clients.length}</div><div class="kpi-sub">Panier moyen ${state.orders.length?fmtEur(ca/state.orders.length):'—'}</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">ROAS global</div><div class="kpi-value">${roas}×</div><div class="kpi-sub">${fmtEur(adRev)} CA / ${fmtEur(adSpend)} dépensés</div></div>
+    <div class="kpi-card kpi-blue"><div class="kpi-label">Abonnés totaux</div><div class="kpi-value">${fmt(followers)}</div><div class="kpi-sub">IG ${fmt(lIG?.followers||0)} · TT ${fmt(lTT?.followers||0)}</div></div>
+    <div class="kpi-card kpi-pink"><div class="kpi-label">Vues contenu</div><div class="kpi-value">${fmt(state.content.reduce((s,c)=>s+Number(c.views||0),0))}</div><div class="kpi-sub">${state.content.reduce((s,c)=>s+Number(c.ordersGenerated||0),0)} ventes générées</div></div>
+  </div>
+
+  <div class="section-grid full">
+    <div class="card actions-card">
+      <div class="card-title">⚡ Actions prioritaires</div>
+      <div class="card-sub">Ce que tu dois faire maintenant</div>
+      <div class="action-list">${actionsHTML}</div>
+    </div>
+  </div>
+
+  <div class="section-grid wide">
+    <div class="card"><div class="card-title">CA mensuel</div><div class="card-sub">7 derniers mois</div><div class="chart-wrap tall"><canvas id="ch-ca"></canvas></div></div>
+    <div class="card"><div class="card-title">CA par canal</div><div class="card-sub">Répartition des sources</div><div class="chart-wrap tall"><canvas id="ch-sources"></canvas></div></div>
+  </div>
+
+  <div class="section-grid">
+    <div class="card"><div class="card-title">🏆 Top ventes</div><div class="card-sub">Par chiffre d'affaires</div><div class="top-list">${topSalesHTML}</div></div>
+    <div class="card"><div class="card-title">💰 Top marge</div><div class="card-sub">Produits les plus rentables</div><div class="top-list">${topMargHTML}</div></div>
+  </div>
+
+  <div class="section-grid wide">
+    <div class="card"><div class="card-title">Commandes récentes</div><div class="card-sub">6 dernières</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Client</th><th>Produit</th><th>Source</th><th>Statut</th><th>Profit</th><th>Montant</th></tr></thead><tbody>${recent.length?recent.map(o=>{const prof=calcOrderProfit(o);return`<tr><td class="muted">${fmtDate(o.date)}</td><td>${esc(o.clientName)}</td><td>${esc(o.product)}</td><td>${srcBadge(o.source)}</td><td><span class="badge ${STATUS_BADGE[o.status]||'badge-grey'}">${STATUS_LABEL[o.status]||o.status}</span></td><td style="color:${prof>=0?'#3a7d40':'var(--red)'}; font-weight:600">${fmtEur(prof)}</td><td class="amount">${fmtEur(o.amount)}</td></tr>`;}).join(''):'<tr><td colspan="7" class="muted" style="text-align:center;padding:24px">Aucune commande</td></tr>'}</tbody></table></div></div>
+    <div class="card"><div class="card-title">Croissance abonnés</div><div class="card-sub">Instagram & TikTok</div><div class="chart-wrap tall"><canvas id="ch-follow-dash"></canvas></div></div>
+  </div>`;
+}
+
+/* ── RENDER ORDERS ── */
+function renderOrders(){
+  const s=[...state.orders].sort((a,b)=>b.date.localeCompare(a.date));
+  const tot=s.reduce((x,o)=>x+Number(o.amount||0),0);
+  const pr=s.reduce((x,o)=>x+calcOrderProfit(o),0);
+  const avg=s.length?tot/s.length:0;
+  const pend=s.filter(o=>o.status!=='delivered').length;
+  return`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${fmtEur(tot)}</div><div class="stat-lbl">CA total</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#3a7d40">${fmtEur(pr)}</div><div class="stat-lbl">Profit net</div></div>
+    <div class="stat-box"><div class="stat-num">${fmtEur(caInDays(30))}</div><div class="stat-lbl">Ce mois</div></div>
+    <div class="stat-box"><div class="stat-num">${s.length}</div><div class="stat-lbl">Commandes</div></div>
+    <div class="stat-box"><div class="stat-num">${fmtEur(avg)}</div><div class="stat-lbl">Panier moyen</div></div>
+    <div class="stat-box"><div class="stat-num" style="${pend>0?'color:var(--terra)':''}">${pend}</div><div class="stat-lbl">En cours</div></div>
+  </div>
+  <div class="section-grid full" style="margin-bottom:18px"><div class="card"><div class="card-title">CA mensuel</div><div class="chart-wrap"><canvas id="ch-ca-orders"></canvas></div></div></div>
+  <div class="card"><div class="card-title">Toutes les commandes</div><div class="card-sub">${s.length} enregistrées</div>${s.length===0?emptyState('🛍','Aucune commande.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Client</th><th>Produit</th><th>Source</th><th>Statut</th><th>Profit</th><th>Montant</th><th></th></tr></thead><tbody>${s.map(o=>{const pr=calcOrderProfit(o);return`<tr><td class="muted">${fmtDate(o.date)}</td><td>${esc(o.clientName)}</td><td>${esc(o.product)}</td><td>${srcBadge(o.source)}</td><td><span class="badge ${STATUS_BADGE[o.status]||'badge-grey'}">${STATUS_LABEL[o.status]||o.status}</span></td><td style="color:${pr>=0?'#3a7d40':'var(--red)'}; font-weight:600">${fmtEur(pr)}</td><td class="amount">${fmtEur(o.amount)}</td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('orders','${o.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('orders','${o.id}')">✕</button></div></td></tr>`;}).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── RENDER PRODUCTS ── */
+function renderProducts(){
+  const ps=state.products;
+  const avgM=ps.length?ps.reduce((s,p)=>s+(Number(p.sellingPrice||0)>0?(Number(p.sellingPrice||0)-Number(p.materialCost||0))/Number(p.sellingPrice||0)*100:0),0)/ps.length:0;
+  const low=ps.filter(p=>Number(p.stock||0)<3).length;
+  const soldMap={};state.orders.forEach(o=>soldMap[o.product]=(soldMap[o.product]||0)+1);
+  return`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${ps.length}</div><div class="stat-lbl">Produits</div></div>
+    <div class="stat-box"><div class="stat-num">${ps.reduce((s,p)=>s+Number(p.stock||0),0)}</div><div class="stat-lbl">Stock total</div></div>
+    <div class="stat-box"><div class="stat-num">${Math.round(avgM)}%</div><div class="stat-lbl">Marge moyenne</div></div>
+    <div class="stat-box"><div class="stat-num" style="${low>0?'color:var(--terra)':''}">${low}</div><div class="stat-lbl">Stock bas</div></div>
+  </div>
+  <div class="card"><div class="card-title">Catalogue produits</div><div class="card-sub">${ps.length} produits</div>${ps.length===0?emptyState('📦','Aucun produit.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Produit</th><th>Catégorie</th><th>Stock</th><th>Impression</th><th>Coût mat.</th><th>Prix vente</th><th>Marge</th><th>Ventes</th><th></th></tr></thead><tbody>${ps.map(p=>{const m=Number(p.sellingPrice||0)>0?Math.round((Number(p.sellingPrice||0)-Number(p.materialCost||0))/Number(p.sellingPrice||0)*100):0;const lw=Number(p.stock||0)<3;const sold=soldMap[p.name]||0;return`<tr><td><strong>${esc(p.name)}</strong></td><td><span class="badge badge-grey">${CAT_LABEL[p.category]||p.category}</span></td><td style="${lw?'color:var(--terra);font-weight:700':''}">${p.stock||0}${lw?' ⚠':''}</td><td class="muted">${p.printTimeH}h</td><td class="muted">${fmtEur(p.materialCost)}</td><td class="amount">${fmtEur(p.sellingPrice)}</td><td><span class="badge ${m>=70?'badge-green':m>=50?'badge-gold':'badge-terra'}">${m}%</span></td><td>${sold>0?`<strong>${sold}</strong>`:`<span class="muted">0</span>`}</td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('products','${p.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('products','${p.id}')">✕</button></div></td></tr>`;}).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── RENDER CLIENTS ── */
+function renderClients(){
+  const cs=[...state.clients].sort((a,b)=>(b.firstOrder||'').localeCompare(a.firstOrder||''));
+  const cCA={},cO={};
+  state.orders.forEach(o=>{cCA[o.clientName]=(cCA[o.clientName]||0)+Number(o.amount||0);cO[o.clientName]=(cO[o.clientName]||0)+1;});
+  const srcs={};cs.forEach(c=>{srcs[c.source]=(srcs[c.source]||0)+1;});
+  const top=Object.entries(srcs).sort((a,b)=>b[1]-a[1])[0];
+  const n30=cs.filter(c=>{const d=new Date(c.firstOrder||0);const x=new Date();x.setDate(x.getDate()-30);return d>=x;}).length;
+  return`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${cs.length}</div><div class="stat-lbl">Clients</div></div>
+    <div class="stat-box"><div class="stat-num">${n30}</div><div class="stat-lbl">Nouveaux ce mois</div></div>
+    <div class="stat-box"><div class="stat-num">${top?(SRC_LABEL[top[0]]||top[0]):'—'}</div><div class="stat-lbl">1ère source</div></div>
+    <div class="stat-box"><div class="stat-num">${fmtEur(Object.values(cCA).reduce((s,v)=>s+v,0)/Math.max(cs.length,1))}</div><div class="stat-lbl">LTV moyenne</div></div>
+  </div>
+  <div class="card"><div class="card-title">Base clients</div><div class="card-sub">${cs.length} clients</div>${cs.length===0?emptyState('👥','Aucun client.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Ville</th><th>Source</th><th>1ère commande</th><th>Commandes</th><th>CA total</th><th></th></tr></thead><tbody>${cs.map(c=>`<tr><td><strong>${esc(c.name)}</strong>${c.email?`<div class="subline">${esc(c.email)}</div>`:''}</td><td class="muted">${esc(c.city)||'—'}</td><td>${srcBadge(c.source)}</td><td class="muted">${fmtDate(c.firstOrder)}</td><td>${cO[c.name]||0}</td><td class="amount">${fmtEur(cCA[c.name]||0)}</td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('clients','${c.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('clients','${c.id}')">✕</button></div></td></tr>`).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── RENDER CONTENT ── */
+function renderContent(){
+  const ct=[...state.content].sort((a,b)=>b.date.localeCompare(a.date));
+  const totalViews=ct.reduce((s,c)=>s+Number(c.views||0),0);
+  const totalOrders=ct.reduce((s,c)=>s+Number(c.ordersGenerated||0),0);
+  const totalRev=ct.reduce((s,c)=>s+Number(c.revenue||0),0);
+  const avgWatch=ct.length?Math.round(ct.reduce((s,c)=>s+Number(c.watchTimePct||0),0)/ct.length):0;
+  const best=[...ct].sort((a,b)=>Number(b.views||0)-Number(a.views||0))[0];
+  const convRate=totalViews>0?((totalOrders/totalViews)*100).toFixed(3):'—';
+
+  return`<div class="video-kpi">
+    <div class="video-card"><div class="kpi-label">Vues totales</div><div class="kpi-value">${fmt(totalViews)}</div><div class="kpi-sub">${ct.length} vidéos</div></div>
+    <div class="video-card" style="border-top:3px solid var(--green)"><div class="kpi-label">CA généré contenu</div><div class="kpi-value" style="color:#3a7d40">${fmtEur(totalRev)}</div><div class="kpi-sub">${totalOrders} commandes</div></div>
+    <div class="video-card" style="border-top:3px solid var(--or)"><div class="kpi-label">Watch time moyen</div><div class="kpi-value">${avgWatch}%</div><div class="kpi-sub">Taux conversion ${convRate}%</div></div>
+    <div class="video-card" style="border-top:3px solid var(--pink)"><div class="kpi-label">Meilleure vidéo</div><div class="kpi-value" style="font-size:16px;line-height:1.3">${best?esc(best.title.length>22?best.title.slice(0,22)+'…':best.title):'—'}</div><div class="kpi-sub">${best?fmt(best.views)+' vues':'Aucune vidéo'}</div></div>
+  </div>
+  <div class="section-grid wide">
+    <div class="card"><div class="card-title">Vues par vidéo</div><div class="card-sub">Performance du contenu</div><div class="chart-wrap tall"><canvas id="ch-content-views"></canvas></div></div>
+    <div class="card"><div class="card-title">CA généré par vidéo</div><div class="card-sub">Revenus attribuables</div><div class="chart-wrap tall"><canvas id="ch-content-rev"></canvas></div></div>
+  </div>
+  <div class="card"><div class="card-title">Toutes les vidéos</div><div class="card-sub">${ct.length} contenus</div>${ct.length===0?emptyState('🎬','Aucune vidéo.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Titre</th><th>Plateforme</th><th>Vues</th><th>Watch %</th><th>Likes</th><th>Partages</th><th>Clics site</th><th>Commandes</th><th>CA</th><th>Perf.</th><th></th></tr></thead><tbody>${ct.map(c=>{const perf=Number(c.views||0)>50000?'high':Number(c.views||0)>20000?'mid':'low';const perfLabel=perf==='high'?'Viral':perf==='mid'?'Bon':'Faible';return`<tr><td class="muted">${fmtDate(c.date)}</td><td><strong>${esc(c.title)}</strong></td><td>${PLAT_CONTENT[c.platform]||c.platform}</td><td><strong>${fmt(c.views)}</strong></td><td><span class="badge ${Number(c.watchTimePct||0)>=50?'badge-green':Number(c.watchTimePct||0)>=35?'badge-gold':'badge-grey'}">${c.watchTimePct}%</span></td><td>${fmt(c.likes)}</td><td>${fmt(c.shares)}</td><td>${fmt(c.siteClicks)}</td><td><strong>${c.ordersGenerated||0}</strong></td><td class="amount">${fmtEur(c.revenue)}</td><td><span class="perf-dot ${perf}"></span>${perfLabel}</td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('content','${c.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('content','${c.id}')">✕</button></div></td></tr>`;}).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── RENDER SOCIAL ── */
+function renderSocial(){
+  const ig=[...state.social].filter(s=>s.platform==='instagram').sort((a,b)=>b.date.localeCompare(a.date));
+  const tt=[...state.social].filter(s=>s.platform==='tiktok').sort((a,b)=>b.date.localeCompare(a.date));
+  const lI=ig[0],lT=tt[0];
+  const all=[...state.social].sort((a,b)=>b.date.localeCompare(a.date));
+  return`<div class="kpi-grid">
+    <div class="kpi-card" style="position:relative"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:#E1306C"></div><div class="kpi-label">Instagram · Abonnés</div><div class="kpi-value">${fmt(lI?.followers||0)}</div><div class="kpi-sub">Engagement ${lI?.engagement||0}% · Reach ${fmt(lI?.reach||0)}</div></div>
+    <div class="kpi-card" style="position:relative"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:#111"></div><div class="kpi-label">TikTok · Abonnés</div><div class="kpi-value">${fmt(lT?.followers||0)}</div><div class="kpi-sub">Engagement ${lT?.engagement||0}% · Reach ${fmt(lT?.reach||0)}</div></div>
+    <div class="kpi-card kpi-gold"><div class="kpi-label">Reach total semaine</div><div class="kpi-value">${fmt((lI?.reach||0)+(lT?.reach||0))}</div><div class="kpi-sub">Impressions ${fmt((lI?.impressions||0)+(lT?.impressions||0))}</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">Posts cette semaine</div><div class="kpi-value">${(lI?.posts||0)+(lT?.posts||0)}</div><div class="kpi-sub">IG ${lI?.posts||0} · TikTok ${lT?.posts||0}</div></div>
+  </div>
+  <div class="section-grid">
+    <div class="card"><div class="card-title">Croissance abonnés</div><div class="card-sub">Instagram & TikTok</div><div class="chart-wrap tall"><canvas id="ch-soc-follow"></canvas></div></div>
+    <div class="card"><div class="card-title">Taux d'engagement</div><div class="card-sub">% par semaine</div><div class="chart-wrap tall"><canvas id="ch-soc-engage"></canvas></div></div>
+  </div>
+  <div class="card"><div class="card-title">Historique semaines</div><div class="card-sub">${all.length} entrées</div>${all.length===0?emptyState('📱','Aucune donnée.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Semaine</th><th>Plateforme</th><th>Abonnés</th><th>Reach</th><th>Impressions</th><th>Engagement</th><th>Posts</th><th>Visites profil</th><th></th></tr></thead><tbody>${all.map(s=>`<tr><td class="muted">${fmtDate(s.date)}</td><td>${PLAT_TAG[s.platform]||s.platform}</td><td><strong>${fmt(s.followers)}</strong></td><td>${fmt(s.reach)}</td><td>${fmt(s.impressions)}</td><td><span class="badge ${Number(s.engagement)>=5?'badge-green':'badge-gold'}">${s.engagement}%</span></td><td>${s.posts||0}</td><td class="muted">${fmt(s.profileVisits||0)}</td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('social','${s.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('social','${s.id}')">✕</button></div></td></tr>`).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── RENDER ADS ── */
+function renderAds(){
+  const ads=[...state.ads].sort((a,b)=>b.startDate.localeCompare(a.startDate));
+  const tSpend=ads.reduce((s,a)=>s+Number(a.spend||0),0);
+  const tRev=ads.reduce((s,a)=>s+Number(a.revenue||0),0);
+  const tConv=ads.reduce((s,a)=>s+Number(a.conversions||0),0);
+  const tClicks=ads.reduce((s,a)=>s+Number(a.clicks||0),0);
+  const tImpr=ads.reduce((s,a)=>s+Number(a.impressions||0),0);
+  const roas=tSpend>0?(tRev/tSpend).toFixed(2):'—';
+  const cpc=tClicks>0?(tSpend/tClicks).toFixed(2):'—';
+  const ctr=tImpr>0?((tClicks/tImpr)*100).toFixed(2):'—';
+  const cpa=tConv>0?(tSpend/tConv).toFixed(2):'—';
+  return`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${fmtEur(tSpend)}</div><div class="stat-lbl">Total dépensé</div></div>
+    <div class="stat-box"><div class="stat-num">${fmtEur(tRev)}</div><div class="stat-lbl">CA généré</div></div>
+    <div class="stat-box"><div class="stat-num">${roas}×</div><div class="stat-lbl">ROAS global</div></div>
+    <div class="stat-box"><div class="stat-num">${tConv}</div><div class="stat-lbl">Conversions</div></div>
+    <div class="stat-box"><div class="stat-num">${cpc} €</div><div class="stat-lbl">CPC moyen</div></div>
+    <div class="stat-box"><div class="stat-num">${ctr}%</div><div class="stat-lbl">CTR moyen</div></div>
+    <div class="stat-box"><div class="stat-num">${cpa} €</div><div class="stat-lbl">CPA moyen</div></div>
+  </div>
+  <div class="section-grid">
+    <div class="card"><div class="card-title">ROAS par campagne</div><div class="card-sub">Retour sur investissement pub</div><div class="chart-wrap"><canvas id="ch-ads-roas"></canvas></div></div>
+    <div class="card"><div class="card-title">Budget vs CA généré</div><div class="card-sub">Par campagne</div><div class="chart-wrap"><canvas id="ch-ads-spend"></canvas></div></div>
+  </div>
+  <div class="card"><div class="card-title">Campagnes publicitaires</div><div class="card-sub">${ads.length} campagnes</div>${ads.length===0?emptyState('📣','Aucune campagne.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Campagne</th><th>Plateforme</th><th>Période</th><th>Dépensé</th><th>Impressions</th><th>Clics</th><th>CTR</th><th>Conv.</th><th>CA généré</th><th>ROAS</th><th>Statut</th><th></th></tr></thead><tbody>${ads.map(a=>{const aCtr=Number(a.impressions||0)>0?((Number(a.clicks||0)/Number(a.impressions||0))*100).toFixed(2):'0.00';const aR=Number(a.spend||0)>0?(Number(a.revenue||0)/Number(a.spend||0)).toFixed(2):'—';const[sb,sl]=AD_STATUS[a.status]||['badge-grey',a.status];return`<tr><td><strong>${esc(a.name)}</strong></td><td>${PLAT_TAG[a.platform]||a.platform}</td><td class="muted">${fmtDate(a.startDate)} → ${fmtDate(a.endDate)}</td><td class="amount">${fmtEur(a.spend)}</td><td>${fmt(a.impressions)}</td><td>${fmt(a.clicks)}</td><td class="muted">${aCtr}%</td><td>${fmt(a.conversions)}</td><td class="amount">${fmtEur(a.revenue)}</td><td><span class="badge ${Number(aR)>=3?'badge-green':Number(aR)>=2?'badge-gold':'badge-terra'}">${aR}×</span></td><td><span class="badge ${sb}">${sl}</span></td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('ads','${a.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('ads','${a.id}')">✕</button></div></td></tr>`;}).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── CHARTS ── */
+const C={terra:'#C4623A',or:'#D4A853',green:'#5C9E5E',blue:'#3866b7',pink:'#E1306C',
+  terraFade:'rgba(196,98,58,0.13)',grid:'rgba(44,36,32,0.07)'};
+Chart.defaults.font.family="'Inter',system-ui,sans-serif";
+Chart.defaults.font.size=11;
+Chart.defaults.color='#8A8280';
+Chart.defaults.animation={duration:600,easing:'easeOutQuart'};
+
+function mkChart(id,cfg){const el=document.getElementById(id);if(!el)return;if(charts[id])charts[id].destroy();charts[id]=new Chart(el,cfg);}
+function socialDates(a,b){return[...new Set([...a,...b].map(s=>s.date))].sort();}
+
+function initCharts(){
+  const n=7,cd=monthlyCAData(n),cl=monthLabels(n);
+  const barCfg=id=>mkChart(id,{type:'bar',data:{labels:cl,datasets:[{label:'CA (€)',data:cd,backgroundColor:C.terraFade,borderColor:C.terra,borderWidth:2,borderRadius:7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:C.grid},ticks:{callback:v=>v+'€'}},x:{grid:{display:false}}}}});
+
+  if(activeTab==='dashboard'){
+    barCfg('ch-ca');
+    const sd={};state.orders.forEach(o=>{sd[o.source]=(sd[o.source]||0)+Number(o.amount||0);});
+    const SRC_LABEL_LOCAL={instagram:'Instagram',tiktok:'TikTok',etsy:'Etsy',direct:'Direct',ads_meta:'Meta Ads',ads_tiktok:'TikTok Ads',recommandation:'Bouche à oreille'};
+    mkChart('ch-sources',{type:'doughnut',data:{labels:Object.keys(sd).map(s=>SRC_LABEL_LOCAL[s]||s),datasets:[{data:Object.values(sd),backgroundColor:['#C4623A','#D4A853','#2C2420','#8A8280','#3866b7','#5C9E5E','#E1306C'],borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'right',labels:{boxWidth:10,padding:12}}}}});
+    const ig=[...state.social].filter(s=>s.platform==='instagram').sort((a,b)=>a.date.localeCompare(b.date)).slice(-6);
+    const tt=[...state.social].filter(s=>s.platform==='tiktok').sort((a,b)=>a.date.localeCompare(b.date)).slice(-6);
+    const dates=socialDates(ig,tt);
+    mkChart('ch-follow-dash',{type:'line',data:{labels:dates.map(fmtDate),datasets:[{label:'Instagram',data:dates.map(d=>ig.find(s=>s.date===d)?.followers??null),borderColor:C.pink,backgroundColor:'rgba(225,48,108,0.07)',borderWidth:2,tension:0.4,fill:true,pointRadius:3},{label:'TikTok',data:dates.map(d=>tt.find(s=>s.date===d)?.followers??null),borderColor:'#111',backgroundColor:'rgba(0,0,0,0.05)',borderWidth:2,tension:0.4,fill:true,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{y:{grid:{color:C.grid}},x:{grid:{display:false}}}}});
+  }
+  if(activeTab==='orders')barCfg('ch-ca-orders');
+  if(activeTab==='content'){
+    const ct=[...state.content].sort((a,b)=>Number(b.views||0)-Number(a.views||0)).slice(0,8);
+    const names=ct.map(c=>c.title.length>18?c.title.slice(0,18)+'…':c.title);
+    const views=ct.map(c=>Number(c.views||0));
+    const revs=ct.map(c=>Number(c.revenue||0));
+    mkChart('ch-content-views',{type:'bar',data:{labels:names,datasets:[{label:'Vues',data:views,backgroundColor:views.map(v=>v>50000?'rgba(225,48,108,0.7)':v>20000?'rgba(212,168,83,0.7)':'rgba(196,98,58,0.5)'),borderRadius:6,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:C.grid},ticks:{callback:v=>fmt(v)}},y:{grid:{display:false}}}}});
+    mkChart('ch-content-rev',{type:'bar',data:{labels:names,datasets:[{label:'CA généré (€)',data:revs,backgroundColor:'rgba(92,158,94,0.65)',borderRadius:6,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:C.grid},ticks:{callback:v=>v+'€'}},y:{grid:{display:false}}}}});
+  }
+  if(activeTab==='social'){
+    const ig=[...state.social].filter(s=>s.platform==='instagram').sort((a,b)=>a.date.localeCompare(b.date));
+    const tt=[...state.social].filter(s=>s.platform==='tiktok').sort((a,b)=>a.date.localeCompare(b.date));
+    const d=socialDates(ig,tt);
+    mkChart('ch-soc-follow',{type:'line',data:{labels:d.map(fmtDate),datasets:[{label:'Instagram',data:d.map(x=>ig.find(s=>s.date===x)?.followers??null),borderColor:C.pink,backgroundColor:'rgba(225,48,108,0.08)',borderWidth:2,tension:0.4,fill:true,pointRadius:4},{label:'TikTok',data:d.map(x=>tt.find(s=>s.date===x)?.followers??null),borderColor:'#111',backgroundColor:'rgba(0,0,0,0.05)',borderWidth:2,tension:0.4,fill:true,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{y:{grid:{color:C.grid}},x:{grid:{display:false}}}}});
+    mkChart('ch-soc-engage',{type:'line',data:{labels:d.map(fmtDate),datasets:[{label:'Instagram',data:d.map(x=>ig.find(s=>s.date===x)?.engagement??null),borderColor:C.pink,borderWidth:2,tension:0.4,pointRadius:4},{label:'TikTok',data:d.map(x=>tt.find(s=>s.date===x)?.engagement??null),borderColor:'#111',borderWidth:2,tension:0.4,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{y:{grid:{color:C.grid},ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}}}});
+  }
+  if(activeTab==='ads'){
+    const ads=state.ads;
+    const names=ads.map(a=>a.name.length>20?a.name.slice(0,20)+'…':a.name);
+    const rv=ads.map(a=>Number(a.spend||0)>0?+(Number(a.revenue||0)/Number(a.spend||0)).toFixed(2):0);
+    mkChart('ch-ads-roas',{type:'bar',data:{labels:names,datasets:[{label:'ROAS',data:rv,backgroundColor:rv.map(r=>r>=3?'rgba(92,158,94,0.75)':r>=2?'rgba(212,168,83,0.75)':'rgba(196,98,58,0.7)'),borderRadius:7,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:C.grid},min:0,ticks:{callback:v=>v+'×'}},x:{grid:{display:false}}}}});
+    mkChart('ch-ads-spend',{type:'bar',data:{labels:names,datasets:[{label:'Dépensé',data:ads.map(a=>Number(a.spend||0)),backgroundColor:'rgba(196,98,58,0.65)',borderRadius:4,borderWidth:0},{label:'CA généré',data:ads.map(a=>Number(a.revenue||0)),backgroundColor:'rgba(212,168,83,0.65)',borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{y:{grid:{color:C.grid},ticks:{callback:v=>v+'€'}},x:{grid:{display:false}}}}});
+  }
+}
+
+/* ── MODAL ── */
+function openAdd(){editingId=null;openModal(activeTab,null);}
+function editItem(tab,id){editingId=id;openModal(tab,state[tab].find(x=>x.id===id)||null);}
+function deleteItem(tab,id){if(!confirm('Supprimer cet élément ?'))return;state[tab]=state[tab].filter(x=>x.id!==id);saveState();renderTab();}
+function openModal(tab,item){
+  document.getElementById('modal-title').textContent=item?'Modifier':`Nouveau${['ads'].includes(tab)?'le':''} ${ADD_LABELS[tab]||''}`;
+  document.getElementById('modal-body').innerHTML=buildForm(tab,item);
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');editingId=null;}
+function handleOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+function saveModal(){
+  const b=document.getElementById('modal-body');const data={};
+  b.querySelectorAll('[name]').forEach(el=>{data[el.name]=el.type==='number'?Number(el.value):el.value;});
+  if(editingId){const i=state[activeTab].findIndex(x=>x.id===editingId);if(i>=0)state[activeTab][i]={...state[activeTab][i],...data};}
+  else{state[activeTab].push({id:uid(),...data});}
+  saveState();closeModal();renderTab();
+}
+
+/* ── FORMS ── */
+function buildForm(tab,item){
+  const v=(k,d='')=>item?(item[k]??d):d;
+  const sel=(name,opts,cur)=>`<select name="${name}">${opts.map(([val,lbl])=>`<option value="${val}"${cur===val?' selected':''}>${lbl}</option>`).join('')}</select>`;
+  const srcOpts=Object.entries(SRC_LABEL);
+
+  if(tab==='orders')return`<div class="form-grid">
+    <div class="form-group"><label>Date</label><input type="date" name="date" value="${v('date',today())}"></div>
+    <div class="form-group"><label>Client</label><input type="text" name="clientName" value="${esc(v('clientName'))}" placeholder="Nom du client"></div>
+    <div class="form-group span-2"><label>Produit commandé</label><input type="text" name="product" value="${esc(v('product'))}" placeholder="Ex: Veilleuse astronaute"></div>
+    <div class="form-group"><label>Montant (€)</label><input type="number" name="amount" value="${v('amount',0)}" min="0" step="0.01"></div>
+    <div class="form-group"><label>Source</label>${sel('source',srcOpts,v('source','instagram'))}</div>
+    <div class="form-group"><label>Statut</label>${sel('status',Object.entries(STATUS_LABEL),v('status','pending'))}</div>
+    <div class="form-group span-2"><label>Notes</label><textarea name="notes">${esc(v('notes'))}</textarea></div>
+  </div>`;
+
+  if(tab==='products')return`<div class="form-grid">
+    <div class="form-group span-2"><label>Nom du produit</label><input type="text" name="name" value="${esc(v('name'))}" placeholder="Ex: Veilleuse astronaute"></div>
+    <div class="form-group"><label>Catégorie</label>${sel('category',Object.entries(CAT_LABEL),v('category','lampes'))}</div>
+    <div class="form-group"><label>Stock actuel</label><input type="number" name="stock" value="${v('stock',0)}" min="0"></div>
+    <div class="form-group"><label>Temps impression (h)</label><input type="number" name="printTimeH" value="${v('printTimeH',1)}" min="0" step="0.5"></div>
+    <div class="form-group"><label>Coût matière (€)</label><input type="number" name="materialCost" value="${v('materialCost',0)}" min="0" step="0.01"></div>
+    <div class="form-group span-2"><label>Prix de vente (€)</label><input type="number" name="sellingPrice" value="${v('sellingPrice',0)}" min="0" step="0.01"></div>
+  </div>`;
+
+  if(tab==='clients')return`<div class="form-grid">
+    <div class="form-group span-2"><label>Nom</label><input type="text" name="name" value="${esc(v('name'))}" placeholder="Nom complet"></div>
+    <div class="form-group span-2"><label>Email</label><input type="email" name="email" value="${esc(v('email'))}" placeholder="email@exemple.fr"></div>
+    <div class="form-group"><label>Ville</label><input type="text" name="city" value="${esc(v('city'))}" placeholder="Nice"></div>
+    <div class="form-group"><label>Source</label>${sel('source',srcOpts.filter(([k])=>!k.startsWith('ads_')),v('source','instagram'))}</div>
+    <div class="form-group span-2"><label>Date 1ère commande</label><input type="date" name="firstOrder" value="${v('firstOrder',today())}"></div>
+    <div class="form-group span-2"><label>Notes</label><textarea name="notes">${esc(v('notes'))}</textarea></div>
+  </div>`;
+
+  if(tab==='content')return`<div class="form-grid">
+    <div class="form-group"><label>Date de publication</label><input type="date" name="date" value="${v('date',today())}"></div>
+    <div class="form-group"><label>Plateforme</label>${sel('platform',[['tiktok','TikTok'],['instagram','Instagram']],v('platform','tiktok'))}</div>
+    <div class="form-group span-2"><label>Titre de la vidéo</label><input type="text" name="title" value="${esc(v('title'))}" placeholder="Ex: Veilleuse astronaute — process"></div>
+    <div class="form-group"><label>Vues</label><input type="number" name="views" value="${v('views',0)}" min="0"></div>
+    <div class="form-group"><label>Watch time (%)</label><input type="number" name="watchTimePct" value="${v('watchTimePct',0)}" min="0" max="100" step="1"></div>
+    <div class="form-group"><label>Likes</label><input type="number" name="likes" value="${v('likes',0)}" min="0"></div>
+    <div class="form-group"><label>Commentaires</label><input type="number" name="comments" value="${v('comments',0)}" min="0"></div>
+    <div class="form-group"><label>Partages</label><input type="number" name="shares" value="${v('shares',0)}" min="0"></div>
+    <div class="form-group"><label>Clics vers site</label><input type="number" name="siteClicks" value="${v('siteClicks',0)}" min="0"></div>
+    <div class="form-group"><label>Commandes générées</label><input type="number" name="ordersGenerated" value="${v('ordersGenerated',0)}" min="0"></div>
+    <div class="form-group span-2"><label>CA généré (€)</label><input type="number" name="revenue" value="${v('revenue',0)}" min="0" step="0.01"></div>
+  </div>`;
+
+  if(tab==='social')return`<div class="form-grid">
+    <div class="form-group"><label>Date (début semaine)</label><input type="date" name="date" value="${v('date',today())}"></div>
+    <div class="form-group"><label>Plateforme</label>${sel('platform',[['instagram','Instagram'],['tiktok','TikTok']],v('platform','instagram'))}</div>
+    <div class="form-group"><label>Abonnés</label><input type="number" name="followers" value="${v('followers',0)}" min="0"></div>
+    <div class="form-group"><label>Posts publiés</label><input type="number" name="posts" value="${v('posts',0)}" min="0"></div>
+    <div class="form-group"><label>Reach</label><input type="number" name="reach" value="${v('reach',0)}" min="0"></div>
+    <div class="form-group"><label>Impressions</label><input type="number" name="impressions" value="${v('impressions',0)}" min="0"></div>
+    <div class="form-group"><label>Engagement (%)</label><input type="number" name="engagement" value="${v('engagement',0)}" min="0" step="0.1"></div>
+    <div class="form-group"><label>Visites profil</label><input type="number" name="profileVisits" value="${v('profileVisits',0)}" min="0"></div>
+  </div>`;
+
+  if(tab==='ads')return`<div class="form-grid">
+    <div class="form-group span-2"><label>Nom de la campagne</label><input type="text" name="name" value="${esc(v('name'))}" placeholder="Ex: Veilleuse — Portée printemps"></div>
+    <div class="form-group"><label>Plateforme</label>${sel('platform',[['meta','Meta (FB/IG)'],['tiktok','TikTok Ads'],['google','Google Ads']],v('platform','meta'))}</div>
+    <div class="form-group"><label>Statut</label>${sel('status',[['active','Actif'],['paused','Pausé'],['ended','Terminé']],v('status','active'))}</div>
+    <div class="form-group"><label>Date début</label><input type="date" name="startDate" value="${v('startDate',today())}"></div>
+    <div class="form-group"><label>Date fin</label><input type="date" name="endDate" value="${v('endDate',today())}"></div>
+    <div class="form-group"><label>Budget total (€)</label><input type="number" name="budget" value="${v('budget',0)}" min="0" step="0.01"></div>
+    <div class="form-group"><label>Dépensé réel (€)</label><input type="number" name="spend" value="${v('spend',0)}" min="0" step="0.01"></div>
+    <div class="form-group"><label>Impressions</label><input type="number" name="impressions" value="${v('impressions',0)}" min="0"></div>
+    <div class="form-group"><label>Clics</label><input type="number" name="clicks" value="${v('clicks',0)}" min="0"></div>
+    <div class="form-group"><label>Conversions</label><input type="number" name="conversions" value="${v('conversions',0)}" min="0"></div>
+    <div class="form-group span-2"><label>CA généré (€)</label><input type="number" name="revenue" value="${v('revenue',0)}" min="0" step="0.01"></div>
+  </div>`;
+
+  return'<p>Formulaire non disponible.</p>';
+}
+
+/* ── INIT ── */
+loadState();
+updateDate();
+setTab('dashboard');
+</script>
+</body>
+</html>
