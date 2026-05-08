@@ -10,8 +10,15 @@
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #FAF6F1; color: #2C2420; min-height: 100vh; }
 
 .header { background: #2C2420; padding: 20px 24px; position: sticky; top: 0; z-index: 100; }
+.header-top { display: flex; justify-content: space-between; align-items: center; }
 .header h1 { color: #D4A853; font-size: 20px; font-weight: 700; letter-spacing: 0.04em; }
 .header p { color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 4px; }
+.sync-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(255,255,255,0.6); }
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; }
+.sync-dot.connected { background: #4CAF50; box-shadow: 0 0 6px #4CAF50; }
+.sync-dot.disconnected { background: #F44336; }
+.sync-dot.connecting { background: #FF9800; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 .tabs { display: flex; gap: 0; background: #fff; border-bottom: 2px solid #eee; position: sticky; top: 62px; z-index: 99; }
 .tab { padding: 12px 20px; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; color: #999; transition: all 0.2s; }
@@ -92,18 +99,63 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .filter-bar { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
 .filter-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid #ddd; background: #fff; font-size: 11px; cursor: pointer; font-weight: 500; }
 .filter-btn.active { background: #2C2420; color: #fff; border-color: #2C2420; }
+
+/* Setup modal */
+.setup-overlay { position: fixed; inset: 0; background: #2C2420; z-index: 500; display: flex; justify-content: center; align-items: center; }
+.setup-box { background: #fff; border-radius: 20px; padding: 40px; max-width: 500px; width: 90%; text-align: center; }
+.setup-box h1 { color: #D4A853; font-size: 28px; margin-bottom: 8px; }
+.setup-box .subtitle { color: #999; font-size: 13px; margin-bottom: 30px; }
+.setup-box label { display: block; text-align: left; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px; }
+.setup-box input { width: 100%; padding: 12px 14px; border: 2px solid #eee; border-radius: 10px; font-size: 14px; margin-bottom: 20px; }
+.setup-box input:focus { outline: none; border-color: #C4623A; }
+.setup-box button { background: #C4623A; color: #fff; border: none; border-radius: 10px; padding: 14px 40px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; }
+.setup-box button:hover { background: #a8512f; }
+.setup-box .error { color: #C62828; font-size: 12px; margin-top: -10px; margin-bottom: 10px; display: none; }
+.setup-box .help { text-align: left; background: #FAF6F1; border-radius: 10px; padding: 14px; margin-bottom: 20px; font-size: 12px; color: #666; line-height: 1.6; }
+.setup-box .help b { color: #2C2420; }
+.setup-box .disconnect { background: none; border: 1px solid #ddd; color: #999; font-size: 12px; padding: 8px; margin-top: 10px; font-weight: 400; }
 </style>
 </head>
 <body>
 
+<!-- SETUP SCREEN -->
+<div class="setup-overlay" id="setupOverlay" style="display:none">
+  <div class="setup-box">
+    <h1>JOYS 3D</h1>
+    <div class="subtitle">Inventaire STL — Connexion Firebase</div>
+    <div class="help">
+      <b>Comment obtenir l'URL :</b><br>
+      1. Va sur <b>console.firebase.google.com</b><br>
+      2. Cree un projet (nom: "joys-inventaire")<br>
+      3. Menu gauche → <b>Realtime Database</b> → Creer<br>
+      4. Choisis <b>Europe</b> → Mode <b>test</b><br>
+      5. Copie l'URL en haut (commence par https://)
+    </div>
+    <label>URL Firebase Realtime Database</label>
+    <input type="url" id="setupUrl" placeholder="https://joys-inventaire-default-rtdb.europe-west1.firebasedatabase.app">
+    <div class="error" id="setupError">URL invalide ou connexion impossible</div>
+    <button onclick="connectFirebase()">Connecter</button>
+    <button class="disconnect" onclick="skipSetup()">Utiliser en mode hors-ligne</button>
+  </div>
+</div>
+
 <div class="header">
-  <h1>JOYS — Inventaire STL & Licences</h1>
-  <p>44 produits Shopify · Statut licences · Couts · Marges</p>
+  <div class="header-top">
+    <div>
+      <h1>JOYS — Inventaire STL & Licences</h1>
+      <p>44 produits Shopify · Statut licences · Couts · Marges</p>
+    </div>
+    <div class="sync-status" id="syncStatus">
+      <div class="sync-dot disconnected" id="syncDot"></div>
+      <span id="syncText">Hors-ligne</span>
+    </div>
+  </div>
 </div>
 
 <div class="tabs">
   <div class="tab active" onclick="switchTab('catalogue')">Catalogue Produits</div>
   <div class="tab" onclick="switchTab('guide')">Guide Licences</div>
+  <div class="tab" onclick="switchTab('settings')">Connexion</div>
 </div>
 
 <div class="stats-bar" id="statsBar"></div>
@@ -122,6 +174,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   </div>
   <div class="section" id="sec-guide">
     <div class="license-guide" id="licenseGuide"></div>
+  </div>
+  <div class="section" id="sec-settings">
+    <div style="max-width:500px;margin:0 auto;">
+      <h2 style="margin-bottom:16px;">Connexion Firebase</h2>
+      <div id="settingsContent"></div>
+    </div>
   </div>
 </div>
 
@@ -152,10 +210,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       </div>
       <div><label>Licence commerciale</label>
         <select id="f-license">
-          <option value="unknown">🟧 A verifier</option>
-          <option value="ok">✅ OUI - Vente autorisee</option>
-          <option value="no">❌ NON - Usage personnel</option>
-          <option value="own">✅ Design propre JOYS</option>
+          <option value="unknown">A verifier</option>
+          <option value="ok">OUI - Vente autorisee</option>
+          <option value="no">NON - Usage personnel</option>
+          <option value="own">Design propre JOYS</option>
         </select>
       </div>
     </div>
@@ -197,8 +255,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 <script>
 const STORAGE_KEY = 'joys_stl_inventory_v2';
+const FB_URL_KEY = 'joys_firebase_url';
 let products = [];
 let currentFilter = 'all';
+let firebaseUrl = '';
+let eventSource = null;
+let isOnline = false;
+let ignoreNextSync = false;
 
 const DEFAULT_PRODUCTS = [
   {id:1,name:"Porte-clef Trophee imprime 3D, finition or premium",category:"Porte-cles",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
@@ -246,18 +309,196 @@ const DEFAULT_PRODUCTS = [
   {id:43,name:"Moule Chocolat & Bonbon (doublon?)",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
 ];
 
-function loadData() {
+// ==================== FIREBASE SYNC ====================
+
+function setSyncStatus(state, text) {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncText');
+  dot.className = 'sync-dot ' + state;
+  txt.textContent = text;
+  isOnline = (state === 'connected');
+}
+
+function getFirebaseUrl() {
+  try { return localStorage.getItem(FB_URL_KEY) || ''; } catch(e) { return ''; }
+}
+
+function setFirebaseUrl(url) {
+  try { localStorage.setItem(FB_URL_KEY, url); } catch(e) {}
+}
+
+async function connectFirebase() {
+  let url = document.getElementById('setupUrl').value.trim();
+  if (!url) { showSetupError('Entre une URL'); return; }
+  url = url.replace(/\/+$/, '');
+  if (!url.startsWith('https://')) { showSetupError('L\'URL doit commencer par https://'); return; }
+
+  setSyncStatus('connecting', 'Connexion...');
+
+  try {
+    const res = await fetch(url + '/products.json', { method: 'GET' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const data = await res.json();
+    setFirebaseUrl(url);
+    firebaseUrl = url;
+
+    // If database is empty, push our default products
+    if (!data) {
+      await fetch(url + '/products.json', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productsToObj(DEFAULT_PRODUCTS))
+      });
+      products = [...DEFAULT_PRODUCTS];
+    } else {
+      products = objToProducts(data);
+    }
+
+    saveLocal();
+    document.getElementById('setupOverlay').style.display = 'none';
+    hideSetupError();
+    startRealtimeSync();
+    renderAll();
+    renderSettings();
+    setSyncStatus('connected', 'Connecte - sync temps reel');
+  } catch(e) {
+    showSetupError('Connexion impossible. Verifie l\'URL et les regles Firebase.');
+    setSyncStatus('disconnected', 'Erreur connexion');
+  }
+}
+
+function productsToObj(arr) {
+  const obj = {};
+  arr.forEach(p => { obj['p' + p.id] = p; });
+  return obj;
+}
+
+function objToProducts(obj) {
+  if (Array.isArray(obj)) return obj.filter(Boolean);
+  return Object.values(obj).filter(Boolean);
+}
+
+async function saveToFirebase() {
+  if (!firebaseUrl || !isOnline) return;
+  ignoreNextSync = true;
+  try {
+    await fetch(firebaseUrl + '/products.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productsToObj(products))
+    });
+  } catch(e) {
+    setSyncStatus('disconnected', 'Erreur sauvegarde');
+    setTimeout(() => tryReconnect(), 3000);
+  }
+}
+
+function startRealtimeSync() {
+  if (eventSource) { eventSource.close(); }
+  if (!firebaseUrl) return;
+
+  setSyncStatus('connecting', 'Connexion...');
+  eventSource = new EventSource(firebaseUrl + '/products.json');
+
+  eventSource.addEventListener('put', (event) => {
+    if (ignoreNextSync) { ignoreNextSync = false; return; }
+    try {
+      const msg = JSON.parse(event.data);
+      if (msg.path === '/') {
+        if (msg.data) {
+          products = objToProducts(msg.data);
+          saveLocal();
+          renderAll();
+        }
+      } else if (msg.path && msg.data !== undefined) {
+        // Individual product update
+        loadFromFirebase();
+      }
+    } catch(e) {}
+    setSyncStatus('connected', 'Connecte - sync temps reel');
+  });
+
+  eventSource.addEventListener('patch', (event) => {
+    if (ignoreNextSync) { ignoreNextSync = false; return; }
+    loadFromFirebase();
+  });
+
+  eventSource.onopen = () => {
+    setSyncStatus('connected', 'Connecte - sync temps reel');
+  };
+
+  eventSource.onerror = () => {
+    setSyncStatus('disconnected', 'Deconnecte');
+    eventSource.close();
+    setTimeout(() => tryReconnect(), 5000);
+  };
+}
+
+async function loadFromFirebase() {
+  if (!firebaseUrl) return;
+  try {
+    const res = await fetch(firebaseUrl + '/products.json');
+    const data = await res.json();
+    if (data) {
+      products = objToProducts(data);
+      saveLocal();
+      renderAll();
+    }
+  } catch(e) {}
+}
+
+function tryReconnect() {
+  if (!firebaseUrl) return;
+  startRealtimeSync();
+}
+
+function skipSetup() {
+  document.getElementById('setupOverlay').style.display = 'none';
+  loadLocal();
+  renderAll();
+  renderSettings();
+}
+
+function disconnectFirebase() {
+  if (eventSource) { eventSource.close(); eventSource = null; }
+  firebaseUrl = '';
+  try { localStorage.removeItem(FB_URL_KEY); } catch(e) {}
+  isOnline = false;
+  setSyncStatus('disconnected', 'Hors-ligne');
+  renderSettings();
+}
+
+function showSetupError(msg) {
+  const el = document.getElementById('setupError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideSetupError() {
+  document.getElementById('setupError').style.display = 'none';
+}
+
+// ==================== LOCAL STORAGE ====================
+
+function saveLocal() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(products)); } catch(e) {}
+}
+
+function loadLocal() {
   try {
     const d = localStorage.getItem(STORAGE_KEY);
     if (d) { products = JSON.parse(d); return; }
   } catch(e) {}
   products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
-  saveData();
+  saveLocal();
 }
 
 function saveData() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(products)); } catch(e) {}
+  saveLocal();
+  saveToFirebase();
 }
+
+// ==================== PRODUCT LOGIC ====================
 
 function getCost(p) { return (p.stlcost||0)+(p.filcost||0)+(p.postprod||0); }
 function getMargin(p) { const c=getCost(p); if(!p.price||!c) return null; return p.price-c; }
@@ -276,18 +517,18 @@ function renderStats() {
   const unk=products.filter(p=>p.license==='unknown'||!p.license).length;
   document.getElementById('statsBar').innerHTML=`
     <div class="stat"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div>
-    <div class="stat green"><div class="stat-num">${ok}</div><div class="stat-label">✅ Vendables</div></div>
-    <div class="stat red"><div class="stat-num">${no}</div><div class="stat-label">❌ Interdits</div></div>
-    <div class="stat orange"><div class="stat-num">${unk}</div><div class="stat-label">🟧 A verifier</div></div>`;
+    <div class="stat green"><div class="stat-num">${ok}</div><div class="stat-label">Vendables</div></div>
+    <div class="stat red"><div class="stat-num">${no}</div><div class="stat-label">Interdits</div></div>
+    <div class="stat orange"><div class="stat-num">${unk}</div><div class="stat-label">A verifier</div></div>`;
 }
 
 function renderFilters() {
   const f=currentFilter;
   document.getElementById('filterBar').innerHTML=`
     <div class="filter-btn ${f==='all'?'active':''}" onclick="setFilter('all')">Tous</div>
-    <div class="filter-btn ${f==='ok'?'active':''}" onclick="setFilter('ok')">✅ Vendables</div>
-    <div class="filter-btn ${f==='no'?'active':''}" onclick="setFilter('no')">❌ Interdits</div>
-    <div class="filter-btn ${f==='unknown'?'active':''}" onclick="setFilter('unknown')">🟧 A verifier</div>`;
+    <div class="filter-btn ${f==='ok'?'active':''}" onclick="setFilter('ok')">Vendables</div>
+    <div class="filter-btn ${f==='no'?'active':''}" onclick="setFilter('no')">Interdits</div>
+    <div class="filter-btn ${f==='unknown'?'active':''}" onclick="setFilter('unknown')">A verifier</div>`;
 }
 
 function setFilter(f) { currentFilter=f; renderAll(); }
@@ -351,11 +592,32 @@ function renderGuide() {
   document.getElementById('licenseGuide').innerHTML=h;
 }
 
+function renderSettings() {
+  const el = document.getElementById('settingsContent');
+  if (firebaseUrl && isOnline) {
+    el.innerHTML = `
+      <div style="background:#E8F5E9;border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-weight:700;color:#2E7D32;margin-bottom:4px;">✅ Connecte a Firebase</div>
+        <div style="font-size:12px;color:#666;word-break:break-all;">${esc(firebaseUrl)}</div>
+      </div>
+      <p style="font-size:13px;color:#666;margin-bottom:16px;">Les modifications sont synchronisees en temps reel entre tous les utilisateurs.</p>
+      <button onclick="disconnectFirebase()" style="background:#C62828;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Deconnecter</button>`;
+  } else {
+    el.innerHTML = `
+      <div style="background:#FFF3E0;border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-weight:700;color:#E65100;margin-bottom:4px;">Mode hors-ligne</div>
+        <div style="font-size:12px;color:#666;">Les donnees sont stockees localement. Pas de sync.</div>
+      </div>
+      <label style="display:block;font-size:12px;font-weight:600;color:#666;margin-bottom:6px;">URL Firebase Realtime Database</label>
+      <input type="url" id="settingsUrl" placeholder="https://xxx.firebasedatabase.app" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;margin-bottom:12px;">
+      <button onclick="document.getElementById('setupUrl').value=document.getElementById('settingsUrl').value;connectFirebase()" style="background:#C4623A;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Connecter</button>`;
+  }
+}
+
 function renderAll(){renderStats();renderFilters();renderProducts();renderGuide();}
 
 function openModal(id){
   const m=document.getElementById('modal');
-  const fields=['f-name','f-category','f-source','f-link','f-file','f-designer','f-stlcost','f-filament','f-filcost','f-time','f-postprod','f-price','f-photo','f-notes'];
   if(id){
     const p=products.find(x=>x.id===id);if(!p)return;
     document.getElementById('modalTitle').textContent='Modifier le produit';
@@ -378,7 +640,7 @@ function openModal(id){
   } else {
     document.getElementById('modalTitle').textContent='Ajouter un produit';
     document.getElementById('editId').value='';
-    fields.forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+    ['f-name','f-category','f-source','f-link','f-file','f-designer','f-stlcost','f-filament','f-filcost','f-time','f-postprod','f-price','f-photo','f-notes'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
     document.getElementById('f-license').value='unknown';
   }
   m.classList.add('show');
@@ -428,10 +690,42 @@ function switchTab(tab){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById('sec-'+tab).classList.add('active');
+  if(tab==='settings') renderSettings();
 }
 function esc(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 
-loadData();renderAll();
+// ==================== INIT ====================
+(async function init() {
+  firebaseUrl = getFirebaseUrl();
+  loadLocal();
+  renderAll();
+
+  if (firebaseUrl) {
+    // Auto-reconnect
+    setSyncStatus('connecting', 'Connexion...');
+    try {
+      const res = await fetch(firebaseUrl + '/products.json');
+      if (res.ok) {
+        const data = await res.json();
+        if (data) {
+          products = objToProducts(data);
+          saveLocal();
+          renderAll();
+        }
+        startRealtimeSync();
+        setSyncStatus('connected', 'Connecte - sync temps reel');
+      } else {
+        setSyncStatus('disconnected', 'Erreur connexion');
+      }
+    } catch(e) {
+      setSyncStatus('disconnected', 'Hors-ligne');
+    }
+  } else {
+    // First visit — show setup
+    document.getElementById('setupOverlay').style.display = 'flex';
+  }
+  renderSettings();
+})();
 </script>
 </body>
 </html>
