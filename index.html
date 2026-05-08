@@ -1,1230 +1,824 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MSPOnboard — IT Client Onboarding, Done Right</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        zinc: { 950:'#09090B', 900:'#18181B', 850:'#1C1C1F', 800:'#27272A', 700:'#3F3F46', 600:'#52525B', 500:'#71717A', 400:'#A1A1AA', 300:'#D4D4D8' },
-        cyan: { DEFAULT:'#06B6D4', dark:'#0891B2', light:'#22D3EE', glow:'#06B6D433' },
-        emerald: { DEFAULT:'#10B981', light:'#34D399' },
-        amber2: { DEFAULT:'#F59E0B', light:'#FCD34D' },
-        red2: { DEFAULT:'#EF4444', light:'#FCA5A5' }
-      },
-      fontFamily: { sans:['DM Sans','sans-serif'], mono:['JetBrains Mono','monospace'] }
-    }
-  }
-}
-</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOYS — Centre de contrôle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  [x-cloak]{display:none!important}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Sans',sans-serif;background:#09090B;color:white;min-height:100vh}
-  ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:#18181B} ::-webkit-scrollbar-thumb{background:#3F3F46;border-radius:3px}
+:root {
+  --brun:#2C2420;--brun-mid:#3D312B;--terra:#C4623A;--terra-dark:#A04E2B;
+  --or:#D4A853;--or-clair:#F0D78C;--or-dark:#B8964E;--creme:#FAF7F2;
+  --blanc:#FFFFFF;--gris:#5C5350;--gris-clair:#8A8280;
+  --green:#5C9E5E;--blue:#3866b7;--red:#c62828;--pink:#E1306C;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,sans-serif;
+  --sidebar-w:224px;--radius:12px;
+  --shadow:0 4px 24px -6px rgba(44,36,32,0.11);
+  --shadow-hover:0 8px 32px -8px rgba(44,36,32,0.18);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--sans);background:var(--creme);color:var(--brun);-webkit-font-smoothing:antialiased;}
 
-  /* Cards */
-  .card{background:#18181B;border:1px solid rgba(255,255,255,0.07);border-radius:12px}
-  .card-inner{background:#09090B;border:1px solid rgba(255,255,255,0.06);border-radius:8px}
+/* ── APP SHELL ── */
+.app{display:flex;height:100vh;overflow:hidden;}
 
-  /* Inputs */
-  .field{background:#09090B;border:1px solid rgba(255,255,255,0.1);color:white;border-radius:8px;padding:10px 13px;width:100%;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
-  .field:focus{border-color:#06B6D4;box-shadow:0 0 0 3px rgba(6,182,212,.12)}
-  .field::placeholder{color:#3F3F46}
-  select.field option{background:#18181B}
-  textarea.field{resize:vertical;min-height:72px}
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--brun);display:flex;flex-direction:column;height:100vh;overflow-y:auto;z-index:10;transition:width .25s var(--ease);}
+.sidebar-brand{padding:26px 22px 20px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.brand-logo{font-family:var(--serif);font-weight:700;font-size:26px;background:linear-gradient(135deg,var(--or),var(--or-clair),var(--or));background-size:300%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 6s linear infinite;display:block;line-height:1;}
+.brand-sub{font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--terra);font-weight:500;margin-top:4px;display:block;}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:300%}}
+.sidebar-nav{flex:1;padding:14px 10px;}
+.nav-section-label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,0.28);font-weight:600;padding:10px 12px 6px;display:block;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;transition:background .2s var(--ease),color .2s var(--ease),transform .15s var(--ease);font-size:13px;font-weight:500;color:rgba(255,255,255,0.52);user-select:none;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.92);transform:translateX(2px);}
+.nav-item.active{background:rgba(196,98,58,0.24);color:var(--blanc);}
+.nav-item.active .nav-icon{color:var(--terra);}
+.nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.nav-label{flex:1;}
+.nav-badge{font-size:10px;font-weight:700;background:var(--terra);color:#fff;border-radius:10px;padding:1px 7px;min-width:18px;text-align:center;}
+.sidebar-footer{padding:12px 22px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:rgba(255,255,255,0.26);line-height:1.7;}
 
-  /* Buttons */
-  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:all .18s;border:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
-  .btn-cyan{background:#06B6D4;color:#09090B}
-  .btn-cyan:hover{background:#0891B2;box-shadow:0 4px 20px rgba(6,182,212,.35);transform:translateY(-1px)}
-  .btn-outline{background:transparent;color:#71717A;border:1px solid rgba(255,255,255,0.1)}
-  .btn-outline:hover{background:rgba(255,255,255,.04);color:white}
-  .btn-ghost{background:transparent;color:#71717A;border:1px solid transparent;padding:8px 14px}
-  .btn-ghost:hover{color:white;background:rgba(255,255,255,.04)}
-  .btn-sm{padding:6px 14px;font-size:12px}
-  .btn-danger{background:rgba(239,68,68,.12);color:#FCA5A5;border:1px solid rgba(239,68,68,.2)}
-  .btn-danger:hover{background:rgba(239,68,68,.2)}
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.topbar{height:60px;padding:0 28px;background:var(--blanc);border-bottom:1px solid rgba(44,36,32,0.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:16px;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-title{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--brun);}
+.topbar-date{font-size:11px;color:var(--gris-clair);padding:3px 10px;background:var(--creme);border-radius:20px;font-weight:500;}
+.btn-add{display:inline-flex;align-items:center;gap:7px;background:var(--terra);color:var(--blanc);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;transition:background .2s var(--ease),transform .15s var(--ease),box-shadow .2s;font-family:var(--sans);box-shadow:0 2px 8px rgba(196,98,58,0.3);}
+.btn-add:hover{background:var(--terra-dark);transform:translateY(-1px);box-shadow:0 4px 14px rgba(196,98,58,0.4);}
+.btn-add:active{transform:translateY(0) scale(.97);}
+.btn-add svg{width:13px;height:13px;flex-shrink:0;}
+.content{flex:1;overflow-y:auto;padding:24px 28px;scroll-behavior:smooth;}
 
-  /* Badges */
-  .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:.04em}
-  .b-green{background:rgba(16,185,129,.12);color:#34D399}
-  .b-yellow{background:rgba(245,158,11,.12);color:#FCD34D}
-  .b-red{background:rgba(239,68,68,.12);color:#FCA5A5}
-  .b-cyan{background:rgba(6,182,212,.12);color:#22D3EE}
-  .b-purple{background:rgba(139,92,246,.12);color:#C4B5FD}
-  .b-zinc{background:rgba(255,255,255,.06);color:#71717A}
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-bottom:20px;}
+.kpi-card{background:var(--blanc);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border:1px solid rgba(44,36,32,0.06);position:relative;overflow:hidden;transition:transform .2s var(--ease),box-shadow .2s var(--ease);}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--terra);}
+.kpi-card.kpi-gold::before{background:var(--or);}
+.kpi-card.kpi-brun::before{background:var(--brun);}
+.kpi-card.kpi-green::before{background:var(--green);}
+.kpi-card.kpi-blue::before{background:var(--blue);}
+.kpi-card.kpi-pink::before{background:var(--pink);}
+.kpi-card.kpi-profit::before{background:linear-gradient(90deg,var(--green),#3a7d40);}
+.kpi-label{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gris);font-weight:600;margin-bottom:8px;}
+.kpi-value{font-family:var(--serif);font-size:28px;font-weight:700;color:var(--brun);line-height:1;margin-bottom:5px;}
+.kpi-sub{font-size:11.5px;color:var(--gris-clair);}
+.kpi-trend{position:absolute;top:14px;right:14px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;}
+.kpi-trend.up{background:#e8f5e9;color:#2e7d32;}
+.kpi-trend.down{background:#fce4ec;color:#c62828;}
 
-  /* Progress */
-  .pbar{height:2px;background:#27272A;border-radius:999px;overflow:hidden}
-  .pfill{height:100%;background:linear-gradient(90deg,#06B6D4,#22D3EE);border-radius:999px;transition:width .4s ease}
+/* ── SECTION GRIDS ── */
+.section-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+.section-grid.wide{grid-template-columns:2fr 1fr;}
+.section-grid.full{grid-template-columns:1fr;}
+.section-grid.thirds{grid-template-columns:1fr 1fr 1fr;}
 
-  /* Section block */
-  .sblock{background:#18181B;border:1px solid rgba(255,255,255,0.07);border-radius:12px;margin-bottom:10px;overflow:hidden}
-  .shead{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;cursor:pointer;user-select:none}
-  .shead:hover{background:rgba(255,255,255,.02)}
+/* ── CARDS ── */
+.card{background:var(--blanc);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);border:1px solid rgba(44,36,32,0.06);transition:box-shadow .2s var(--ease);}
+.card-title{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--brun);margin-bottom:2px;}
+.card-sub{font-size:11.5px;color:var(--gris-clair);margin-bottom:14px;}
+.chart-wrap{position:relative;height:200px;}
+.chart-wrap.tall{height:260px;}
+.chart-wrap.sm{height:160px;}
 
-  /* Chips */
-  .chip{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;border:1px solid rgba(255,255,255,.08);color:#52525B;background:transparent;white-space:nowrap}
-  .chip:hover{border-color:rgba(6,182,212,.4);color:#22D3EE}
-  .chip.on{background:rgba(6,182,212,.15);color:#22D3EE;border-color:rgba(6,182,212,.35)}
+/* ── ACTIONS PRIORITAIRES ── */
+.actions-card{border-left:3px solid var(--terra);}
+.action-list{display:flex;flex-direction:column;gap:8px;}
+.action-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;font-size:13px;transition:background .15s;}
+.action-item:hover{background:var(--creme);}
+.action-item.warn{border-left:3px solid #f59e0b;}
+.action-item.danger{border-left:3px solid var(--red);}
+.action-item.success{border-left:3px solid var(--green);}
+.action-item.info{border-left:3px solid var(--blue);}
+.action-icon{font-size:16px;flex-shrink:0;width:24px;text-align:center;}
+.action-text{flex:1;font-weight:500;color:var(--brun);}
+.action-cta{font-size:11px;font-weight:600;color:var(--terra);padding:3px 10px;border:1px solid rgba(196,98,58,0.3);border-radius:20px;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.action-cta:hover{background:var(--terra);color:#fff;}
 
-  /* Check */
-  .chk{width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(255,255,255,.15);cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .chk.on{background:#06B6D4;border-color:#06B6D4}
+/* ── TOP PRODUITS ── */
+.top-list{display:flex;flex-direction:column;gap:6px;}
+.top-item{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:8px;transition:background .15s;}
+.top-item:hover{background:var(--creme);}
+.top-rank{width:24px;height:24px;border-radius:50%;background:var(--creme);font-size:11px;font-weight:700;color:var(--gris);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.top-rank.gold{background:rgba(212,168,83,0.18);color:var(--or-dark);}
+.top-rank.silver{background:rgba(92,83,80,0.10);color:var(--gris);}
+.top-rank.bronze{background:rgba(196,98,58,0.12);color:var(--terra);}
+.top-info{flex:1;min-width:0;}
+.top-name{font-size:13px;font-weight:600;color:var(--brun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.top-meta{font-size:11px;color:var(--gris-clair);}
+.top-value{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--brun);flex-shrink:0;}
 
-  /* Table row */
-  .trow{padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .12s}
-  .trow:hover{background:rgba(255,255,255,.02)}
-  .trow:last-child{border-bottom:none}
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap;}
+.data-table th{text-align:left;padding:8px 12px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gris);font-weight:600;border-bottom:1px solid rgba(44,36,32,0.09);background:var(--creme);}
+.data-table td{padding:10px 12px;border-bottom:1px solid rgba(44,36,32,0.05);color:var(--brun);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tbody tr{transition:background .12s;}
+.data-table tbody tr:hover td{background:rgba(250,247,242,0.8);}
+.data-table .amount{font-weight:700;font-family:var(--serif);font-size:13.5px;}
+.data-table .muted{color:var(--gris-clair);font-size:11.5px;}
+.data-table .subline{font-size:11px;color:var(--gris-clair);margin-top:2px;}
+.table-actions{display:flex;gap:5px;}
+.btn-icon{width:27px;height:27px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(44,36,32,0.12);background:none;color:var(--gris);transition:all .18s var(--ease);font-size:11.5px;}
+.btn-icon:hover{border-color:var(--terra);color:var(--terra);background:rgba(196,98,58,0.06);}
+.btn-icon.del:hover{border-color:var(--red);color:var(--red);background:rgba(198,40,40,0.06);}
 
-  /* Avatar */
-  .av{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge-terra{background:rgba(196,98,58,0.12);color:var(--terra);}
+.badge-gold{background:rgba(212,168,83,0.15);color:var(--or-dark);}
+.badge-brun{background:rgba(44,36,32,0.08);color:var(--brun);}
+.badge-green{background:rgba(92,158,94,0.14);color:#3a7d40;}
+.badge-blue{background:rgba(56,102,183,0.11);color:var(--blue);}
+.badge-pink{background:rgba(225,48,108,0.11);color:var(--pink);}
+.badge-grey{background:rgba(92,83,80,0.08);color:var(--gris);}
+.badge-red{background:rgba(198,40,40,0.10);color:var(--red);}
+.pt{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px;}
+.pt-meta{background:#e8ecf7;color:#3b5bdb;}
+.pt-tiktok{background:#f0f0f0;color:#111;}
+.pt-google{background:#fce8e8;color:#d93025;}
+.pt-instagram{background:rgba(225,48,108,0.10);color:var(--pink);}
 
-  /* Mono label */
-  .mono{font-family:'JetBrains Mono',monospace}
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:1px;background:rgba(44,36,32,0.08);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
+.stat-box{background:var(--blanc);padding:14px 16px;transition:background .15s;}
+.stat-box:hover{background:var(--creme);}
+.stat-num{font-family:var(--serif);font-size:24px;font-weight:700;color:var(--brun);line-height:1;margin-bottom:4px;}
+.stat-lbl{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gris);}
 
-  /* Tab */
-  .tab{padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:#52525B;transition:all .12s;letter-spacing:.02em}
-  .tab:hover{color:#A1A1AA}
-  .tab.on{background:#27272A;color:white}
+/* ── PROGRESS BAR ── */
+.prog-bar{height:5px;background:rgba(44,36,32,0.08);border-radius:10px;overflow:hidden;margin-top:6px;}
+.prog-fill{height:100%;border-radius:10px;transition:width .6s var(--ease);}
 
-  /* Score ring */
-  .ring{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+/* ── CONTENU / VIDEO ── */
+.video-kpi{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.video-card{background:var(--blanc);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);border:1px solid rgba(44,36,32,0.06);position:relative;overflow:hidden;transition:transform .2s var(--ease),box-shadow .2s;}
+.video-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.perf-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
+.perf-dot.high{background:var(--green);}
+.perf-dot.mid{background:var(--or);}
+.perf-dot.low{background:var(--terra);}
 
-  /* Tooltip-like hint */
-  .hint{background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.18);border-radius:8px;padding:10px 14px}
+/* ── PULSE ANIMATION ── */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulse{animation:pulse 2s ease-in-out infinite;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .35s var(--ease) both;}
 
-  /* Slider */
-  .slider{-webkit-appearance:none;width:100%;height:3px;border-radius:999px;background:#27272A;outline:none}
-  .slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#06B6D4;cursor:pointer;border:2px solid #09090B}
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(44,36,32,0.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .2s;}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--blanc);border-radius:16px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:28px;box-shadow:0 24px 80px -16px rgba(44,36,32,0.32);animation:fadeIn .25s var(--ease);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.modal-title{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--brun);}
+.modal-close{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(44,36,32,0.12);background:none;font-size:15px;color:var(--gris);transition:all .18s;}
+.modal-close:hover{border-color:var(--terra);color:var(--terra);}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid rgba(44,36,32,0.08);}
+.btn-cancel{padding:8px 18px;border-radius:8px;border:1px solid rgba(44,36,32,0.14);background:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--gris);font-family:var(--sans);transition:all .18s;}
+.btn-cancel:hover{border-color:var(--brun);color:var(--brun);}
+.btn-save{padding:8px 22px;border-radius:8px;border:none;background:var(--terra);color:var(--blanc);cursor:pointer;font-size:13px;font-weight:500;font-family:var(--sans);transition:background .18s,transform .15s;box-shadow:0 2px 8px rgba(196,98,58,0.3);}
+.btn-save:hover{background:var(--terra-dark);transform:translateY(-1px);}
 
-  /* Confetti */
-  .cf{position:fixed;border-radius:2px;animation:cffall linear forwards;pointer-events:none}
-  @keyframes cffall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.span-2{grid-column:span 2;}
+label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gris);}
+input[type="text"],input[type="email"],input[type="number"],input[type="date"],select,textarea{padding:8px 11px;border:1px solid rgba(44,36,32,0.16);border-radius:7px;font-family:var(--sans);font-size:13px;color:var(--brun);background:var(--blanc);transition:border-color .18s,box-shadow .18s;width:100%;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--terra);box-shadow:0 0 0 3px rgba(196,98,58,0.10);}
+textarea{min-height:64px;resize:vertical;}
 
-  /* Grid pattern overlay */
-  .grid-bg{background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:32px 32px}
+/* ── EMPTY ── */
+.empty{text-align:center;padding:48px 20px;color:var(--gris-clair);}
+.empty-icon{font-size:34px;margin-bottom:10px;opacity:.32;}
+.empty p{font-size:13px;}
 
-  /* Glow */
-  .glow-cyan{box-shadow:0 0 60px rgba(6,182,212,.15)}
+/* ── DIVIDER ── */
+.section-label{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gris);font-weight:600;margin-bottom:12px;margin-top:4px;}
 
-  /* Nav dot */
-  .ndot{width:6px;height:6px;border-radius:50%;background:#06B6D4;animation:pulse 2s infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* ── MOBILE ── */
+@media(max-width:960px){
+  .sidebar{width:58px;}
+  .brand-sub,.nav-label,.nav-section-label,.sidebar-footer,.nav-badge{display:none;}
+  .nav-item{justify-content:center;padding:11px 0;}
+  .content{padding:14px 14px 80px;}
+  .topbar{padding:0 14px;height:54px;}
+  .topbar-date{display:none;}
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .section-grid,.section-grid.wide,.section-grid.thirds{grid-template-columns:1fr;gap:12px;}
+  .video-kpi{grid-template-columns:1fr 1fr;gap:10px;}
+  .form-group.span-2{grid-column:span 1;}
+  .form-grid{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:600px){
+  .kpi-grid{grid-template-columns:1fr;}
+  .kpi-value{font-size:24px;}
+  .video-kpi{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .data-table{font-size:12px;}
+  .topbar-title{font-size:17px;}
+}
 </style>
 </head>
-<body x-data="app()" x-init="init()">
-
-<!-- ============================================================
-     LANDING PAGE
-============================================================ -->
-<div x-show="view==='landing'" x-cloak>
-
-  <!-- Nav -->
-  <nav style="border-bottom:1px solid rgba(255,255,255,0.06)" class="sticky top-0 z-40" style="background:rgba(9,9,11,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06)">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-1.5">
-          <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:#06B6D4">
-            <svg class="w-4 h-4" style="color:#09090B" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </div>
-          <span class="text-white font-800 tracking-tight text-lg" style="font-weight:800">MSPOnboard</span>
-        </div>
-        <div class="hidden md:flex items-center gap-1 ml-2">
-          <div class="ndot"></div>
-          <span class="text-zinc-600 text-xs mono">v1.0</span>
-        </div>
-      </div>
-      <div class="hidden md:flex items-center gap-6">
-        <span class="text-zinc-500 text-sm cursor-pointer hover:text-white transition-colors" @click="view='dashboard'">Dashboard demo</span>
-        <span class="text-zinc-500 text-sm cursor-pointer hover:text-white transition-colors" @click="builder.type='worker'; view='client'">Client form demo</span>
-        <span class="text-zinc-600 text-sm">Pricing</span>
-      </div>
-      <button class="btn btn-cyan" @click="view='builder'">Start free trial →</button>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-logo">JOYS</span>
+      <span class="brand-sub">Centre de contrôle</span>
     </div>
-  </nav>
-
-  <!-- Hero -->
-  <div class="grid-bg">
-    <div class="max-w-6xl mx-auto px-6 pt-20 pb-24">
-      <div class="max-w-3xl">
-        <div class="flex items-center gap-3 mb-7">
-          <span class="badge b-cyan mono">for MSPs</span>
-          <span class="text-zinc-600 text-xs">·</span>
-          <span class="text-zinc-500 text-sm">IT onboarding, automated</span>
-        </div>
-        <h1 class="text-5xl md:text-6xl font-800 leading-[1.05] tracking-tight mb-6" style="font-weight:800">
-          Stop spending 3 days<br/>onboarding a new client.
-        </h1>
-        <p class="text-zinc-400 text-xl leading-relaxed mb-10 max-w-2xl">
-          Send one link. Your client fills in their entire IT environment — network topology, servers, software licences, admin credentials, and security posture — before your first call.
-        </p>
-        <div class="flex flex-wrap gap-3 mb-14">
-          <button class="btn btn-cyan text-sm px-7 py-3" @click="view='builder'">
-            Create client intake form
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-          </button>
-          <button class="btn btn-outline text-sm px-7 py-3" @click="view='dashboard'">See live dashboard</button>
-        </div>
-
-        <!-- Proof bar -->
-        <div class="flex flex-wrap items-center gap-6">
-          <div><p class="text-3xl font-800 text-white mono" style="font-weight:800">3.4<span class="text-cyan-DEFAULT text-2xl">h</span></p><p class="text-zinc-500 text-xs mt-0.5">saved per new client</p></div>
-          <div class="w-px h-10" style="background:rgba(255,255,255,.06)"></div>
-          <div><p class="text-3xl font-800 text-white mono" style="font-weight:800">0<span class="text-zinc-600 text-2xl">x</span></p><p class="text-zinc-500 text-xs mt-0.5">back-and-forth emails</p></div>
-          <div class="w-px h-10" style="background:rgba(255,255,255,.06)"></div>
-          <div><p class="text-3xl font-800 text-white mono" style="font-weight:800">$149<span class="text-zinc-600 text-sm font-400">/mo</span></p><p class="text-zinc-500 text-xs mt-0.5">vs $400+ for full ATS</p></div>
-        </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-tab="dashboard" onclick="setTab('dashboard')"><span class="nav-icon">◈</span><span class="nav-label">Dashboard</span></div>
+      <div class="nav-item" data-tab="orders" onclick="setTab('orders')"><span class="nav-icon">🛍</span><span class="nav-label">Commandes</span><span class="nav-badge" id="nb-orders" style="display:none">0</span></div>
+      <div class="nav-item" data-tab="products" onclick="setTab('products')"><span class="nav-icon">📦</span><span class="nav-label">Produits</span><span class="nav-badge" id="nb-stock" style="display:none">0</span></div>
+      <div class="nav-item" data-tab="clients" onclick="setTab('clients')"><span class="nav-icon">👥</span><span class="nav-label">Clients</span></div>
+      <span class="nav-section-label">Marketing</span>
+      <div class="nav-item" data-tab="content" onclick="setTab('content')"><span class="nav-icon">🎬</span><span class="nav-label">Contenu</span></div>
+      <div class="nav-item" data-tab="social" onclick="setTab('social')"><span class="nav-icon">📱</span><span class="nav-label">Réseaux sociaux</span></div>
+      <div class="nav-item" data-tab="ads" onclick="setTab('ads')"><span class="nav-icon">📣</span><span class="nav-label">Publicités</span></div>
+    </nav>
+    <div class="sidebar-footer">JOYS · Menton 06500<br><span style="opacity:.5">local · v2.0</span></div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="page-title">Dashboard</div>
+        <div class="topbar-date" id="topbar-date"></div>
       </div>
-
-      <!-- Feature cards -->
-      <div class="grid md:grid-cols-3 gap-4 mt-20">
-        <div class="card p-6">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-5" style="background:rgba(6,182,212,.1)">
-            <svg class="w-5 h-5" style="color:#06B6D4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          </div>
-          <h3 class="text-white font-700 mb-2" style="font-weight:700">Full IT asset inventory</h3>
-          <p class="text-zinc-500 text-sm leading-relaxed">Servers, workstations, network gear, software licences — all collected in one structured form. No more chasing spreadsheets.</p>
-        </div>
-        <div class="card p-6" style="border-color:rgba(6,182,212,.2)">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-5" style="background:rgba(6,182,212,.12)">
-            <svg class="w-5 h-5" style="color:#06B6D4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          </div>
-          <h3 class="text-white font-700 mb-2" style="font-weight:700">Security posture score</h3>
-          <p class="text-zinc-500 text-sm leading-relaxed">Automatic score based on MFA, backup policy, patch cadence, and EDR coverage. Know the risk before day one.</p>
-        </div>
-        <div class="card p-6">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-5" style="background:rgba(6,182,212,.1)">
-            <svg class="w-5 h-5" style="color:#06B6D4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          </div>
-          <h3 class="text-white font-700 mb-2" style="font-weight:700">First call in 15 minutes</h3>
-          <p class="text-zinc-500 text-sm leading-relaxed">Your engineer arrives on the kickoff call with a full picture of the environment. Technical, not discovery. Time-to-value cut in half.</p>
-        </div>
-      </div>
-
-      <!-- What gets collected -->
-      <div class="mt-16 card p-8">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h2 class="text-white font-700 text-lg" style="font-weight:700">What the client fills in</h2>
-            <p class="text-zinc-500 text-sm mt-1">8 structured sections — takes ~12 minutes</p>
-          </div>
-          <button class="btn btn-outline btn-sm" @click="builder.type='worker'; view='client'">Try the form →</button>
-        </div>
-        <div class="grid md:grid-cols-4 gap-3">
-          <template x-for="s in formSections">
-            <div class="card-inner p-3 flex items-start gap-3">
-              <span class="text-lg flex-shrink-0" x-text="s.icon"></span>
-              <div>
-                <p class="text-white text-sm font-600" style="font-weight:600" x-text="s.label"></p>
-                <p class="text-zinc-600 text-xs mt-0.5" x-text="s.hint"></p>
-              </div>
-            </div>
-          </template>
-        </div>
-      </div>
-
-      <!-- Comparison -->
-      <div class="mt-12 grid md:grid-cols-2 gap-5">
-        <div class="card p-6" style="border-color:rgba(239,68,68,.15)">
-          <p class="text-red-400 text-xs font-700 uppercase tracking-widest mb-4">Without MSPOnboard</p>
-          <div class="space-y-3">
-            <template x-for="b in bads">
-              <div class="flex items-start gap-3">
-                <span class="text-red-400 mt-0.5 flex-shrink-0">✗</span>
-                <p class="text-zinc-400 text-sm" x-text="b"></p>
-              </div>
-            </template>
-          </div>
-        </div>
-        <div class="card p-6" style="border-color:rgba(6,182,212,.2)">
-          <p class="text-cyan-DEFAULT text-xs font-700 uppercase tracking-widest mb-4">With MSPOnboard</p>
-          <div class="space-y-3">
-            <template x-for="g in goods">
-              <div class="flex items-start gap-3">
-                <span style="color:#06B6D4" class="mt-0.5 flex-shrink-0">✓</span>
-                <p class="text-zinc-400 text-sm" x-text="g"></p>
-              </div>
-            </template>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pricing -->
-      <div class="mt-16">
-        <h2 class="text-white font-700 text-2xl mb-2 tracking-tight" style="font-weight:700">Simple pricing</h2>
-        <p class="text-zinc-500 mb-8">No per-seat fees. No onboarding cost. Cancel anytime.</p>
-        <div class="grid md:grid-cols-3 gap-4">
-          <div class="card p-6">
-            <p class="text-zinc-500 text-xs uppercase tracking-widest mb-2">Starter</p>
-            <p class="text-white text-3xl font-800 mono mb-1" style="font-weight:800">Free</p>
-            <p class="text-zinc-600 text-sm mb-5">Up to 3 clients</p>
-            <ul class="space-y-2 text-zinc-500 text-sm mb-6">
-              <li>✓ Client intake forms</li>
-              <li>✓ Security posture score</li>
-              <li>✓ Asset inventory</li>
-            </ul>
-            <button class="btn btn-outline w-full justify-center" @click="view='builder'">Get started</button>
-          </div>
-          <div class="p-6 rounded-xl glow-cyan" style="background:#18181B;border:1px solid rgba(6,182,212,.35)">
-            <div class="flex items-center justify-between mb-2">
-              <p style="color:#06B6D4" class="text-xs uppercase tracking-widest font-700">Pro</p>
-              <span class="badge b-cyan">Most popular</span>
-            </div>
-            <p class="text-white text-3xl font-800 mono mb-1" style="font-weight:800">$99<span class="text-zinc-500 text-base font-400">/mo</span></p>
-            <p class="text-zinc-600 text-sm mb-5">Up to 25 clients</p>
-            <ul class="space-y-2 text-zinc-500 text-sm mb-6">
-              <li>✓ Everything in Starter</li>
-              <li>✓ Email notifications</li>
-              <li>✓ PDF export & brief</li>
-              <li>✓ Custom branding</li>
-              <li>✓ ConnectWise / Autotask export</li>
-            </ul>
-            <button class="btn btn-cyan w-full justify-center" @click="view='builder'">Start 14-day trial →</button>
-          </div>
-          <div class="card p-6">
-            <p class="text-zinc-500 text-xs uppercase tracking-widest mb-2">Agency</p>
-            <p class="text-white text-3xl font-800 mono mb-1" style="font-weight:800">$149<span class="text-zinc-500 text-base font-400">/mo</span></p>
-            <p class="text-zinc-600 text-sm mb-5">Unlimited clients</p>
-            <ul class="space-y-2 text-zinc-500 text-sm mb-6">
-              <li>✓ Everything in Pro</li>
-              <li>✓ Multi-engineer dashboard</li>
-              <li>✓ API access</li>
-              <li>✓ SLA & compliance reports</li>
-              <li>✓ Priority support</li>
-            </ul>
-            <button class="btn btn-outline w-full justify-center" @click="view='builder'">Contact us</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     DASHBOARD
-============================================================ -->
-<div x-show="view==='dashboard'" x-cloak>
-  <div class="max-w-5xl mx-auto px-5 py-6">
-
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3">
-        <button class="btn btn-ghost" @click="view='landing'">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        </button>
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:#06B6D4">
-            <svg class="w-3.5 h-3.5" style="color:#09090B" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </div>
-          <span class="text-white font-700 tracking-tight" style="font-weight:700">MSPOnboard</span>
-          <span class="text-zinc-700">/</span>
-          <span class="text-zinc-500 text-sm">Apex IT Solutions</span>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="flex rounded-lg overflow-hidden" style="border:1px solid rgba(255,255,255,.07)">
-          <button class="tab" :class="dashTab==='clients'?'on':''" @click="dashTab='clients'">Clients</button>
-          <button class="tab" :class="dashTab==='assets'?'on':''" @click="dashTab='assets'">Assets</button>
-          <button class="tab" :class="dashTab==='security'?'on':''" @click="dashTab='security'">Security</button>
-        </div>
-        <button class="btn btn-cyan btn-sm" @click="view='builder'">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-          New client
-        </button>
-      </div>
-    </div>
-
-    <!-- Stats row -->
-    <div class="grid grid-cols-5 gap-3 mb-6">
-      <div class="card p-4">
-        <p class="text-zinc-500 text-xs mono mb-1">CLIENTS</p>
-        <p class="text-white text-2xl font-800 mono" style="font-weight:800" x-text="clients.length"></p>
-      </div>
-      <div class="card p-4">
-        <p class="text-zinc-500 text-xs mono mb-1">ONBOARDED</p>
-        <p class="text-2xl font-800 mono text-emerald-DEFAULT" style="font-weight:800" x-text="clients.filter(c=>c.status==='Active').length"></p>
-      </div>
-      <div class="card p-4">
-        <p class="text-zinc-500 text-xs mono mb-1">IN PROGRESS</p>
-        <p class="text-2xl font-800 mono" style="font-weight:800;color:#F59E0B" x-text="clients.filter(c=>c.status==='In Progress').length"></p>
-      </div>
-      <div class="card p-4">
-        <p class="text-zinc-500 text-xs mono mb-1">TOTAL DEVICES</p>
-        <p class="text-white text-2xl font-800 mono" style="font-weight:800" x-text="clients.reduce((a,c)=>a+(c.devices||0),0)"></p>
-      </div>
-      <div class="card p-4">
-        <p class="text-zinc-500 text-xs mono mb-1">AVG SEC SCORE</p>
-        <p class="text-2xl font-800 mono" :style="`color:${scoreCol(Math.round(clients.reduce((a,c)=>a+(c.secScore||0),0)/clients.length))}`" style="font-weight:800" x-text="Math.round(clients.reduce((a,c)=>a+(c.secScore||0),0)/clients.length)+'%'"></p>
-      </div>
-    </div>
-
-    <!-- CLIENTS TAB -->
-    <template x-if="dashTab==='clients'">
-      <div class="card overflow-hidden">
-        <div class="flex items-center justify-between px-5 py-3.5" style="border-bottom:1px solid rgba(255,255,255,.05)">
-          <h2 class="text-white text-sm font-600" style="font-weight:600">Client roster</h2>
-          <span class="text-zinc-600 text-xs mono" x-text="clients.length + ' clients'"></span>
-        </div>
-        <template x-for="(c,i) in clients" :key="i">
-          <div class="trow group" @click="openClient(c)">
-            <div class="flex items-center gap-3">
-              <div class="av" :style="`background:${c.color}15;color:${c.color}`" x-text="c.name.split(' ').map(w=>w[0]).join('').slice(0,2)"></div>
-              <div>
-                <div class="flex items-center gap-2">
-                  <p class="text-white text-sm font-500 group-hover:text-cyan-light transition-colors" style="font-weight:500" x-text="c.name"></p>
-                  <span class="badge" :class="c.status==='Active'?'b-green':c.status==='In Progress'?'b-yellow':'b-zinc'" x-text="c.status"></span>
-                </div>
-                <p class="text-zinc-600 text-xs mt-0.5" x-text="c.industry + ' · ' + c.size + ' employees'"></p>
-              </div>
-            </div>
-            <div class="flex items-center gap-5">
-              <div class="hidden md:flex items-center gap-4 text-right">
-                <div>
-                  <p class="text-zinc-500 text-xs mono">Devices</p>
-                  <p class="text-white text-sm mono font-600" style="font-weight:600" x-text="c.devices"></p>
-                </div>
-                <div>
-                  <p class="text-zinc-500 text-xs mono">M365</p>
-                  <p class="text-sm mono font-600" style="font-weight:600" :class="c.m365?'text-emerald-DEFAULT':'text-zinc-700'" x-text="c.m365?'✓':'—'"></p>
-                </div>
-                <div>
-                  <p class="text-zinc-500 text-xs mono">MFA</p>
-                  <p class="text-sm mono font-600" style="font-weight:600" :class="c.mfa?'text-emerald-DEFAULT':'text-red2-DEFAULT'" x-text="c.mfa?'ON':'OFF'"></p>
-                </div>
-              </div>
-              <!-- Sec score bar -->
-              <div class="text-center w-14">
-                <div class="ring" :style="`background:${scoreCol(c.secScore)}15;color:${scoreCol(c.secScore)}`" x-text="c.secScore+'%'"></div>
-                <p class="text-zinc-600 text-xs mono mt-0.5">sec</p>
-              </div>
-              <button class="btn btn-ghost btn-sm opacity-0 group-hover:opacity-100 transition-opacity" @click.stop="exportClient(c)">Export</button>
-            </div>
-          </div>
-        </template>
-      </div>
-    </template>
-
-    <!-- ASSETS TAB -->
-    <template x-if="dashTab==='assets'">
-      <div class="space-y-4">
-        <!-- Software overview -->
-        <div class="card p-5">
-          <h3 class="text-white text-sm font-600 mb-4" style="font-weight:600">Software stack across all clients</h3>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <template x-for="sw in softwareStack">
-              <div class="card-inner p-3">
-                <p class="text-zinc-500 text-xs mono mb-1" x-text="sw.name"></p>
-                <div class="flex items-end gap-2">
-                  <p class="text-white text-xl font-800 mono" style="font-weight:800" x-text="sw.count"></p>
-                  <p class="text-zinc-600 text-xs mb-0.5">clients</p>
-                </div>
-                <div class="pbar mt-2"><div class="pfill" :style="`width:${(sw.count/clients.length)*100}%`"></div></div>
-              </div>
-            </template>
-          </div>
-        </div>
-        <!-- Device breakdown -->
-        <div class="card p-5">
-          <h3 class="text-white text-sm font-600 mb-4" style="font-weight:600">Device inventory</h3>
-          <div class="space-y-2">
-            <template x-for="(c, i) in clients" :key="i">
-              <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 w-44 flex-shrink-0">
-                  <div class="av w-7 h-7 text-xs" :style="`background:${c.color}15;color:${c.color}`" x-text="c.name.split(' ').map(w=>w[0]).join('').slice(0,2)"></div>
-                  <p class="text-zinc-400 text-xs truncate" x-text="c.name"></p>
-                </div>
-                <div class="flex-1 flex items-center gap-2">
-                  <div class="flex-1 bg-zinc-800 rounded-full overflow-hidden" style="height:6px">
-                    <div class="h-full rounded-full" :style="`width:${Math.min((c.devices/50)*100,100)}%;background:${c.color}`"></div>
-                  </div>
-                  <p class="text-zinc-500 text-xs mono w-14 text-right" x-text="c.devices + ' devices'"></p>
-                </div>
-                <div class="hidden md:flex gap-2">
-                  <span class="badge b-zinc text-xs mono" x-text="c.os"></span>
-                  <span class="badge" :class="c.edr?'b-green':'b-red'" x-text="c.edr?'EDR ✓':'No EDR'"></span>
-                </div>
-              </div>
-            </template>
-          </div>
-        </div>
-      </div>
-    </template>
-
-    <!-- SECURITY TAB -->
-    <template x-if="dashTab==='security'">
-      <div class="space-y-4">
-        <div class="card p-5">
-          <h3 class="text-white text-sm font-600 mb-4" style="font-weight:600">Security posture by client</h3>
-          <div class="space-y-3">
-            <template x-for="(c,i) in [...clients].sort((a,b)=>a.secScore-b.secScore)" :key="i">
-              <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 w-44 flex-shrink-0">
-                  <div class="av w-7 h-7 text-xs" :style="`background:${c.color}15;color:${c.color}`" x-text="c.name.split(' ').map(w=>w[0]).join('').slice(0,2)"></div>
-                  <p class="text-zinc-400 text-xs truncate" x-text="c.name"></p>
-                </div>
-                <div class="flex-1 bg-zinc-800 rounded-full overflow-hidden" style="height:6px">
-                  <div class="h-full rounded-full transition-all" :style="`width:${c.secScore}%;background:${scoreCol(c.secScore)}`"></div>
-                </div>
-                <p class="text-sm mono font-700 w-12 text-right" :style="`color:${scoreCol(c.secScore)}`" style="font-weight:700" x-text="c.secScore+'%'"></p>
-                <div class="hidden md:flex gap-1.5">
-                  <span class="badge" :class="c.mfa?'b-green':'b-red'" x-text="c.mfa?'MFA':'No MFA'"></span>
-                  <span class="badge" :class="c.backup?'b-green':'b-red'" x-text="c.backup?'Backup':'No Backup'"></span>
-                  <span class="badge" :class="c.edr?'b-green':'b-red'" x-text="c.edr?'EDR':'No EDR'"></span>
-                </div>
-              </div>
-            </template>
-          </div>
-        </div>
-        <div class="grid grid-cols-3 gap-4">
-          <div class="card p-4 text-center">
-            <p class="text-4xl font-800 text-emerald-DEFAULT mono mb-1" style="font-weight:800" x-text="clients.filter(c=>c.mfa).length + '/' + clients.length"></p>
-            <p class="text-zinc-500 text-sm">MFA enabled</p>
-          </div>
-          <div class="card p-4 text-center">
-            <p class="text-4xl font-800 text-emerald-DEFAULT mono mb-1" style="font-weight:800" x-text="clients.filter(c=>c.backup).length + '/' + clients.length"></p>
-            <p class="text-zinc-500 text-sm">Backup solution</p>
-          </div>
-          <div class="card p-4 text-center">
-            <p class="text-4xl font-800 mono mb-1" :class="clients.filter(c=>!c.edr).length>0?'text-red2-DEFAULT':'text-emerald-DEFAULT'" style="font-weight:800" x-text="clients.filter(c=>c.edr).length + '/' + clients.length"></p>
-            <p class="text-zinc-500 text-sm">EDR deployed</p>
-          </div>
-        </div>
-      </div>
-    </template>
-
-  </div>
-</div>
-
-<!-- ============================================================
-     BUILDER
-============================================================ -->
-<div x-show="view==='builder'" x-cloak>
-  <div class="max-w-xl mx-auto px-5 py-7">
-    <div class="flex items-center gap-3 mb-7">
-      <button class="btn btn-ghost" @click="view='dashboard'">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      <button class="btn-add" id="btn-add" style="display:none" onclick="openAdd()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        <span id="btn-add-label">Ajouter</span>
       </button>
-      <div>
-        <h1 class="text-white font-800 tracking-tight" style="font-weight:800">New client intake</h1>
-        <p class="text-zinc-500 text-sm">Configure and send — they fill everything before the kickoff call</p>
-      </div>
     </div>
-
-    <div class="card p-5 mb-4">
-      <h3 class="text-white text-sm font-600 mb-4" style="font-weight:600">Your MSP</h3>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="text-zinc-500 text-xs mono block mb-1.5">COMPANY NAME</label><input class="field" x-model="builder.mspName" placeholder="Apex IT Solutions"/></div>
-        <div><label class="text-zinc-500 text-xs mono block mb-1.5">ENGINEER NAME</label><input class="field" x-model="builder.engineer" placeholder="Alex Chen"/></div>
-      </div>
-      <div class="mt-3"><label class="text-zinc-500 text-xs mono block mb-1.5">CLIENT COMPANY NAME</label><input class="field" x-model="builder.clientName" placeholder="e.g. Riverstone Legal"/></div>
-    </div>
-
-    <div class="card p-5 mb-4">
-      <div class="flex items-start justify-between mb-3">
-        <div>
-          <h3 class="text-white text-sm font-600" style="font-weight:600">Client intake link</h3>
-          <p class="text-zinc-500 text-xs mt-0.5">Send via email — they fill it before the kickoff call</p>
-        </div>
-        <button class="btn btn-cyan btn-sm" @click="generateLink()">Generate link</button>
-      </div>
-      <template x-if="generatedLink">
-        <div class="card-inner p-3 flex items-center gap-2 mt-3">
-          <code class="mono text-cyan-light text-xs flex-1 truncate" x-text="generatedLink"></code>
-          <button class="btn btn-ghost btn-sm" @click="copyLink()">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-          </button>
-          <button class="btn btn-cyan btn-sm" @click="view='client'">Preview →</button>
-        </div>
-      </template>
-      <template x-if="copied"><p class="text-emerald-light text-xs mt-2">✓ Copied to clipboard</p></template>
-    </div>
-
-    <div class="text-center mt-4">
-      <button class="text-zinc-600 hover:text-cyan-light text-sm transition-colors" @click="view='client'">→ Preview the client form</button>
-    </div>
+    <div class="content" id="main-content"></div>
   </div>
 </div>
 
-<!-- ============================================================
-     CLIENT FORM
-============================================================ -->
-<div x-show="view==='client'" x-cloak>
-  <div class="max-w-xl mx-auto px-5 py-7">
-
-    <!-- Progress header -->
-    <div class="mb-7">
-      <div class="flex items-center justify-between mb-2.5">
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-md flex items-center justify-center" style="background:#06B6D4">
-            <svg class="w-3 h-3" style="color:#09090B" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </div>
-          <span class="text-white text-sm font-600" style="font-weight:600" x-text="builder.mspName||'Your MSP'"></span>
-        </div>
-        <span class="text-zinc-600 text-xs mono" x-text="Math.round(progress)+'% complete'"></span>
-      </div>
-      <div class="pbar"><div class="pfill" :style="`width:${progress}%`"></div></div>
+<div class="modal-overlay hidden" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Ajouter</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
-
-    <!-- Welcome card -->
-    <div class="card p-5 mb-4">
-      <div class="flex items-start justify-between mb-3">
-        <div>
-          <div class="flex items-center gap-2 mb-2">
-            <span class="badge b-cyan mono">IT Onboarding</span>
-            <span x-show="builder.clientName" class="text-zinc-600 text-xs" x-text="'→ ' + builder.clientName"></span>
-          </div>
-          <h1 class="text-xl font-800 text-white tracking-tight" style="font-weight:800">Tell us about your IT environment</h1>
-        </div>
-      </div>
-      <p class="text-zinc-500 text-sm leading-relaxed">This form gives our engineers a complete picture of your infrastructure before we start. Takes ~12 minutes. Your data is end-to-end encrypted.</p>
-      <div class="hint mt-3 flex items-start gap-2">
-        <svg class="w-4 h-4 flex-shrink-0 mt-0.5" style="color:#06B6D4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <p class="text-cyan-light text-xs leading-relaxed">Don't know all the answers? Fill what you can — your assigned engineer will complete the rest on the kickoff call.</p>
-      </div>
+    <div id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-save" onclick="saveModal()">Enregistrer</button>
     </div>
-
-    <!-- ---- SECTION: Company ---- -->
-    <div class="sblock">
-      <div class="shead" @click="tog('co')">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">🏢</span>
-          <div><p class="text-white text-sm font-600" style="font-weight:600">Company details</p><p class="text-zinc-600 text-xs">Size, industry, primary contact</p></div>
-        </div>
-        <div class="flex items-center gap-2">
-          <template x-if="form.company"><span class="badge b-green text-xs">Done</span></template>
-          <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.co?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </div>
-      </div>
-      <div x-show="open.co" class="px-4 pb-5 space-y-3">
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">COMPANY NAME</label><input class="field" x-model="form.company" placeholder="Riverstone Legal" @input="cp()"/></div>
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">INDUSTRY</label>
-            <select class="field" x-model="form.industry" @change="cp()"><option value="">Select…</option><option>Legal</option><option>Finance / Accounting</option><option>Healthcare</option><option>Construction</option><option>Retail / E-commerce</option><option>Manufacturing</option><option>Non-profit</option><option>Education</option><option>Real Estate</option><option>Other</option></select>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">NO. OF EMPLOYEES</label><input class="field" x-model="form.employees" placeholder="42" type="number" @input="cp()"/></div>
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">NO. OF LOCATIONS</label><input class="field" x-model="form.locations" placeholder="2" type="number" @input="cp()"/></div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">PRIMARY CONTACT</label><input class="field" x-model="form.contact" placeholder="Name + mobile" @input="cp()"/></div>
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">EMAIL</label><input class="field" x-model="form.email" placeholder="it@company.com" @input="cp()"/></div>
-        </div>
-        <div><label class="text-zinc-500 text-xs mono block mb-1.5">CURRENT IT PROVIDER (if any)</label><input class="field" x-model="form.prevMSP" placeholder="e.g. TechCorp MSP — contract ends June 2025" @input="cp()"/></div>
-      </div>
-    </div>
-
-    <!-- ---- SECTION: Network ---- -->
-    <div class="sblock">
-      <div class="shead" @click="tog('net')">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">🌐</span>
-          <div><p class="text-white text-sm font-600" style="font-weight:600">Network infrastructure</p><p class="text-zinc-600 text-xs">ISP, firewall, Wi-Fi, VPN</p></div>
-        </div>
-        <div class="flex items-center gap-2">
-          <template x-if="form.isp"><span class="badge b-green text-xs">Done</span></template>
-          <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.net?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </div>
-      </div>
-      <div x-show="open.net" class="px-4 pb-5 space-y-3">
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">INTERNET PROVIDER (ISP)</label><input class="field" x-model="form.isp" placeholder="e.g. Telstra, NBN, Optus" @input="cp()"/></div>
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">CONNECTION TYPE</label>
-            <select class="field" x-model="form.connType" @change="cp()"><option value="">Select…</option><option>NBN FTTP</option><option>NBN FTTN</option><option>NBN HFC</option><option>4G/5G</option><option>Fibre (dedicated)</option><option>ADSL</option><option>Other</option></select>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">FIREWALL / ROUTER</label><input class="field" x-model="form.firewall" placeholder="e.g. Cisco Meraki MX68, Fortinet" @input="cp()"/></div>
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">MANAGED SWITCH</label><input class="field" x-model="form.switch" placeholder="e.g. Cisco SG350, Unmanaged" @input="cp()"/></div>
-        </div>
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-1.5">STATIC IP ADDRESS (if any)</label>
-          <input class="field mono" x-model="form.staticIP" placeholder="e.g. 203.x.x.x" @input="cp()"/>
-        </div>
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">VPN IN USE?</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="v in ['No VPN','Cisco AnyConnect','Fortinet SSL VPN','WireGuard','OpenVPN','Windows VPN','Other']">
-              <button class="chip" :class="form.vpn===v?'on':''" @click="form.vpn=v;cp()" x-text="v"></button>
-            </template>
-          </div>
-        </div>
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">WI-FI HARDWARE</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="w in ['Ubiquiti UniFi','Cisco Meraki','Ruckus','Aruba','TP-Link Omada','Consumer grade','None']">
-              <button class="chip" :class="form.wifi===w?'on':''" @click="form.wifi=w;cp()" x-text="w"></button>
-            </template>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ---- SECTION: Servers ---- -->
-    <div class="sblock">
-      <div class="shead" @click="tog('srv')">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">🖥️</span>
-          <div><p class="text-white text-sm font-600" style="font-weight:600">Servers & infrastructure</p><p class="text-zinc-600 text-xs">On-prem, cloud, virtualisation</p></div>
-        </div>
-        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.srv?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-      </div>
-      <div x-show="open.srv" class="px-4 pb-5 space-y-3">
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">SERVER ENVIRONMENT</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="e in ['On-premises only','Cloud only (Azure/AWS)','Hybrid','No servers']">
-              <button class="chip" :class="form.serverEnv===e?'on':''" @click="form.serverEnv=e;cp()" x-text="e"></button>
-            </template>
-          </div>
-        </div>
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">SERVER ROLES IN USE</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="r in ['Domain Controller (AD)','File Server','Print Server','Exchange (on-prem)','SQL Server','RDS / Terminal Server','Hyper-V Host','VMware ESXi','Web Server','Other']">
-              <button class="chip" :class="form.serverRoles.includes(r)?'on':''" @click="tarr('serverRoles',r);cp()" x-text="r"></button>
-            </template>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">TOTAL SERVERS</label><input class="field mono" x-model="form.serverCount" placeholder="3" type="number" @input="cp()"/></div>
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">MAIN SERVER OS</label>
-            <select class="field" x-model="form.serverOS" @change="cp()"><option value="">Select…</option><option>Windows Server 2022</option><option>Windows Server 2019</option><option>Windows Server 2016</option><option>Windows Server 2012 R2</option><option>Linux (Ubuntu)</option><option>Linux (CentOS/RHEL)</option><option>Mixed</option></select>
-          </div>
-        </div>
-        <div><label class="text-zinc-500 text-xs mono block mb-1.5">CLOUD SERVICES</label><input class="field" x-model="form.cloud" placeholder="e.g. Azure AD, AWS S3, Cloudflare..." @input="cp()"/></div>
-      </div>
-    </div>
-
-    <!-- ---- SECTION: Workstations ---- -->
-    <div class="sblock">
-      <div class="shead" @click="tog('ws')">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">💻</span>
-          <div><p class="text-white text-sm font-600" style="font-weight:600">Workstations & devices</p><p class="text-zinc-600 text-xs">PCs, laptops, mobile devices</p></div>
-        </div>
-        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.ws?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-      </div>
-      <div x-show="open.ws" class="px-4 pb-5 space-y-3">
-        <div class="grid grid-cols-3 gap-3">
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">WINDOWS PCs</label><input class="field mono" x-model="form.winPC" placeholder="18" type="number" @input="cp()"/></div>
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">MACS</label><input class="field mono" x-model="form.macs" placeholder="4" type="number" @input="cp()"/></div>
-          <div><label class="text-zinc-500 text-xs mono block mb-1.5">LAPTOPS</label><input class="field mono" x-model="form.laptops" placeholder="12" type="number" @input="cp()"/></div>
-        </div>
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">PRIMARY WINDOWS VERSION</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="v in ['Windows 11','Windows 10','Windows 10 + 11 mix','Windows 7/8 (legacy)','macOS only','Mixed']">
-              <button class="chip" :class="form.winVer===v?'on':''" @click="form.winVer=v;cp()" x-text="v"></button>
-            </template>
-          </div>
-        </div>
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">MOBILE DEVICE MANAGEMENT (MDM)</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="m in ['Intune / Microsoft MDM','Jamf (Mac)','Other MDM','No MDM']">
-              <button class="chip" :class="form.mdm===m?'on':''" @click="form.mdm=m;cp()" x-text="m"></button>
-            </template>
-          </div>
-        </div>
-        <div><label class="text-zinc-500 text-xs mono block mb-1.5">AVERAGE DEVICE AGE</label>
-          <select class="field" x-model="form.deviceAge" @change="cp()"><option value="">Select…</option><option>Less than 2 years</option><option>2–4 years</option><option>4–6 years</option><option>6+ years (needs refresh)</option></select>
-        </div>
-      </div>
-    </div>
-
-    <!-- ---- SECTION: Software & Licences ---- -->
-    <div class="sblock">
-      <div class="shead" @click="tog('sw')">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">📦</span>
-          <div><p class="text-white text-sm font-600" style="font-weight:600">Software & licences</p><p class="text-zinc-600 text-xs">Microsoft 365, antivirus, line-of-business apps</p></div>
-        </div>
-        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.sw?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-      </div>
-      <div x-show="open.sw" class="px-4 pb-5 space-y-3">
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">MICROSOFT 365 / OFFICE</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="o in ['M365 Business Basic','M365 Business Standard','M365 Business Premium','M365 E3','Office 2021 (perpetual)','Office 2019','Google Workspace','None']">
-              <button class="chip" :class="form.m365plan===o?'on':''" @click="form.m365plan=o;cp()" x-text="o"></button>
-            </template>
-          </div>
-        </div>
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">CURRENT ANTIVIRUS / EDR</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="a in ['Windows Defender only','Defender for Business','SentinelOne','CrowdStrike','Bitdefender','Malwarebytes','ESET','Symantec','None']">
-              <button class="chip" :class="form.av===a?'on':''" @click="form.av=a;cp()" x-text="a"></button>
-            </template>
-          </div>
-        </div>
-        <div><label class="text-zinc-500 text-xs mono block mb-1.5">LINE-OF-BUSINESS APPLICATIONS</label><textarea class="field" x-model="form.lob" placeholder="e.g. MYOB (accounting), Salesforce (CRM), Xero, Practice Evolve (legal), custom ERP..." @input="cp()"></textarea></div>
-        <div><label class="text-zinc-500 text-xs mono block mb-1.5">COMMUNICATION TOOLS</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="c in ['Microsoft Teams','Slack','Zoom','Google Meet','Email only','Other']">
-              <button class="chip" :class="form.comms.includes(c)?'on':''" @click="tarr('comms',c);cp()" x-text="c"></button>
-            </template>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ---- SECTION: Security ---- -->
-    <div class="sblock" style="border-color:rgba(6,182,212,.15)">
-      <div class="shead" @click="tog('sec')">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">🔐</span>
-          <div>
-            <div class="flex items-center gap-2">
-              <p class="text-white text-sm font-600" style="font-weight:600">Security posture</p>
-              <span class="badge b-cyan">Auto-scored</span>
-            </div>
-            <p class="text-zinc-600 text-xs">MFA, backups, patching, passwords</p>
-          </div>
-        </div>
-        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.sec?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-      </div>
-      <div x-show="open.sec" class="px-4 pb-5 space-y-4">
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-zinc-500 text-xs mono">MFA (MULTI-FACTOR AUTH)</label>
-            <span class="badge" :class="form.mfa==='Enabled everywhere'||form.mfa==='Enabled on M365'?'b-green':'b-red'" x-text="form.mfa||'Not set'"></span>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="m in ['Enabled everywhere','Enabled on M365','Enabled on some apps','Not enabled','Not sure']">
-              <button class="chip" :class="form.mfa===m?'on':''" @click="form.mfa=m;cp()" x-text="m"></button>
-            </template>
-          </div>
-        </div>
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-zinc-500 text-xs mono">BACKUP SOLUTION</label>
-            <span class="badge" :class="form.backup&&form.backup!=='No backup'?'b-green':'b-red'" x-text="form.backup||'Not set'"></span>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="b in ['Veeam','Datto','Acronis','Backblaze B2','Azure Backup','Time Machine (Mac)','External HDD only','No backup','Not sure']">
-              <button class="chip" :class="form.backup===b?'on':''" @click="form.backup=b;cp()" x-text="b"></button>
-            </template>
-          </div>
-        </div>
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">WINDOWS UPDATE / PATCH POLICY</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="p in ['Auto updates enabled','Manual updates monthly','Updates delayed/deferred','Not managed','Not sure']">
-              <button class="chip" :class="form.patches===p?'on':''" @click="form.patches=p;cp()" x-text="p"></button>
-            </template>
-          </div>
-        </div>
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">PASSWORD MANAGER</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="pm in ['1Password','Bitwarden','LastPass','Keeper','No password manager']">
-              <button class="chip" :class="form.pwManager===pm?'on':''" @click="form.pwManager=pm;cp()" x-text="pm"></button>
-            </template>
-          </div>
-        </div>
-        <!-- Live sec score -->
-        <div class="card-inner p-4">
-          <div class="flex items-center justify-between mb-3">
-            <p class="text-zinc-500 text-xs mono">CURRENT SECURITY SCORE</p>
-            <p class="text-2xl font-800 mono" :style="`color:${scoreCol(liveSecScore)}`" style="font-weight:800" x-text="liveSecScore+'%'"></p>
-          </div>
-          <div class="pbar"><div class="pfill" :style="`width:${liveSecScore}%;background:${scoreCol(liveSecScore)}`"></div></div>
-          <p class="text-zinc-600 text-xs mt-2" x-text="liveSecScore>=70?'Good security baseline. We\'ll help you reach 90%+.':liveSecScore>=40?'Several critical gaps identified. We\'ll prioritise these first.':'High risk environment. Immediate action recommended.'"></p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ---- SECTION: Backup & Recovery ---- -->
-    <div class="sblock">
-      <div class="shead" @click="tog('bk')">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">💾</span>
-          <div><p class="text-white text-sm font-600" style="font-weight:600">Backup & disaster recovery</p><p class="text-zinc-600 text-xs">RPO, RTO, last restore test</p></div>
-        </div>
-        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.bk?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-      </div>
-      <div x-show="open.bk" class="px-4 pb-5 space-y-3">
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">HOW LONG CAN YOU AFFORD TO BE DOWN? (RTO)</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="r in ['Less than 1 hour','1–4 hours','4–8 hours','1 business day','Longer is fine']">
-              <button class="chip" :class="form.rto===r?'on':''" @click="form.rto=r;cp()" x-text="r"></button>
-            </template>
-          </div>
-        </div>
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">HOW MUCH DATA LOSS IS ACCEPTABLE? (RPO)</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="r in ['0 – real-time sync','< 1 hour','< 4 hours','< 24 hours','24+ hours']">
-              <button class="chip" :class="form.rpo===r?'on':''" @click="form.rpo=r;cp()" x-text="r"></button>
-            </template>
-          </div>
-        </div>
-        <div><label class="text-zinc-500 text-xs mono block mb-1.5">LAST BACKUP RESTORE TEST</label>
-          <select class="field" x-model="form.lastRestore" @change="cp()"><option value="">Select…</option><option>Within last month</option><option>1–6 months ago</option><option>6–12 months ago</option><option>More than 1 year ago</option><option>Never tested</option><option>Not sure</option></select>
-        </div>
-      </div>
-    </div>
-
-    <!-- ---- SECTION: Pain points ---- -->
-    <div class="sblock">
-      <div class="shead" @click="tog('pain')">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">🎯</span>
-          <div><p class="text-white text-sm font-600" style="font-weight:600">Pain points & priorities</p><p class="text-zinc-600 text-xs">What's broken, what matters most</p></div>
-        </div>
-        <svg class="w-4 h-4 text-zinc-600 transition-transform" :class="open.pain?'rotate-180':''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-      </div>
-      <div x-show="open.pain" class="px-4 pb-5 space-y-3">
-        <div>
-          <label class="text-zinc-500 text-xs mono block mb-2">TOP IT COMPLAINTS (SELECT ALL THAT APPLY)</label>
-          <div class="flex flex-wrap gap-2">
-            <template x-for="p in ['Slow computers','Frequent crashes/BSOD','Email issues','Slow internet','VPN problems','Printer issues','Software licensing confusion','Security worries','No IT visibility','Poor response from current IT','Outdated hardware','Password reset hell','Remote work issues']">
-              <button class="chip" :class="form.pains.includes(p)?'on':''" @click="tarr('pains',p);cp()" x-text="p"></button>
-            </template>
-          </div>
-        </div>
-        <div><label class="text-zinc-500 text-xs mono block mb-1.5">TOP PRIORITY FOR FIRST 30 DAYS</label><textarea class="field" x-model="form.priority" placeholder="What do you want us to fix or improve first? Be specific..." @input="cp()"></textarea></div>
-        <div><label class="text-zinc-500 text-xs mono block mb-1.5">ANYTHING ELSE WE SHOULD KNOW</label><textarea class="field" x-model="form.notes" placeholder="Upcoming projects, compliance requirements, planned office moves, acquisitions..." @input="cp()"></textarea></div>
-      </div>
-    </div>
-
-    <!-- Submit -->
-    <div class="mt-6">
-      <button class="btn btn-cyan w-full justify-center py-3.5 text-sm" @click="submitForm()">
-        Submit IT environment brief →
-      </button>
-      <p class="text-zinc-700 text-xs text-center mt-2.5 mono">All data encrypted in transit · Progress auto-saved</p>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     SUCCESS
-============================================================ -->
-<div x-show="view==='success'" x-cloak>
-  <div id="cf-wrap"></div>
-  <div class="max-w-md mx-auto px-5 py-24 text-center">
-    <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6" style="background:rgba(16,185,129,.1)">
-      <svg class="w-8 h-8 text-emerald-DEFAULT" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-    </div>
-    <h1 class="text-3xl font-800 text-white tracking-tight mb-2" style="font-weight:800">Environment brief received.</h1>
-    <p class="text-zinc-500 mb-1">Submitted to <span class="text-cyan-light" x-text="builder.mspName||'your MSP'"></span></p>
-    <p class="text-zinc-600 text-sm mb-8">Security score: <span class="font-700 mono" :style="`color:${scoreCol(liveSecScore)}`" style="font-weight:700" x-text="liveSecScore+'%'"></span></p>
-
-    <div class="card p-5 text-left mb-5">
-      <p class="text-zinc-500 text-xs mono uppercase tracking-widest mb-4">What happens next</p>
-      <div class="space-y-3">
-        <div class="flex items-start gap-3"><div class="w-5 h-5 rounded flex items-center justify-center text-xs flex-shrink-0 mt-0.5" style="background:rgba(6,182,212,.12);color:#06B6D4">1</div><p class="text-zinc-400 text-sm">Your engineer reviews the brief and asset inventory</p></div>
-        <div class="flex items-start gap-3"><div class="w-5 h-5 rounded flex items-center justify-center text-xs flex-shrink-0 mt-0.5" style="background:rgba(6,182,212,.12);color:#06B6D4">2</div><p class="text-zinc-400 text-sm">Kickoff call is scheduled — now technical from minute 1</p></div>
-        <div class="flex items-start gap-3"><div class="w-5 h-5 rounded flex items-center justify-center text-xs flex-shrink-0 mt-0.5" style="background:rgba(6,182,212,.12);color:#06B6D4">3</div><p class="text-zinc-400 text-sm">We build your onboarding plan and deploy our toolstack</p></div>
-        <div class="flex items-start gap-3"><div class="w-5 h-5 rounded flex items-center justify-center text-xs flex-shrink-0 mt-0.5" style="background:rgba(6,182,212,.12);color:#06B6D4">4</div><p class="text-zinc-400 text-sm">You're fully under management within 48 hours</p></div>
-      </div>
-    </div>
-
-    <button class="btn btn-outline w-full justify-center" @click="view='dashboard'">View dashboard →</button>
-  </div>
-</div>
-
-<!-- ============================================================
-     CLIENT DETAIL MODAL
-============================================================ -->
-<div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto py-8 px-4">
-  <div class="absolute inset-0 bg-black/80" style="backdrop-filter:blur(8px)" @click="modalOpen=false"></div>
-  <div class="relative card rounded-2xl w-full max-w-2xl z-10 p-7" x-show="selectedClient">
-    <button class="absolute top-4 right-4 btn btn-ghost btn-sm" @click="modalOpen=false">✕</button>
-    <template x-if="selectedClient">
-      <div>
-        <div class="flex items-start gap-4 mb-6">
-          <div class="av w-12 h-12 text-base" :style="`background:${selectedClient.color}15;color:${selectedClient.color}`" x-text="selectedClient.name.split(' ').map(w=>w[0]).join('').slice(0,2)"></div>
-          <div class="flex-1">
-            <h2 class="text-white text-xl font-800 tracking-tight" style="font-weight:800" x-text="selectedClient.name"></h2>
-            <p class="text-zinc-500 text-sm" x-text="selectedClient.industry + ' · ' + selectedClient.size + ' employees'"></p>
-            <div class="flex items-center gap-2 mt-1.5">
-              <span class="badge" :class="selectedClient.status==='Active'?'b-green':selectedClient.status==='In Progress'?'b-yellow':'b-zinc'" x-text="selectedClient.status"></span>
-              <span class="badge b-cyan mono" x-text="'Sec: ' + selectedClient.secScore + '%'"></span>
-            </div>
-          </div>
-          <div class="text-right">
-            <div class="ring w-16 h-16" :style="`background:${scoreCol(selectedClient.secScore)}15;color:${scoreCol(selectedClient.secScore)}`" x-text="selectedClient.secScore+'%'"></div>
-            <p class="text-zinc-600 text-xs mono mt-1">Security</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-3 mb-5">
-          <div class="card-inner p-3"><p class="text-zinc-600 text-xs mono">DEVICES</p><p class="text-white text-xl font-800 mono mt-1" style="font-weight:800" x-text="selectedClient.devices"></p></div>
-          <div class="card-inner p-3"><p class="text-zinc-600 text-xs mono">M365</p><p class="text-sm mt-1 font-700" :class="selectedClient.m365?'text-emerald-DEFAULT':'text-zinc-700'" style="font-weight:700" x-text="selectedClient.m365?'✓ Enabled':'✗ No'"></p></div>
-          <div class="card-inner p-3"><p class="text-zinc-600 text-xs mono">MFA</p><p class="text-sm mt-1 font-700" :class="selectedClient.mfa?'text-emerald-DEFAULT':'text-red2-DEFAULT'" style="font-weight:700" x-text="selectedClient.mfa?'✓ Enabled':'✗ Disabled'"></p></div>
-        </div>
-
-        <div class="space-y-4">
-          <template x-for="(section, key) in selectedClient.data">
-            <div>
-              <p class="text-zinc-600 text-xs mono uppercase tracking-widest mb-2 pb-1.5" style="border-bottom:1px solid rgba(255,255,255,.05)" x-text="key"></p>
-              <div class="grid grid-cols-2 gap-x-6 gap-y-1.5">
-                <template x-for="(val, field) in section">
-                  <div x-show="val" class="flex items-start gap-2">
-                    <p class="text-zinc-600 text-xs mt-0.5 flex-shrink-0 w-28 truncate" x-text="field"></p>
-                    <p class="text-zinc-300 text-xs font-500" style="font-weight:500" x-text="val"></p>
-                  </div>
-                </template>
-              </div>
-            </div>
-          </template>
-        </div>
-
-        <div class="flex gap-3 mt-6 pt-4" style="border-top:1px solid rgba(255,255,255,.06)">
-          <button class="btn btn-cyan btn-sm" @click="exportClient(selectedClient)">Export brief</button>
-          <button class="btn btn-outline btn-sm" @click="modalOpen=false">Close</button>
-        </div>
-      </div>
-    </template>
   </div>
 </div>
 
 <script>
-function app() {
-  return {
-    view: 'landing',
-    dashTab: 'clients',
-    modalOpen: false,
-    selectedClient: null,
-    generatedLink: null,
-    copied: false,
-    progress: 0,
+/* ── UTILS ── */
+function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
+function today(){return new Date().toISOString().slice(0,10);}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmt(n){const x=Number(n);return isNaN(x)?'—':new Intl.NumberFormat('fr-FR').format(x);}
+function fmtEur(n){const x=Number(n);return isNaN(x)?'—':new Intl.NumberFormat('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:0}).format(x)+' €';}
+function fmtDate(d){if(!d)return'—';const p=d.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:d;}
+function pct(a,b){return b>0?Math.round(a/b*100):0;}
 
-    builder: { mspName: 'Apex IT Solutions', engineer: 'Alex Chen', clientName: '' },
+/* ── SAMPLE DATA ── */
+const SAMPLE={
+  orders:[
+    {id:uid(),date:'2026-04-28',clientName:'Élodie M.',product:'Moule sucette logo',amount:38,source:'instagram',status:'delivered',notes:''},
+    {id:uid(),date:'2026-04-25',clientName:'Yoann B.',product:'Veilleuse astronaute',amount:54,source:'direct',status:'delivered',notes:''},
+    {id:uid(),date:'2026-04-22',clientName:'Studio Atelier 13',product:'Maquette architecture',amount:240,source:'ads_meta',status:'delivered',notes:'B2B'},
+    {id:uid(),date:'2026-04-19',clientName:'Camille R.',product:'Figurines mariage',amount:96,source:'instagram',status:'delivered',notes:''},
+    {id:uid(),date:'2026-04-15',clientName:'Karim L.',product:'Porte-clés Spotify',amount:24,source:'tiktok',status:'delivered',notes:''},
+    {id:uid(),date:'2026-04-10',clientName:'Margaux D.',product:'Moule chocolat',amount:42,source:'etsy',status:'delivered',notes:''},
+    {id:uid(),date:'2026-04-05',clientName:'AS Monaco Boutique',product:'Trophée CDM diorama',amount:480,source:'direct',status:'delivered',notes:'B2B'},
+    {id:uid(),date:'2026-03-28',clientName:'Marie T.',product:'Lithophanie portrait',amount:49,source:'ads_meta',status:'delivered',notes:''},
+    {id:uid(),date:'2026-03-20',clientName:'Tom S.',product:'Trophée CDM diorama',amount:39,source:'tiktok',status:'delivered',notes:''},
+    {id:uid(),date:'2026-03-15',clientName:'Julie P.',product:'Moule sucette logo',amount:38,source:'instagram',status:'delivered',notes:''},
+    {id:uid(),date:'2026-03-08',clientName:'Lucas F.',product:'Support gaming',amount:28,source:'etsy',status:'delivered',notes:''},
+    {id:uid(),date:'2026-02-14',clientName:'Sophie & Marc',product:'Figurines mariage',amount:68,source:'instagram',status:'delivered',notes:''},
+    {id:uid(),date:'2026-05-01',clientName:'Nathan B.',product:'Veilleuse astronaute',amount:54,source:'tiktok',status:'printing',notes:''},
+    {id:uid(),date:'2026-05-03',clientName:'Claire D.',product:'Moule chocolat',amount:42,source:'ads_meta',status:'pending',notes:''},
+    {id:uid(),date:'2026-05-06',clientName:'Lucas G.',product:'Lithophanie portrait',amount:49,source:'instagram',status:'pending',notes:'Urgent'},
+  ],
+  products:[
+    {id:uid(),name:'Veilleuse astronaute',category:'lampes',stock:3,printTimeH:3,materialCost:8.5,sellingPrice:54},
+    {id:uid(),name:'Lithophanie portrait',category:'lampes',stock:5,printTimeH:2.5,materialCost:6,sellingPrice:49},
+    {id:uid(),name:'Moule sucette logo',category:'moules',stock:8,printTimeH:1.5,materialCost:3.5,sellingPrice:38},
+    {id:uid(),name:'Moule chocolat',category:'moules',stock:12,printTimeH:1.2,materialCost:2.8,sellingPrice:42},
+    {id:uid(),name:'Porte-clés Spotify',category:'porte-cles',stock:15,printTimeH:0.5,materialCost:1.2,sellingPrice:24},
+    {id:uid(),name:'Figurines mariage',category:'figurines',stock:2,printTimeH:4,materialCost:12,sellingPrice:68},
+    {id:uid(),name:'Trophée CDM diorama',category:'trophees',stock:7,printTimeH:2,materialCost:7,sellingPrice:39},
+    {id:uid(),name:'Support gaming',category:'gaming',stock:4,printTimeH:2,materialCost:5,sellingPrice:28},
+    {id:uid(),name:'Maquette architecture',category:'autre',stock:1,printTimeH:6,materialCost:18,sellingPrice:120},
+  ],
+  clients:[
+    {id:uid(),name:'Élodie M.',email:'elodie@exemple.fr',source:'instagram',city:'Nice',firstOrder:'2026-04-28',notes:'Pâtissière'},
+    {id:uid(),name:'Yoann B.',email:'yoann@exemple.fr',source:'direct',city:'Lyon',firstOrder:'2026-04-25',notes:''},
+    {id:uid(),name:'Studio Atelier 13',email:'contact@atelier13.fr',source:'direct',city:'Marseille',firstOrder:'2026-04-22',notes:'B2B'},
+    {id:uid(),name:'Camille R.',email:'',source:'instagram',city:'Cannes',firstOrder:'2026-04-19',notes:'Mariage juin 2026'},
+    {id:uid(),name:'AS Monaco Boutique',email:'boutique@asmonaco.com',source:'direct',city:'Monaco',firstOrder:'2026-04-05',notes:'B2B stratégique'},
+    {id:uid(),name:'Karim L.',email:'',source:'tiktok',city:'Paris',firstOrder:'2026-04-15',notes:''},
+    {id:uid(),name:'Margaux D.',email:'margaux@exemple.fr',source:'etsy',city:'Grasse',firstOrder:'2026-04-10',notes:''},
+  ],
+  content:[
+    {id:uid(),date:'2026-04-29',title:'Porte-clés Spotify — perso',platform:'tiktok',views:62300,watchTimePct:55,likes:3800,comments:156,shares:520,siteClicks:290,ordersGenerated:5,revenue:120},
+    {id:uid(),date:'2026-04-22',title:'Figurines mariage avant/après',platform:'tiktok',views:89400,watchTimePct:61,likes:5200,comments:234,shares:890,siteClicks:420,ordersGenerated:8,revenue:544},
+    {id:uid(),date:'2026-04-18',title:'Moule sucette logo ASMR',platform:'tiktok',views:31500,watchTimePct:38,likes:1280,comments:54,shares:198,siteClicks:120,ordersGenerated:2,revenue:76},
+    {id:uid(),date:'2026-04-25',title:'Veilleuse astronaute — process',platform:'tiktok',views:48200,watchTimePct:42,likes:2140,comments:89,shares:312,siteClicks:180,ordersGenerated:4,revenue:216},
+    {id:uid(),date:'2026-04-12',title:'Impression 3D CDM diorama',platform:'tiktok',views:24100,watchTimePct:35,likes:980,comments:41,shares:145,siteClicks:88,ordersGenerated:2,revenue:78},
+    {id:uid(),date:'2026-04-22',title:'Lithophanie portrait — tuto',platform:'instagram',views:8400,watchTimePct:52,likes:410,comments:32,shares:67,siteClicks:94,ordersGenerated:2,revenue:98},
+    {id:uid(),date:'2026-04-05',title:'Pack Bambu Lab — unboxing',platform:'tiktok',views:15600,watchTimePct:29,likes:640,comments:28,shares:87,siteClicks:55,ordersGenerated:1,revenue:54},
+    {id:uid(),date:'2026-05-02',title:'Moule chocolat Pâques',platform:'tiktok',views:41800,watchTimePct:48,likes:2010,comments:98,shares:244,siteClicks:160,ordersGenerated:3,revenue:126},
+  ],
+  social:[
+    {id:uid(),date:'2026-04-28',platform:'instagram',followers:1428,reach:9200,impressions:13400,engagement:4.8,posts:6,profileVisits:410},
+    {id:uid(),date:'2026-04-21',platform:'instagram',followers:1380,reach:8100,impressions:11800,engagement:4.3,posts:5,profileVisits:340},
+    {id:uid(),date:'2026-04-14',platform:'instagram',followers:1305,reach:7400,impressions:10200,engagement:5.1,posts:7,profileVisits:290},
+    {id:uid(),date:'2026-04-07',platform:'instagram',followers:1240,reach:6800,impressions:9600,engagement:4.6,posts:4,profileVisits:260},
+    {id:uid(),date:'2026-03-31',platform:'instagram',followers:1190,reach:6200,impressions:8900,engagement:4.1,posts:5,profileVisits:230},
+    {id:uid(),date:'2026-04-28',platform:'tiktok',followers:3840,reach:28000,impressions:42000,engagement:6.2,posts:4,profileVisits:1200},
+    {id:uid(),date:'2026-04-21',platform:'tiktok',followers:3610,reach:22000,impressions:31000,engagement:5.8,posts:3,profileVisits:980},
+    {id:uid(),date:'2026-04-14',platform:'tiktok',followers:3200,reach:18000,impressions:24000,engagement:7.1,posts:5,profileVisits:820},
+    {id:uid(),date:'2026-04-07',platform:'tiktok',followers:2900,reach:14000,impressions:19000,engagement:6.9,posts:3,profileVisits:670},
+    {id:uid(),date:'2026-03-31',platform:'tiktok',followers:2540,reach:11000,impressions:15500,engagement:6.4,posts:4,profileVisits:520},
+  ],
+  ads:[
+    {id:uid(),platform:'meta',name:'Veilleuse — Portée',startDate:'2026-04-15',endDate:'2026-04-30',budget:80,spend:78.4,impressions:28000,clicks:620,conversions:9,revenue:412,status:'ended'},
+    {id:uid(),platform:'meta',name:'CDM 2026 — Lancement',startDate:'2026-04-20',endDate:'2026-05-15',budget:150,spend:62.3,impressions:21000,clicks:440,conversions:6,revenue:234,status:'active'},
+    {id:uid(),platform:'tiktok',name:'Moules pâtisserie',startDate:'2026-04-10',endDate:'2026-04-25',budget:60,spend:59.8,impressions:45000,clicks:890,conversions:7,revenue:267,status:'ended'},
+    {id:uid(),platform:'meta',name:'Figurines mariage',startDate:'2026-03-20',endDate:'2026-04-10',budget:100,spend:98.2,impressions:35000,clicks:710,conversions:11,revenue:482,status:'ended'},
+    {id:uid(),platform:'tiktok',name:'Veilleuse — Retargeting',startDate:'2026-03-01',endDate:'2026-03-20',budget:50,spend:49.1,impressions:18000,clicks:340,conversions:5,revenue:212,status:'ended'},
+  ]
+};
 
-    open: { co:true, net:false, srv:false, ws:false, sw:false, sec:false, bk:false, pain:false },
+/* ── STATE ── */
+let state={orders:[],products:[],clients:[],content:[],social:[],ads:[]};
+let activeTab='dashboard',editingId=null;
+const charts={};
 
-    form: {
-      company:'', industry:'', employees:'', locations:'', contact:'', email:'', prevMSP:'',
-      isp:'', connType:'', firewall:'', switch:'', staticIP:'', vpn:'', wifi:'',
-      serverEnv:'', serverRoles:[], serverCount:'', serverOS:'', cloud:'',
-      winPC:'', macs:'', laptops:'', winVer:'', mdm:'', deviceAge:'',
-      m365plan:'', av:'', lob:'', comms:[],
-      mfa:'', backup:'', patches:'', pwManager:'',
-      rto:'', rpo:'', lastRestore:'',
-      pains:[], priority:'', notes:''
-    },
+const TITLES={dashboard:'Dashboard',orders:'Commandes & CA',products:'Produits',clients:'Clients',content:'Contenu TikTok / IG',social:'Réseaux sociaux',ads:'Publicités'};
+const ADD_LABELS={orders:'Commande',products:'Produit',clients:'Client',content:'Vidéo',social:'Semaine',ads:'Campagne'};
+const SRC_LABEL={instagram:'Instagram',tiktok:'TikTok',etsy:'Etsy',direct:'Direct',ads_meta:'Meta Ads',ads_tiktok:'TikTok Ads',recommandation:'Bouche à oreille'};
+const SRC_BADGE={instagram:'badge-pink',tiktok:'badge-brun',etsy:'badge-terra',direct:'badge-green',ads_meta:'badge-blue',ads_tiktok:'badge-grey',recommandation:'badge-grey'};
+const STATUS_LABEL={pending:'En attente',printing:'En impression',shipped:'Expédié',delivered:'Livré'};
+const STATUS_BADGE={pending:'badge-grey',printing:'badge-gold',shipped:'badge-blue',delivered:'badge-green'};
+const CAT_LABEL={lampes:'Lampes',moules:'Moules','porte-cles':'Porte-clés',figurines:'Figurines',trophees:'Trophées',gaming:'Gaming',autre:'Autre'};
+const PLAT_TAG={meta:'<span class="pt pt-meta">Meta</span>',tiktok:'<span class="pt pt-tiktok">TikTok</span>',google:'<span class="pt pt-google">Google</span>',instagram:'<span class="pt pt-instagram">Instagram</span>'};
+const AD_STATUS={active:['badge-green','Actif'],paused:['badge-gold','Pausé'],ended:['badge-grey','Terminé']};
+const PLAT_CONTENT={tiktok:'<span class="pt pt-tiktok">🎵 TikTok</span>',instagram:'<span class="pt pt-instagram">📸 Instagram</span>'};
 
-    formSections: [
-      { icon:'🏢', label:'Company',        hint:'Size, industry, contacts' },
-      { icon:'🌐', label:'Network',         hint:'ISP, firewall, VPN' },
-      { icon:'🖥️', label:'Servers',         hint:'On-prem / cloud / hybrid' },
-      { icon:'💻', label:'Workstations',    hint:'PCs, laptops, OS mix' },
-      { icon:'📦', label:'Software',        hint:'M365, AV, line-of-business' },
-      { icon:'🔐', label:'Security',        hint:'MFA, patches, passwords' },
-      { icon:'💾', label:'Backup & DR',     hint:'RTO, RPO, restore tests' },
-      { icon:'🎯', label:'Pain points',     hint:'What needs fixing first' },
-    ],
+function srcBadge(s){return`<span class="badge ${SRC_BADGE[s]||'badge-grey'}">${esc(SRC_LABEL[s]||s)}</span>`;}
 
-    bads: [
-      '45-minute discovery call before you know anything',
-      'Client sends files in 6 different emails over 3 days',
-      'Engineer shows up to kickoff not knowing the environment',
-      'Spreadsheet with passwords stored in OneDrive',
-      'Missing info discovered mid-deployment — delays everything',
-      'Security gaps not found until first audit (weeks later)',
-    ],
+/* ── PERSIST ── */
+function loadState(){
+  try{
+    const r=localStorage.getItem('joys_v2');
+    state=r?JSON.parse(r):JSON.parse(JSON.stringify(SAMPLE));
+    ['orders','products','clients','content','social','ads'].forEach(k=>{if(!state[k])state[k]=[];});
+    if(!r)saveState();
+  }catch(e){state=JSON.parse(JSON.stringify(SAMPLE));}
+}
+function saveState(){localStorage.setItem('joys_v2',JSON.stringify(state));}
 
-    goods: [
-      'Client fills the form before the first call',
-      'Full asset inventory before kickoff — no surprises',
-      'Security score calculated automatically on submission',
-      'Engineer walks into the call knowing everything',
-      'Deployment plan ready in 24 hours',
-      'Risk flags surfaced immediately — not weeks later',
-    ],
+/* ── CALCULATIONS ── */
+function caInDays(d){const c=new Date();c.setDate(c.getDate()-d);return state.orders.filter(o=>new Date(o.date)>=c).reduce((s,o)=>s+Number(o.amount||0),0);}
+function monthlyCAData(n){return Array.from({length:n},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-(n-1-i));const k=d.toISOString().slice(0,7);return state.orders.filter(o=>o.date.slice(0,7)===k).reduce((s,o)=>s+Number(o.amount||0),0);});}
+function monthLabels(n){return Array.from({length:n},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-(n-1-i));return d.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'});});}
 
-    softwareStack: [
-      { name:'Microsoft 365', count: 4 },
-      { name:'Defender/EDR',  count: 3 },
-      { name:'Veeam Backup',  count: 2 },
-      { name:'Microsoft Teams', count: 5 },
-      { name:'Azure AD',      count: 3 },
-      { name:'Intune MDM',    count: 2 },
-      { name:'Cisco Meraki',  count: 2 },
-      { name:'SQL Server',    count: 3 },
-    ],
+function calcOrderProfit(o){
+  const p=state.products.find(x=>x.name===o.product);
+  const cost=p?Number(p.materialCost||0):0;
+  return Number(o.amount||0)-cost;
+}
+function totalProfit(){return state.orders.reduce((s,o)=>s+calcOrderProfit(o),0);}
+function totalCA(){return state.orders.reduce((s,o)=>s+Number(o.amount||0),0);}
+function marginPct(){const ca=totalCA();return ca>0?Math.round(totalProfit()/ca*100):0;}
 
-    clients: [
-      {
-        name:'Riverstone Legal', industry:'Legal', size:38, devices:42, status:'Active',
-        secScore:82, color:'#6366F1', m365:true, mfa:true, backup:true, edr:true, os:'Win 11', lob:'Practice Evolve',
-        data: {
-          'Network': { ISP:'Telstra NBN FTTP 1Gbps', Firewall:'Cisco Meraki MX68', VPN:'Cisco AnyConnect', 'Wi-Fi':'Meraki MR46' },
-          'Servers': { Environment:'Hybrid', Roles:'DC, File Server, RDS', OS:'Windows Server 2022', Count:'2 on-prem + Azure' },
-          'Software': { 'M365 Plan':'M365 Business Premium', Antivirus:'Defender for Business', 'Line of Business':'Practice Evolve, MYOB', Comms:'Teams + Email' },
-          'Security': { MFA:'Enabled everywhere', Backup:'Veeam + Azure Backup', Patching:'Auto updates enabled', 'Password Manager':'1Password' },
-          'Backup': { RTO:'1–4 hours', RPO:'< 1 hour', 'Last Tested':'Within last month' }
-        }
-      },
-      {
-        name:'NovaBuild Construction', industry:'Construction', size:65, devices:28, status:'Active',
-        secScore:54, color:'#F97316', m365:true, mfa:false, backup:true, edr:false, os:'Win 10', lob:'Procore',
-        data: {
-          'Network': { ISP:'Optus 4G Business', Firewall:'Fortinet FortiGate 60F', VPN:'Fortinet SSL VPN' },
-          'Servers': { Environment:'On-premises only', Roles:'DC, File Server', OS:'Windows Server 2019', Count:'2' },
-          'Software': { 'M365 Plan':'M365 Business Standard', Antivirus:'Windows Defender only', 'Line of Business':'Procore (project mgmt), Xero' },
-          'Security': { MFA:'Not enabled ⚠️', Backup:'External HDD only ⚠️', Patching:'Manual updates monthly' },
-          'Pain Points': { 'Top issues':'Slow computers, VPN problems, no IT visibility', Priority:'Get MFA deployed ASAP, replace external HDD backup' }
-        }
-      },
-      {
-        name:'Clearwater Accounting', industry:'Finance / Accounting', size:12, devices:15, status:'In Progress',
-        secScore:91, color:'#10B981', m365:true, mfa:true, backup:true, edr:true, os:'Win 11', lob:'Xero',
-        data: {
-          'Network': { ISP:'NBN FTTP 500/50', Firewall:'Ubiquiti UDM Pro', 'Wi-Fi':'Ubiquiti U6-Pro' },
-          'Software': { 'M365 Plan':'M365 Business Premium', Antivirus:'SentinelOne', 'Line of Business':'Xero, CCH iFirm, DocuSign' },
-          'Security': { MFA:'Enabled everywhere', Backup:'Acronis Cyber Backup', 'Password Manager':'Bitwarden', Patching:'Auto updates enabled' }
-        }
-      },
-      {
-        name:'Meridian Healthcare', industry:'Healthcare', size:24, devices:31, status:'Active',
-        secScore:67, color:'#EC4899', m365:false, mfa:true, backup:true, edr:false, os:'Win 10+11', lob:'Genie Solutions',
-        data: {
-          'Network': { ISP:'Telstra Fibre Dedicated', Firewall:'SonicWall TZ470' },
-          'Software': { 'M365 Plan':'Google Workspace', Antivirus:'Malwarebytes', 'Line of Business':'Genie Solutions (practice mgmt), MediRecords' },
-          'Security': { MFA:'Enabled on M365', Backup:'Veeam', 'Last Restore':'1–6 months ago' },
-          'Pain Points': { Issues:'Email issues, security worries, compliance', Priority:'HIPAA-ready backup, EDR deployment' }
-        }
-      },
-      {
-        name:'Volta E-commerce', industry:'Retail / E-commerce', size:9, devices:11, status:'In Progress',
-        secScore:38, color:'#F59E0B', m365:true, mfa:false, backup:false, edr:false, os:'Win 10', lob:'Shopify',
-        data: {
-          'Network': { ISP:'NBN HFC', Firewall:'Consumer router (no management)' },
-          'Software': { 'M365 Plan':'M365 Business Basic', Antivirus:'None ⚠️', 'Line of Business':'Shopify, WooCommerce, QuickBooks' },
-          'Security': { MFA:'Not enabled ⚠️', Backup:'No backup ⚠️', Patching:'Not managed ⚠️' },
-          'Pain Points': { Issues:'Slow computers, no IT visibility, security worries', Priority:'Everything — starting from scratch' }
-        }
-      },
-    ],
+function topProductsBySales(){
+  const cnt={},rev={};
+  state.orders.forEach(o=>{cnt[o.product]=(cnt[o.product]||0)+1;rev[o.product]=(rev[o.product]||0)+Number(o.amount||0);});
+  return Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([name,count])=>({name,count,revenue:rev[name]||0}));
+}
+function topProductsByMargin(){
+  return state.products.map(p=>{
+    const sp=Number(p.sellingPrice||0);const mc=Number(p.materialCost||0);
+    const m=sp>0?Math.round((sp-mc)/sp*100):0;
+    return{name:p.name,margin:m,sellingPrice:sp};
+  }).sort((a,b)=>b.margin-a.margin);
+}
+function bestContent(){
+  return [...state.content].sort((a,b)=>Number(b.views||0)-Number(a.views||0))[0]||null;
+}
+function bestAdROAS(){
+  const ads=state.ads.filter(a=>Number(a.spend||0)>0);
+  return ads.sort((a,b)=>(Number(b.revenue)/Number(b.spend))-(Number(a.revenue)/Number(a.spend)))[0]||null;
+}
 
-    jobs: [],
+/* ── ACTIONS GENERATOR ── */
+function generateActions(){
+  const actions=[];
+  // Stock faible
+  state.products.filter(p=>Number(p.stock||0)<3&&Number(p.stock||0)>=0).forEach(p=>{
+    actions.push({type:Number(p.stock)===0?'danger':'warn',icon:'⚠',text:`Stock ${Number(p.stock)===0?'épuisé':'faible'} — ${p.name} (${p.stock||0} restant${(p.stock||0)>1?'s':''})`,cta:'Gérer',tab:'products'});
+  });
+  // Commandes en attente
+  const pend=state.orders.filter(o=>o.status==='pending');
+  if(pend.length>0)actions.push({type:'info',icon:'📦',text:`${pend.length} commande${pend.length>1?'s':''} en attente de traitement`,cta:'Voir',tab:'orders'});
+  // Campagnes actives sous-performantes
+  state.ads.filter(a=>a.status==='active').forEach(a=>{
+    const roas=Number(a.spend||0)>0?Number(a.revenue||0)/Number(a.spend||0):0;
+    if(roas<2&&Number(a.spend||0)>0)actions.push({type:'danger',icon:'📉',text:`Campagne "${a.name}" — ROAS faible (${roas.toFixed(1)}×)`,cta:'Analyser',tab:'ads'});
+    else if(roas>=3)actions.push({type:'success',icon:'🔥',text:`Campagne "${a.name}" performe (ROAS ${roas.toFixed(1)}×)`,cta:'Voir',tab:'ads'});
+  });
+  // Meilleur contenu
+  const bc=bestContent();
+  if(bc)actions.push({type:'success',icon:'🎬',text:`Vidéo virale — "${bc.title}" (${fmt(bc.views)} vues, ${bc.ordersGenerated} ventes)`,cta:'Analyser',tab:'content'});
+  // Produits sans vente
+  const soldNames=new Set(state.orders.map(o=>o.product));
+  state.products.filter(p=>!soldNames.has(p.name)).forEach(p=>{
+    actions.push({type:'warn',icon:'💡',text:`"${p.name}" — aucune vente enregistrée`,cta:'',tab:''});
+  });
+  if(actions.length===0)actions.push({type:'success',icon:'✅',text:'Tout roule — aucune alerte active',cta:'',tab:''});
+  return actions.slice(0,6);
+}
 
-    get liveSecScore() {
-      let score = 20;
-      if (this.form.mfa === 'Enabled everywhere') score += 25;
-      else if (this.form.mfa === 'Enabled on M365') score += 15;
-      else if (this.form.mfa === 'Enabled on some apps') score += 8;
-      if (this.form.backup && !['No backup','Not sure'].includes(this.form.backup)) score += 20;
-      if (this.form.av && !['Windows Defender only','None'].includes(this.form.av)) score += 15;
-      if (this.form.patches === 'Auto updates enabled') score += 10;
-      if (this.form.pwManager && this.form.pwManager !== 'No password manager') score += 10;
-      return Math.min(100, score);
-    },
+/* ── NAVBAR BADGES ── */
+function updateBadges(){
+  const pend=state.orders.filter(o=>o.status==='pending'||o.status==='printing').length;
+  const nb=document.getElementById('nb-orders');
+  if(nb){nb.textContent=pend;nb.style.display=pend>0?'':'none';}
+  const low=state.products.filter(p=>Number(p.stock||0)<3).length;
+  const ns=document.getElementById('nb-stock');
+  if(ns){ns.textContent=low;ns.style.display=low>0?'':'none';}
+}
 
-    init() {
-      const s = localStorage.getItem('mspo_form');
-      if (s) { try { this.form = { ...this.form, ...JSON.parse(s) }; } catch(e){} }
-      this.cp();
-    },
+/* ── DATE DISPLAY ── */
+function updateDate(){
+  const el=document.getElementById('topbar-date');
+  if(el)el.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+}
 
-    tog(k) { this.open[k] = !this.open[k]; },
+/* ── TAB ROUTING ── */
+function setTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.tab===tab));
+  document.getElementById('page-title').textContent=TITLES[tab];
+  const b=document.getElementById('btn-add');
+  if(tab==='dashboard'){b.style.display='none';}
+  else{b.style.display='';document.getElementById('btn-add-label').textContent=ADD_LABELS[tab]||'Ajouter';}
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
+  Object.keys(charts).forEach(k=>delete charts[k]);
+  renderTab();
+  updateBadges();
+}
+function renderTab(){
+  const el=document.getElementById('main-content');
+  const r={dashboard:renderDashboard,orders:renderOrders,products:renderProducts,clients:renderClients,content:renderContent,social:renderSocial,ads:renderAds};
+  el.innerHTML=(r[activeTab]||(() =>''))();
+  el.querySelectorAll('.card,.kpi-card,.stat-box').forEach((c,i)=>{c.style.animationDelay=`${i*0.03}s`;c.classList.add('fade-in');});
+  setTimeout(initCharts,40);
+}
+function emptyState(icon,msg){return`<div class="empty"><div class="empty-icon">${icon}</div><p>${msg}</p></div>`;}
 
-    tarr(f, v) {
-      const i = this.form[f].indexOf(v);
-      if (i === -1) this.form[f].push(v); else this.form[f].splice(i, 1);
-    },
+/* ── RENDER DASHBOARD ── */
+function renderDashboard(){
+  const ca=totalCA(),pr=totalProfit(),mg=marginPct();
+  const ca30=caInDays(30),ca7=caInDays(7);
+  const o30=state.orders.filter(o=>{const c=new Date();c.setDate(c.getDate()-30);return new Date(o.date)>=c;}).length;
+  const pending=state.orders.filter(o=>o.status!=='delivered').length;
+  const lIG=[...state.social].filter(s=>s.platform==='instagram').sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const lTT=[...state.social].filter(s=>s.platform==='tiktok').sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const followers=(lIG?.followers||0)+(lTT?.followers||0);
+  const adSpend=state.ads.reduce((s,a)=>s+Number(a.spend||0),0);
+  const adRev=state.ads.reduce((s,a)=>s+Number(a.revenue||0),0);
+  const roas=adSpend>0?(adRev/adSpend).toFixed(2):'—';
+  const recent=[...state.orders].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
+  const actions=generateActions();
+  const topsales=topProductsBySales().slice(0,5);
+  const topmarg=topProductsByMargin().slice(0,5);
 
-    cp() {
-      localStorage.setItem('mspo_form', JSON.stringify(this.form));
-      const fields = [
-        this.form.company, this.form.industry, this.form.employees,
-        this.form.isp, this.form.firewall,
-        this.form.serverEnv,
-        this.form.winPC || this.form.laptops,
-        this.form.m365plan, this.form.av,
-        this.form.mfa, this.form.backup,
-        this.form.rto,
-        this.form.pains.length > 0 ? 'y' : ''
-      ];
-      this.progress = Math.round((fields.filter(f => f && String(f).trim() !== '').length / fields.length) * 100);
-    },
+  const topSalesHTML=topsales.length?topsales.map((p,i)=>{
+    const rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    return`<div class="top-item"><div class="top-rank ${rankClass}">${i+1}</div><div class="top-info"><div class="top-name">${esc(p.name)}</div><div class="top-meta">${p.count} vente${p.count>1?'s':''}</div></div><div class="top-value">${fmtEur(p.revenue)}</div></div>`;
+  }).join(''):emptyState('📦','Aucune vente');
 
-    scoreCol(s) {
-      if (s >= 75) return '#10B981';
-      if (s >= 45) return '#F59E0B';
-      return '#EF4444';
-    },
+  const topMargHTML=topmarg.length?topmarg.map((p,i)=>{
+    const rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const colorClass=p.margin>=70?'badge-green':p.margin>=50?'badge-gold':'badge-terra';
+    return`<div class="top-item"><div class="top-rank ${rankClass}">${i+1}</div><div class="top-info"><div class="top-name">${esc(p.name)}</div><div class="top-meta">Prix vente ${fmtEur(p.sellingPrice)}</div></div><span class="badge ${colorClass}">${p.margin}%</span></div>`;
+  }).join(''):emptyState('📦','Aucun produit');
 
-    generateLink() {
-      const cfg = btoa(JSON.stringify({ msp: this.builder.mspName, eng: this.builder.engineer, client: this.builder.clientName }));
-      this.generatedLink = `${location.origin}${location.pathname}#mspo/${cfg}`;
-    },
+  const actionsHTML=actions.map(a=>`
+    <div class="action-item ${a.type}">
+      <div class="action-icon">${a.icon}</div>
+      <div class="action-text">${esc(a.text)}</div>
+      ${a.cta&&a.tab?`<div class="action-cta" onclick="setTab('${a.tab}')">${esc(a.cta)}</div>`:''}
+    </div>`).join('');
 
-    copyLink() {
-      if (!this.generatedLink) return;
-      navigator.clipboard.writeText(this.generatedLink).then(() => { this.copied = true; setTimeout(() => this.copied = false, 2500); });
-    },
+  return`
+  <div class="kpi-grid">
+    <div class="kpi-card"><span class="kpi-trend up">+12%</span><div class="kpi-label">CA total</div><div class="kpi-value">${fmtEur(ca)}</div><div class="kpi-sub">${fmtEur(ca30)} ce mois · ${fmtEur(ca7)} cette semaine</div></div>
+    <div class="kpi-card kpi-profit"><div class="kpi-label">Profit net</div><div class="kpi-value" style="color:${pr>0?'#3a7d40':'var(--red)'}">${fmtEur(pr)}</div><div class="kpi-sub">Marge globale ${mg}%</div></div>
+    <div class="kpi-card kpi-gold"><div class="kpi-label">Commandes</div><div class="kpi-value">${state.orders.length}</div><div class="kpi-sub">${o30} ce mois · <span style="color:var(--terra);font-weight:600">${pending} en cours</span></div></div>
+    <div class="kpi-card kpi-brun"><div class="kpi-label">Clients</div><div class="kpi-value">${state.clients.length}</div><div class="kpi-sub">Panier moyen ${state.orders.length?fmtEur(ca/state.orders.length):'—'}</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">ROAS global</div><div class="kpi-value">${roas}×</div><div class="kpi-sub">${fmtEur(adRev)} CA / ${fmtEur(adSpend)} dépensés</div></div>
+    <div class="kpi-card kpi-blue"><div class="kpi-label">Abonnés totaux</div><div class="kpi-value">${fmt(followers)}</div><div class="kpi-sub">IG ${fmt(lIG?.followers||0)} · TT ${fmt(lTT?.followers||0)}</div></div>
+    <div class="kpi-card kpi-pink"><div class="kpi-label">Vues contenu</div><div class="kpi-value">${fmt(state.content.reduce((s,c)=>s+Number(c.views||0),0))}</div><div class="kpi-sub">${state.content.reduce((s,c)=>s+Number(c.ordersGenerated||0),0)} ventes générées</div></div>
+  </div>
 
-    submitForm() {
-      const total = (parseInt(this.form.winPC)||0)+(parseInt(this.form.macs)||0)+(parseInt(this.form.laptops)||0)+(parseInt(this.form.serverCount)||0);
-      const entry = {
-        name: this.form.company || 'New Client',
-        industry: this.form.industry || 'Technology',
-        size: this.form.employees || '?',
-        devices: total || 10,
-        status: 'In Progress',
-        secScore: this.liveSecScore,
-        color: '#06B6D4',
-        m365: this.form.m365plan && !this.form.m365plan.includes('Google'),
-        mfa: this.form.mfa === 'Enabled everywhere' || this.form.mfa === 'Enabled on M365',
-        backup: this.form.backup && !['No backup','Not sure'].includes(this.form.backup),
-        edr: this.form.av && !['Windows Defender only','None',''].includes(this.form.av),
-        os: this.form.winVer || 'Windows',
-        data: {
-          'Company': { Industry: this.form.industry, Employees: this.form.employees, Contact: this.form.contact, Email: this.form.email },
-          'Network': { ISP: this.form.isp, Firewall: this.form.firewall, VPN: this.form.vpn, 'Wi-Fi': this.form.wifi },
-          'Software': { 'M365': this.form.m365plan, 'Antivirus': this.form.av, 'LoB Apps': this.form.lob },
-          'Security': { MFA: this.form.mfa, Backup: this.form.backup, Patching: this.form.patches },
-          'Pain Points': { Issues: this.form.pains.join(', '), Priority: this.form.priority }
-        }
-      };
-      this.clients.unshift(entry);
-      this.view = 'success';
-      setTimeout(() => this.confetti(), 200);
-    },
+  <div class="section-grid full">
+    <div class="card actions-card">
+      <div class="card-title">⚡ Actions prioritaires</div>
+      <div class="card-sub">Ce que tu dois faire maintenant</div>
+      <div class="action-list">${actionsHTML}</div>
+    </div>
+  </div>
 
-    confetti() {
-      const colors = ['#06B6D4','#22D3EE','#10B981','#6366F1','#F59E0B','#F0ABFC'];
-      const c = document.getElementById('cf-wrap');
-      if (!c) return;
-      for (let i = 0; i < 60; i++) {
-        const p = document.createElement('div');
-        p.className = 'cf';
-        p.style.cssText = `left:${Math.random()*100}vw;top:-20px;background:${colors[~~(Math.random()*colors.length)]};animation-duration:${1.4+Math.random()*2}s;animation-delay:${Math.random()*.9}s;width:${5+Math.random()*8}px;height:${5+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'}`;
-        c.appendChild(p);
-        setTimeout(() => p.remove(), 4500);
-      }
-    },
+  <div class="section-grid wide">
+    <div class="card"><div class="card-title">CA mensuel</div><div class="card-sub">7 derniers mois</div><div class="chart-wrap tall"><canvas id="ch-ca"></canvas></div></div>
+    <div class="card"><div class="card-title">CA par canal</div><div class="card-sub">Répartition des sources</div><div class="chart-wrap tall"><canvas id="ch-sources"></canvas></div></div>
+  </div>
 
-    openClient(c) { this.selectedClient = c; this.modalOpen = true; },
+  <div class="section-grid">
+    <div class="card"><div class="card-title">🏆 Top ventes</div><div class="card-sub">Par chiffre d'affaires</div><div class="top-list">${topSalesHTML}</div></div>
+    <div class="card"><div class="card-title">💰 Top marge</div><div class="card-sub">Produits les plus rentables</div><div class="top-list">${topMargHTML}</div></div>
+  </div>
 
-    exportClient(c) {
-      let t = `CLIENT IT BRIEF — ${c.name}\nIndustry: ${c.industry} | Employees: ${c.size} | Devices: ${c.devices}\nSecurity Score: ${c.secScore}% | Status: ${c.status}\nMFA: ${c.mfa?'✓ Enabled':'✗ Disabled'} | M365: ${c.m365?'✓ Yes':'✗ No'} | EDR: ${c.edr?'✓ Yes':'✗ No'}\n`;
-      if (c.data) {
-        for (const [s, fields] of Object.entries(c.data)) {
-          t += `\n── ${s} ──\n`;
-          for (const [f, v] of Object.entries(fields)) { if (v) t += `  ${f}: ${v}\n`; }
-        }
-      }
-      navigator.clipboard.writeText(t).then(() => alert('Brief copied to clipboard — paste into your PSA/ticketing system.'));
-    }
+  <div class="section-grid wide">
+    <div class="card"><div class="card-title">Commandes récentes</div><div class="card-sub">6 dernières</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Client</th><th>Produit</th><th>Source</th><th>Statut</th><th>Profit</th><th>Montant</th></tr></thead><tbody>${recent.length?recent.map(o=>{const prof=calcOrderProfit(o);return`<tr><td class="muted">${fmtDate(o.date)}</td><td>${esc(o.clientName)}</td><td>${esc(o.product)}</td><td>${srcBadge(o.source)}</td><td><span class="badge ${STATUS_BADGE[o.status]||'badge-grey'}">${STATUS_LABEL[o.status]||o.status}</span></td><td style="color:${prof>=0?'#3a7d40':'var(--red)'}; font-weight:600">${fmtEur(prof)}</td><td class="amount">${fmtEur(o.amount)}</td></tr>`;}).join(''):'<tr><td colspan="7" class="muted" style="text-align:center;padding:24px">Aucune commande</td></tr>'}</tbody></table></div></div>
+    <div class="card"><div class="card-title">Croissance abonnés</div><div class="card-sub">Instagram & TikTok</div><div class="chart-wrap tall"><canvas id="ch-follow-dash"></canvas></div></div>
+  </div>`;
+}
+
+/* ── RENDER ORDERS ── */
+function renderOrders(){
+  const s=[...state.orders].sort((a,b)=>b.date.localeCompare(a.date));
+  const tot=s.reduce((x,o)=>x+Number(o.amount||0),0);
+  const pr=s.reduce((x,o)=>x+calcOrderProfit(o),0);
+  const avg=s.length?tot/s.length:0;
+  const pend=s.filter(o=>o.status!=='delivered').length;
+  return`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${fmtEur(tot)}</div><div class="stat-lbl">CA total</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#3a7d40">${fmtEur(pr)}</div><div class="stat-lbl">Profit net</div></div>
+    <div class="stat-box"><div class="stat-num">${fmtEur(caInDays(30))}</div><div class="stat-lbl">Ce mois</div></div>
+    <div class="stat-box"><div class="stat-num">${s.length}</div><div class="stat-lbl">Commandes</div></div>
+    <div class="stat-box"><div class="stat-num">${fmtEur(avg)}</div><div class="stat-lbl">Panier moyen</div></div>
+    <div class="stat-box"><div class="stat-num" style="${pend>0?'color:var(--terra)':''}">${pend}</div><div class="stat-lbl">En cours</div></div>
+  </div>
+  <div class="section-grid full" style="margin-bottom:18px"><div class="card"><div class="card-title">CA mensuel</div><div class="chart-wrap"><canvas id="ch-ca-orders"></canvas></div></div></div>
+  <div class="card"><div class="card-title">Toutes les commandes</div><div class="card-sub">${s.length} enregistrées</div>${s.length===0?emptyState('🛍','Aucune commande.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Client</th><th>Produit</th><th>Source</th><th>Statut</th><th>Profit</th><th>Montant</th><th></th></tr></thead><tbody>${s.map(o=>{const pr=calcOrderProfit(o);return`<tr><td class="muted">${fmtDate(o.date)}</td><td>${esc(o.clientName)}</td><td>${esc(o.product)}</td><td>${srcBadge(o.source)}</td><td><span class="badge ${STATUS_BADGE[o.status]||'badge-grey'}">${STATUS_LABEL[o.status]||o.status}</span></td><td style="color:${pr>=0?'#3a7d40':'var(--red)'}; font-weight:600">${fmtEur(pr)}</td><td class="amount">${fmtEur(o.amount)}</td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('orders','${o.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('orders','${o.id}')">✕</button></div></td></tr>`;}).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── RENDER PRODUCTS ── */
+function renderProducts(){
+  const ps=state.products;
+  const avgM=ps.length?ps.reduce((s,p)=>s+(Number(p.sellingPrice||0)>0?(Number(p.sellingPrice||0)-Number(p.materialCost||0))/Number(p.sellingPrice||0)*100:0),0)/ps.length:0;
+  const low=ps.filter(p=>Number(p.stock||0)<3).length;
+  const soldMap={};state.orders.forEach(o=>soldMap[o.product]=(soldMap[o.product]||0)+1);
+  return`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${ps.length}</div><div class="stat-lbl">Produits</div></div>
+    <div class="stat-box"><div class="stat-num">${ps.reduce((s,p)=>s+Number(p.stock||0),0)}</div><div class="stat-lbl">Stock total</div></div>
+    <div class="stat-box"><div class="stat-num">${Math.round(avgM)}%</div><div class="stat-lbl">Marge moyenne</div></div>
+    <div class="stat-box"><div class="stat-num" style="${low>0?'color:var(--terra)':''}">${low}</div><div class="stat-lbl">Stock bas</div></div>
+  </div>
+  <div class="card"><div class="card-title">Catalogue produits</div><div class="card-sub">${ps.length} produits</div>${ps.length===0?emptyState('📦','Aucun produit.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Produit</th><th>Catégorie</th><th>Stock</th><th>Impression</th><th>Coût mat.</th><th>Prix vente</th><th>Marge</th><th>Ventes</th><th></th></tr></thead><tbody>${ps.map(p=>{const m=Number(p.sellingPrice||0)>0?Math.round((Number(p.sellingPrice||0)-Number(p.materialCost||0))/Number(p.sellingPrice||0)*100):0;const lw=Number(p.stock||0)<3;const sold=soldMap[p.name]||0;return`<tr><td><strong>${esc(p.name)}</strong></td><td><span class="badge badge-grey">${CAT_LABEL[p.category]||p.category}</span></td><td style="${lw?'color:var(--terra);font-weight:700':''}">${p.stock||0}${lw?' ⚠':''}</td><td class="muted">${p.printTimeH}h</td><td class="muted">${fmtEur(p.materialCost)}</td><td class="amount">${fmtEur(p.sellingPrice)}</td><td><span class="badge ${m>=70?'badge-green':m>=50?'badge-gold':'badge-terra'}">${m}%</span></td><td>${sold>0?`<strong>${sold}</strong>`:`<span class="muted">0</span>`}</td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('products','${p.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('products','${p.id}')">✕</button></div></td></tr>`;}).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── RENDER CLIENTS ── */
+function renderClients(){
+  const cs=[...state.clients].sort((a,b)=>(b.firstOrder||'').localeCompare(a.firstOrder||''));
+  const cCA={},cO={};
+  state.orders.forEach(o=>{cCA[o.clientName]=(cCA[o.clientName]||0)+Number(o.amount||0);cO[o.clientName]=(cO[o.clientName]||0)+1;});
+  const srcs={};cs.forEach(c=>{srcs[c.source]=(srcs[c.source]||0)+1;});
+  const top=Object.entries(srcs).sort((a,b)=>b[1]-a[1])[0];
+  const n30=cs.filter(c=>{const d=new Date(c.firstOrder||0);const x=new Date();x.setDate(x.getDate()-30);return d>=x;}).length;
+  return`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${cs.length}</div><div class="stat-lbl">Clients</div></div>
+    <div class="stat-box"><div class="stat-num">${n30}</div><div class="stat-lbl">Nouveaux ce mois</div></div>
+    <div class="stat-box"><div class="stat-num">${top?(SRC_LABEL[top[0]]||top[0]):'—'}</div><div class="stat-lbl">1ère source</div></div>
+    <div class="stat-box"><div class="stat-num">${fmtEur(Object.values(cCA).reduce((s,v)=>s+v,0)/Math.max(cs.length,1))}</div><div class="stat-lbl">LTV moyenne</div></div>
+  </div>
+  <div class="card"><div class="card-title">Base clients</div><div class="card-sub">${cs.length} clients</div>${cs.length===0?emptyState('👥','Aucun client.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Nom</th><th>Ville</th><th>Source</th><th>1ère commande</th><th>Commandes</th><th>CA total</th><th></th></tr></thead><tbody>${cs.map(c=>`<tr><td><strong>${esc(c.name)}</strong>${c.email?`<div class="subline">${esc(c.email)}</div>`:''}</td><td class="muted">${esc(c.city)||'—'}</td><td>${srcBadge(c.source)}</td><td class="muted">${fmtDate(c.firstOrder)}</td><td>${cO[c.name]||0}</td><td class="amount">${fmtEur(cCA[c.name]||0)}</td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('clients','${c.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('clients','${c.id}')">✕</button></div></td></tr>`).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── RENDER CONTENT ── */
+function renderContent(){
+  const ct=[...state.content].sort((a,b)=>b.date.localeCompare(a.date));
+  const totalViews=ct.reduce((s,c)=>s+Number(c.views||0),0);
+  const totalOrders=ct.reduce((s,c)=>s+Number(c.ordersGenerated||0),0);
+  const totalRev=ct.reduce((s,c)=>s+Number(c.revenue||0),0);
+  const avgWatch=ct.length?Math.round(ct.reduce((s,c)=>s+Number(c.watchTimePct||0),0)/ct.length):0;
+  const best=[...ct].sort((a,b)=>Number(b.views||0)-Number(a.views||0))[0];
+  const convRate=totalViews>0?((totalOrders/totalViews)*100).toFixed(3):'—';
+
+  return`<div class="video-kpi">
+    <div class="video-card"><div class="kpi-label">Vues totales</div><div class="kpi-value">${fmt(totalViews)}</div><div class="kpi-sub">${ct.length} vidéos</div></div>
+    <div class="video-card" style="border-top:3px solid var(--green)"><div class="kpi-label">CA généré contenu</div><div class="kpi-value" style="color:#3a7d40">${fmtEur(totalRev)}</div><div class="kpi-sub">${totalOrders} commandes</div></div>
+    <div class="video-card" style="border-top:3px solid var(--or)"><div class="kpi-label">Watch time moyen</div><div class="kpi-value">${avgWatch}%</div><div class="kpi-sub">Taux conversion ${convRate}%</div></div>
+    <div class="video-card" style="border-top:3px solid var(--pink)"><div class="kpi-label">Meilleure vidéo</div><div class="kpi-value" style="font-size:16px;line-height:1.3">${best?esc(best.title.length>22?best.title.slice(0,22)+'…':best.title):'—'}</div><div class="kpi-sub">${best?fmt(best.views)+' vues':'Aucune vidéo'}</div></div>
+  </div>
+  <div class="section-grid wide">
+    <div class="card"><div class="card-title">Vues par vidéo</div><div class="card-sub">Performance du contenu</div><div class="chart-wrap tall"><canvas id="ch-content-views"></canvas></div></div>
+    <div class="card"><div class="card-title">CA généré par vidéo</div><div class="card-sub">Revenus attribuables</div><div class="chart-wrap tall"><canvas id="ch-content-rev"></canvas></div></div>
+  </div>
+  <div class="card"><div class="card-title">Toutes les vidéos</div><div class="card-sub">${ct.length} contenus</div>${ct.length===0?emptyState('🎬','Aucune vidéo.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Titre</th><th>Plateforme</th><th>Vues</th><th>Watch %</th><th>Likes</th><th>Partages</th><th>Clics site</th><th>Commandes</th><th>CA</th><th>Perf.</th><th></th></tr></thead><tbody>${ct.map(c=>{const perf=Number(c.views||0)>50000?'high':Number(c.views||0)>20000?'mid':'low';const perfLabel=perf==='high'?'Viral':perf==='mid'?'Bon':'Faible';return`<tr><td class="muted">${fmtDate(c.date)}</td><td><strong>${esc(c.title)}</strong></td><td>${PLAT_CONTENT[c.platform]||c.platform}</td><td><strong>${fmt(c.views)}</strong></td><td><span class="badge ${Number(c.watchTimePct||0)>=50?'badge-green':Number(c.watchTimePct||0)>=35?'badge-gold':'badge-grey'}">${c.watchTimePct}%</span></td><td>${fmt(c.likes)}</td><td>${fmt(c.shares)}</td><td>${fmt(c.siteClicks)}</td><td><strong>${c.ordersGenerated||0}</strong></td><td class="amount">${fmtEur(c.revenue)}</td><td><span class="perf-dot ${perf}"></span>${perfLabel}</td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('content','${c.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('content','${c.id}')">✕</button></div></td></tr>`;}).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── RENDER SOCIAL ── */
+function renderSocial(){
+  const ig=[...state.social].filter(s=>s.platform==='instagram').sort((a,b)=>b.date.localeCompare(a.date));
+  const tt=[...state.social].filter(s=>s.platform==='tiktok').sort((a,b)=>b.date.localeCompare(a.date));
+  const lI=ig[0],lT=tt[0];
+  const all=[...state.social].sort((a,b)=>b.date.localeCompare(a.date));
+  return`<div class="kpi-grid">
+    <div class="kpi-card" style="position:relative"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:#E1306C"></div><div class="kpi-label">Instagram · Abonnés</div><div class="kpi-value">${fmt(lI?.followers||0)}</div><div class="kpi-sub">Engagement ${lI?.engagement||0}% · Reach ${fmt(lI?.reach||0)}</div></div>
+    <div class="kpi-card" style="position:relative"><div style="position:absolute;top:0;left:0;right:0;height:3px;background:#111"></div><div class="kpi-label">TikTok · Abonnés</div><div class="kpi-value">${fmt(lT?.followers||0)}</div><div class="kpi-sub">Engagement ${lT?.engagement||0}% · Reach ${fmt(lT?.reach||0)}</div></div>
+    <div class="kpi-card kpi-gold"><div class="kpi-label">Reach total semaine</div><div class="kpi-value">${fmt((lI?.reach||0)+(lT?.reach||0))}</div><div class="kpi-sub">Impressions ${fmt((lI?.impressions||0)+(lT?.impressions||0))}</div></div>
+    <div class="kpi-card kpi-green"><div class="kpi-label">Posts cette semaine</div><div class="kpi-value">${(lI?.posts||0)+(lT?.posts||0)}</div><div class="kpi-sub">IG ${lI?.posts||0} · TikTok ${lT?.posts||0}</div></div>
+  </div>
+  <div class="section-grid">
+    <div class="card"><div class="card-title">Croissance abonnés</div><div class="card-sub">Instagram & TikTok</div><div class="chart-wrap tall"><canvas id="ch-soc-follow"></canvas></div></div>
+    <div class="card"><div class="card-title">Taux d'engagement</div><div class="card-sub">% par semaine</div><div class="chart-wrap tall"><canvas id="ch-soc-engage"></canvas></div></div>
+  </div>
+  <div class="card"><div class="card-title">Historique semaines</div><div class="card-sub">${all.length} entrées</div>${all.length===0?emptyState('📱','Aucune donnée.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Semaine</th><th>Plateforme</th><th>Abonnés</th><th>Reach</th><th>Impressions</th><th>Engagement</th><th>Posts</th><th>Visites profil</th><th></th></tr></thead><tbody>${all.map(s=>`<tr><td class="muted">${fmtDate(s.date)}</td><td>${PLAT_TAG[s.platform]||s.platform}</td><td><strong>${fmt(s.followers)}</strong></td><td>${fmt(s.reach)}</td><td>${fmt(s.impressions)}</td><td><span class="badge ${Number(s.engagement)>=5?'badge-green':'badge-gold'}">${s.engagement}%</span></td><td>${s.posts||0}</td><td class="muted">${fmt(s.profileVisits||0)}</td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('social','${s.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('social','${s.id}')">✕</button></div></td></tr>`).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── RENDER ADS ── */
+function renderAds(){
+  const ads=[...state.ads].sort((a,b)=>b.startDate.localeCompare(a.startDate));
+  const tSpend=ads.reduce((s,a)=>s+Number(a.spend||0),0);
+  const tRev=ads.reduce((s,a)=>s+Number(a.revenue||0),0);
+  const tConv=ads.reduce((s,a)=>s+Number(a.conversions||0),0);
+  const tClicks=ads.reduce((s,a)=>s+Number(a.clicks||0),0);
+  const tImpr=ads.reduce((s,a)=>s+Number(a.impressions||0),0);
+  const roas=tSpend>0?(tRev/tSpend).toFixed(2):'—';
+  const cpc=tClicks>0?(tSpend/tClicks).toFixed(2):'—';
+  const ctr=tImpr>0?((tClicks/tImpr)*100).toFixed(2):'—';
+  const cpa=tConv>0?(tSpend/tConv).toFixed(2):'—';
+  return`<div class="stats-row">
+    <div class="stat-box"><div class="stat-num">${fmtEur(tSpend)}</div><div class="stat-lbl">Total dépensé</div></div>
+    <div class="stat-box"><div class="stat-num">${fmtEur(tRev)}</div><div class="stat-lbl">CA généré</div></div>
+    <div class="stat-box"><div class="stat-num">${roas}×</div><div class="stat-lbl">ROAS global</div></div>
+    <div class="stat-box"><div class="stat-num">${tConv}</div><div class="stat-lbl">Conversions</div></div>
+    <div class="stat-box"><div class="stat-num">${cpc} €</div><div class="stat-lbl">CPC moyen</div></div>
+    <div class="stat-box"><div class="stat-num">${ctr}%</div><div class="stat-lbl">CTR moyen</div></div>
+    <div class="stat-box"><div class="stat-num">${cpa} €</div><div class="stat-lbl">CPA moyen</div></div>
+  </div>
+  <div class="section-grid">
+    <div class="card"><div class="card-title">ROAS par campagne</div><div class="card-sub">Retour sur investissement pub</div><div class="chart-wrap"><canvas id="ch-ads-roas"></canvas></div></div>
+    <div class="card"><div class="card-title">Budget vs CA généré</div><div class="card-sub">Par campagne</div><div class="chart-wrap"><canvas id="ch-ads-spend"></canvas></div></div>
+  </div>
+  <div class="card"><div class="card-title">Campagnes publicitaires</div><div class="card-sub">${ads.length} campagnes</div>${ads.length===0?emptyState('📣','Aucune campagne.'):`<div class="table-wrap"><table class="data-table"><thead><tr><th>Campagne</th><th>Plateforme</th><th>Période</th><th>Dépensé</th><th>Impressions</th><th>Clics</th><th>CTR</th><th>Conv.</th><th>CA généré</th><th>ROAS</th><th>Statut</th><th></th></tr></thead><tbody>${ads.map(a=>{const aCtr=Number(a.impressions||0)>0?((Number(a.clicks||0)/Number(a.impressions||0))*100).toFixed(2):'0.00';const aR=Number(a.spend||0)>0?(Number(a.revenue||0)/Number(a.spend||0)).toFixed(2):'—';const[sb,sl]=AD_STATUS[a.status]||['badge-grey',a.status];return`<tr><td><strong>${esc(a.name)}</strong></td><td>${PLAT_TAG[a.platform]||a.platform}</td><td class="muted">${fmtDate(a.startDate)} → ${fmtDate(a.endDate)}</td><td class="amount">${fmtEur(a.spend)}</td><td>${fmt(a.impressions)}</td><td>${fmt(a.clicks)}</td><td class="muted">${aCtr}%</td><td>${fmt(a.conversions)}</td><td class="amount">${fmtEur(a.revenue)}</td><td><span class="badge ${Number(aR)>=3?'badge-green':Number(aR)>=2?'badge-gold':'badge-terra'}">${aR}×</span></td><td><span class="badge ${sb}">${sl}</span></td><td><div class="table-actions"><button class="btn-icon" onclick="editItem('ads','${a.id}')">✏</button><button class="btn-icon del" onclick="deleteItem('ads','${a.id}')">✕</button></div></td></tr>`;}).join('')}</tbody></table></div>`}</div>`;}
+
+/* ── CHARTS ── */
+const C={terra:'#C4623A',or:'#D4A853',green:'#5C9E5E',blue:'#3866b7',pink:'#E1306C',
+  terraFade:'rgba(196,98,58,0.13)',grid:'rgba(44,36,32,0.07)'};
+Chart.defaults.font.family="'Inter',system-ui,sans-serif";
+Chart.defaults.font.size=11;
+Chart.defaults.color='#8A8280';
+Chart.defaults.animation={duration:600,easing:'easeOutQuart'};
+
+function mkChart(id,cfg){const el=document.getElementById(id);if(!el)return;if(charts[id])charts[id].destroy();charts[id]=new Chart(el,cfg);}
+function socialDates(a,b){return[...new Set([...a,...b].map(s=>s.date))].sort();}
+
+function initCharts(){
+  const n=7,cd=monthlyCAData(n),cl=monthLabels(n);
+  const barCfg=id=>mkChart(id,{type:'bar',data:{labels:cl,datasets:[{label:'CA (€)',data:cd,backgroundColor:C.terraFade,borderColor:C.terra,borderWidth:2,borderRadius:7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:C.grid},ticks:{callback:v=>v+'€'}},x:{grid:{display:false}}}}});
+
+  if(activeTab==='dashboard'){
+    barCfg('ch-ca');
+    const sd={};state.orders.forEach(o=>{sd[o.source]=(sd[o.source]||0)+Number(o.amount||0);});
+    const SRC_LABEL_LOCAL={instagram:'Instagram',tiktok:'TikTok',etsy:'Etsy',direct:'Direct',ads_meta:'Meta Ads',ads_tiktok:'TikTok Ads',recommandation:'Bouche à oreille'};
+    mkChart('ch-sources',{type:'doughnut',data:{labels:Object.keys(sd).map(s=>SRC_LABEL_LOCAL[s]||s),datasets:[{data:Object.values(sd),backgroundColor:['#C4623A','#D4A853','#2C2420','#8A8280','#3866b7','#5C9E5E','#E1306C'],borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'right',labels:{boxWidth:10,padding:12}}}}});
+    const ig=[...state.social].filter(s=>s.platform==='instagram').sort((a,b)=>a.date.localeCompare(b.date)).slice(-6);
+    const tt=[...state.social].filter(s=>s.platform==='tiktok').sort((a,b)=>a.date.localeCompare(b.date)).slice(-6);
+    const dates=socialDates(ig,tt);
+    mkChart('ch-follow-dash',{type:'line',data:{labels:dates.map(fmtDate),datasets:[{label:'Instagram',data:dates.map(d=>ig.find(s=>s.date===d)?.followers??null),borderColor:C.pink,backgroundColor:'rgba(225,48,108,0.07)',borderWidth:2,tension:0.4,fill:true,pointRadius:3},{label:'TikTok',data:dates.map(d=>tt.find(s=>s.date===d)?.followers??null),borderColor:'#111',backgroundColor:'rgba(0,0,0,0.05)',borderWidth:2,tension:0.4,fill:true,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{y:{grid:{color:C.grid}},x:{grid:{display:false}}}}});
+  }
+  if(activeTab==='orders')barCfg('ch-ca-orders');
+  if(activeTab==='content'){
+    const ct=[...state.content].sort((a,b)=>Number(b.views||0)-Number(a.views||0)).slice(0,8);
+    const names=ct.map(c=>c.title.length>18?c.title.slice(0,18)+'…':c.title);
+    const views=ct.map(c=>Number(c.views||0));
+    const revs=ct.map(c=>Number(c.revenue||0));
+    mkChart('ch-content-views',{type:'bar',data:{labels:names,datasets:[{label:'Vues',data:views,backgroundColor:views.map(v=>v>50000?'rgba(225,48,108,0.7)':v>20000?'rgba(212,168,83,0.7)':'rgba(196,98,58,0.5)'),borderRadius:6,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:C.grid},ticks:{callback:v=>fmt(v)}},y:{grid:{display:false}}}}});
+    mkChart('ch-content-rev',{type:'bar',data:{labels:names,datasets:[{label:'CA généré (€)',data:revs,backgroundColor:'rgba(92,158,94,0.65)',borderRadius:6,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:C.grid},ticks:{callback:v=>v+'€'}},y:{grid:{display:false}}}}});
+  }
+  if(activeTab==='social'){
+    const ig=[...state.social].filter(s=>s.platform==='instagram').sort((a,b)=>a.date.localeCompare(b.date));
+    const tt=[...state.social].filter(s=>s.platform==='tiktok').sort((a,b)=>a.date.localeCompare(b.date));
+    const d=socialDates(ig,tt);
+    mkChart('ch-soc-follow',{type:'line',data:{labels:d.map(fmtDate),datasets:[{label:'Instagram',data:d.map(x=>ig.find(s=>s.date===x)?.followers??null),borderColor:C.pink,backgroundColor:'rgba(225,48,108,0.08)',borderWidth:2,tension:0.4,fill:true,pointRadius:4},{label:'TikTok',data:d.map(x=>tt.find(s=>s.date===x)?.followers??null),borderColor:'#111',backgroundColor:'rgba(0,0,0,0.05)',borderWidth:2,tension:0.4,fill:true,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{y:{grid:{color:C.grid}},x:{grid:{display:false}}}}});
+    mkChart('ch-soc-engage',{type:'line',data:{labels:d.map(fmtDate),datasets:[{label:'Instagram',data:d.map(x=>ig.find(s=>s.date===x)?.engagement??null),borderColor:C.pink,borderWidth:2,tension:0.4,pointRadius:4},{label:'TikTok',data:d.map(x=>tt.find(s=>s.date===x)?.engagement??null),borderColor:'#111',borderWidth:2,tension:0.4,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{y:{grid:{color:C.grid},ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}}}});
+  }
+  if(activeTab==='ads'){
+    const ads=state.ads;
+    const names=ads.map(a=>a.name.length>20?a.name.slice(0,20)+'…':a.name);
+    const rv=ads.map(a=>Number(a.spend||0)>0?+(Number(a.revenue||0)/Number(a.spend||0)).toFixed(2):0);
+    mkChart('ch-ads-roas',{type:'bar',data:{labels:names,datasets:[{label:'ROAS',data:rv,backgroundColor:rv.map(r=>r>=3?'rgba(92,158,94,0.75)':r>=2?'rgba(212,168,83,0.75)':'rgba(196,98,58,0.7)'),borderRadius:7,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:C.grid},min:0,ticks:{callback:v=>v+'×'}},x:{grid:{display:false}}}}});
+    mkChart('ch-ads-spend',{type:'bar',data:{labels:names,datasets:[{label:'Dépensé',data:ads.map(a=>Number(a.spend||0)),backgroundColor:'rgba(196,98,58,0.65)',borderRadius:4,borderWidth:0},{label:'CA généré',data:ads.map(a=>Number(a.revenue||0)),backgroundColor:'rgba(212,168,83,0.65)',borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},scales:{y:{grid:{color:C.grid},ticks:{callback:v=>v+'€'}},x:{grid:{display:false}}}}});
   }
 }
+
+/* ── MODAL ── */
+function openAdd(){editingId=null;openModal(activeTab,null);}
+function editItem(tab,id){editingId=id;openModal(tab,state[tab].find(x=>x.id===id)||null);}
+function deleteItem(tab,id){if(!confirm('Supprimer cet élément ?'))return;state[tab]=state[tab].filter(x=>x.id!==id);saveState();renderTab();}
+function openModal(tab,item){
+  document.getElementById('modal-title').textContent=item?'Modifier':`Nouveau${['ads'].includes(tab)?'le':''} ${ADD_LABELS[tab]||''}`;
+  document.getElementById('modal-body').innerHTML=buildForm(tab,item);
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden');editingId=null;}
+function handleOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+function saveModal(){
+  const b=document.getElementById('modal-body');const data={};
+  b.querySelectorAll('[name]').forEach(el=>{data[el.name]=el.type==='number'?Number(el.value):el.value;});
+  if(editingId){const i=state[activeTab].findIndex(x=>x.id===editingId);if(i>=0)state[activeTab][i]={...state[activeTab][i],...data};}
+  else{state[activeTab].push({id:uid(),...data});}
+  saveState();closeModal();renderTab();
+}
+
+/* ── FORMS ── */
+function buildForm(tab,item){
+  const v=(k,d='')=>item?(item[k]??d):d;
+  const sel=(name,opts,cur)=>`<select name="${name}">${opts.map(([val,lbl])=>`<option value="${val}"${cur===val?' selected':''}>${lbl}</option>`).join('')}</select>`;
+  const srcOpts=Object.entries(SRC_LABEL);
+
+  if(tab==='orders')return`<div class="form-grid">
+    <div class="form-group"><label>Date</label><input type="date" name="date" value="${v('date',today())}"></div>
+    <div class="form-group"><label>Client</label><input type="text" name="clientName" value="${esc(v('clientName'))}" placeholder="Nom du client"></div>
+    <div class="form-group span-2"><label>Produit commandé</label><input type="text" name="product" value="${esc(v('product'))}" placeholder="Ex: Veilleuse astronaute"></div>
+    <div class="form-group"><label>Montant (€)</label><input type="number" name="amount" value="${v('amount',0)}" min="0" step="0.01"></div>
+    <div class="form-group"><label>Source</label>${sel('source',srcOpts,v('source','instagram'))}</div>
+    <div class="form-group"><label>Statut</label>${sel('status',Object.entries(STATUS_LABEL),v('status','pending'))}</div>
+    <div class="form-group span-2"><label>Notes</label><textarea name="notes">${esc(v('notes'))}</textarea></div>
+  </div>`;
+
+  if(tab==='products')return`<div class="form-grid">
+    <div class="form-group span-2"><label>Nom du produit</label><input type="text" name="name" value="${esc(v('name'))}" placeholder="Ex: Veilleuse astronaute"></div>
+    <div class="form-group"><label>Catégorie</label>${sel('category',Object.entries(CAT_LABEL),v('category','lampes'))}</div>
+    <div class="form-group"><label>Stock actuel</label><input type="number" name="stock" value="${v('stock',0)}" min="0"></div>
+    <div class="form-group"><label>Temps impression (h)</label><input type="number" name="printTimeH" value="${v('printTimeH',1)}" min="0" step="0.5"></div>
+    <div class="form-group"><label>Coût matière (€)</label><input type="number" name="materialCost" value="${v('materialCost',0)}" min="0" step="0.01"></div>
+    <div class="form-group span-2"><label>Prix de vente (€)</label><input type="number" name="sellingPrice" value="${v('sellingPrice',0)}" min="0" step="0.01"></div>
+  </div>`;
+
+  if(tab==='clients')return`<div class="form-grid">
+    <div class="form-group span-2"><label>Nom</label><input type="text" name="name" value="${esc(v('name'))}" placeholder="Nom complet"></div>
+    <div class="form-group span-2"><label>Email</label><input type="email" name="email" value="${esc(v('email'))}" placeholder="email@exemple.fr"></div>
+    <div class="form-group"><label>Ville</label><input type="text" name="city" value="${esc(v('city'))}" placeholder="Nice"></div>
+    <div class="form-group"><label>Source</label>${sel('source',srcOpts.filter(([k])=>!k.startsWith('ads_')),v('source','instagram'))}</div>
+    <div class="form-group span-2"><label>Date 1ère commande</label><input type="date" name="firstOrder" value="${v('firstOrder',today())}"></div>
+    <div class="form-group span-2"><label>Notes</label><textarea name="notes">${esc(v('notes'))}</textarea></div>
+  </div>`;
+
+  if(tab==='content')return`<div class="form-grid">
+    <div class="form-group"><label>Date de publication</label><input type="date" name="date" value="${v('date',today())}"></div>
+    <div class="form-group"><label>Plateforme</label>${sel('platform',[['tiktok','TikTok'],['instagram','Instagram']],v('platform','tiktok'))}</div>
+    <div class="form-group span-2"><label>Titre de la vidéo</label><input type="text" name="title" value="${esc(v('title'))}" placeholder="Ex: Veilleuse astronaute — process"></div>
+    <div class="form-group"><label>Vues</label><input type="number" name="views" value="${v('views',0)}" min="0"></div>
+    <div class="form-group"><label>Watch time (%)</label><input type="number" name="watchTimePct" value="${v('watchTimePct',0)}" min="0" max="100" step="1"></div>
+    <div class="form-group"><label>Likes</label><input type="number" name="likes" value="${v('likes',0)}" min="0"></div>
+    <div class="form-group"><label>Commentaires</label><input type="number" name="comments" value="${v('comments',0)}" min="0"></div>
+    <div class="form-group"><label>Partages</label><input type="number" name="shares" value="${v('shares',0)}" min="0"></div>
+    <div class="form-group"><label>Clics vers site</label><input type="number" name="siteClicks" value="${v('siteClicks',0)}" min="0"></div>
+    <div class="form-group"><label>Commandes générées</label><input type="number" name="ordersGenerated" value="${v('ordersGenerated',0)}" min="0"></div>
+    <div class="form-group span-2"><label>CA généré (€)</label><input type="number" name="revenue" value="${v('revenue',0)}" min="0" step="0.01"></div>
+  </div>`;
+
+  if(tab==='social')return`<div class="form-grid">
+    <div class="form-group"><label>Date (début semaine)</label><input type="date" name="date" value="${v('date',today())}"></div>
+    <div class="form-group"><label>Plateforme</label>${sel('platform',[['instagram','Instagram'],['tiktok','TikTok']],v('platform','instagram'))}</div>
+    <div class="form-group"><label>Abonnés</label><input type="number" name="followers" value="${v('followers',0)}" min="0"></div>
+    <div class="form-group"><label>Posts publiés</label><input type="number" name="posts" value="${v('posts',0)}" min="0"></div>
+    <div class="form-group"><label>Reach</label><input type="number" name="reach" value="${v('reach',0)}" min="0"></div>
+    <div class="form-group"><label>Impressions</label><input type="number" name="impressions" value="${v('impressions',0)}" min="0"></div>
+    <div class="form-group"><label>Engagement (%)</label><input type="number" name="engagement" value="${v('engagement',0)}" min="0" step="0.1"></div>
+    <div class="form-group"><label>Visites profil</label><input type="number" name="profileVisits" value="${v('profileVisits',0)}" min="0"></div>
+  </div>`;
+
+  if(tab==='ads')return`<div class="form-grid">
+    <div class="form-group span-2"><label>Nom de la campagne</label><input type="text" name="name" value="${esc(v('name'))}" placeholder="Ex: Veilleuse — Portée printemps"></div>
+    <div class="form-group"><label>Plateforme</label>${sel('platform',[['meta','Meta (FB/IG)'],['tiktok','TikTok Ads'],['google','Google Ads']],v('platform','meta'))}</div>
+    <div class="form-group"><label>Statut</label>${sel('status',[['active','Actif'],['paused','Pausé'],['ended','Terminé']],v('status','active'))}</div>
+    <div class="form-group"><label>Date début</label><input type="date" name="startDate" value="${v('startDate',today())}"></div>
+    <div class="form-group"><label>Date fin</label><input type="date" name="endDate" value="${v('endDate',today())}"></div>
+    <div class="form-group"><label>Budget total (€)</label><input type="number" name="budget" value="${v('budget',0)}" min="0" step="0.01"></div>
+    <div class="form-group"><label>Dépensé réel (€)</label><input type="number" name="spend" value="${v('spend',0)}" min="0" step="0.01"></div>
+    <div class="form-group"><label>Impressions</label><input type="number" name="impressions" value="${v('impressions',0)}" min="0"></div>
+    <div class="form-group"><label>Clics</label><input type="number" name="clicks" value="${v('clicks',0)}" min="0"></div>
+    <div class="form-group"><label>Conversions</label><input type="number" name="conversions" value="${v('conversions',0)}" min="0"></div>
+    <div class="form-group span-2"><label>CA généré (€)</label><input type="number" name="revenue" value="${v('revenue',0)}" min="0" step="0.01"></div>
+  </div>`;
+
+  return'<p>Formulaire non disponible.</p>';
+}
+
+/* ── INIT ── */
+loadState();
+updateDate();
+setTab('dashboard');
 </script>
 </body>
 </html>
