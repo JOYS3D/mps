@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOYS - Inventaire STL & Licences</title>
+<style>
+:root { color-scheme: light; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #FAF6F1; color: #2C2420; min-height: 100vh; }
+
+.header { background: #2C2420; padding: 20px 24px; position: sticky; top: 0; z-index: 100; }
+.header h1 { color: #D4A853; font-size: 20px; font-weight: 700; letter-spacing: 0.04em; }
+.header p { color: rgba(255,255,255,0.5); font-size: 12px; margin-top: 4px; }
+
+.tabs { display: flex; gap: 0; background: #fff; border-bottom: 2px solid #eee; position: sticky; top: 62px; z-index: 99; }
+.tab { padding: 12px 20px; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; color: #999; transition: all 0.2s; }
+.tab.active { color: #C4623A; border-bottom-color: #C4623A; }
+.tab:hover { color: #2C2420; }
+
+.stats-bar { display: flex; gap: 12px; padding: 16px 24px; background: #fff; border-bottom: 1px solid #eee; flex-wrap: wrap; }
+.stat { background: #FAF6F1; border-radius: 10px; padding: 12px 16px; flex: 1; min-width: 100px; }
+.stat-num { font-size: 24px; font-weight: 700; color: #2C2420; }
+.stat-label { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+.stat.green .stat-num { color: #2E7D32; }
+.stat.red .stat-num { color: #C62828; }
+.stat.orange .stat-num { color: #E65100; }
+
+.content { padding: 20px 24px; }
+.section { display: none; }
+.section.active { display: block; }
+
+.add-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.add-bar button { background: #C4623A; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.add-bar button:hover { background: #a8512f; }
+.add-bar button.secondary { background: #2C2420; }
+
+.search-bar { margin-bottom: 16px; }
+.search-bar input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+.search-bar input:focus { outline: none; border-color: #C4623A; }
+
+.product-grid { display: flex; flex-direction: column; gap: 10px; }
+.product-card { background: #fff; border-radius: 12px; padding: 14px 16px; border: 1px solid #eee; transition: box-shadow 0.2s; }
+.product-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.product-card.license-ok { border-left: 4px solid #2E7D32; }
+.product-card.license-no { border-left: 4px solid #C62828; }
+.product-card.license-unknown { border-left: 4px solid #E65100; }
+
+.pc-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pc-name { font-size: 14px; font-weight: 700; color: #2C2420; }
+.pc-category { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 0.06em; }
+.pc-license { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+.pc-license.ok { background: #E8F5E9; color: #2E7D32; }
+.pc-license.no { background: #FFEBEE; color: #C62828; }
+.pc-license.unknown { background: #FFF3E0; color: #E65100; }
+
+.pc-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; margin-top: 10px; }
+.pc-detail { background: #FAF6F1; border-radius: 6px; padding: 6px 8px; }
+.pc-detail-label { font-size: 9px; color: #999; text-transform: uppercase; letter-spacing: 0.06em; }
+.pc-detail-value { font-size: 12px; font-weight: 600; color: #2C2420; margin-top: 1px; }
+.pc-detail-value a { color: #C4623A; text-decoration: none; font-size: 11px; word-break: break-all; }
+
+.pc-actions { display: flex; gap: 6px; margin-top: 10px; justify-content: flex-end; }
+.pc-actions button { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 5px 10px; font-size: 11px; cursor: pointer; color: #666; }
+.pc-actions button:hover { border-color: #C4623A; color: #C4623A; }
+.pc-actions button.del:hover { border-color: #C62828; color: #C62828; }
+
+.pc-notes { margin-top:8px; font-size:11px; color:#888; font-style:italic; }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: flex-start; padding-top: 40px; overflow-y: auto; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 16px; padding: 24px; max-width: 560px; width: 90%; margin-bottom: 40px; }
+.modal h2 { font-size: 18px; margin-bottom: 16px; color: #2C2420; }
+.modal label { display: block; font-size: 11px; font-weight: 600; color: #666; margin-bottom: 3px; margin-top: 10px; }
+.modal input, .modal select, .modal textarea { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; }
+.modal input:focus, .modal select:focus { outline: none; border-color: #C4623A; }
+.modal textarea { resize: vertical; min-height: 50px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+.modal-actions button { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+.modal-actions .save { background: #C4623A; color: #fff; }
+.modal-actions .cancel { background: #eee; color: #666; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Guide */
+.license-guide { background: #fff; border-radius: 12px; overflow: hidden; }
+.lg-row { display: grid; grid-template-columns: 180px 1fr 100px; gap: 0; border-bottom: 1px solid #eee; }
+.lg-row.header { background: #2C2420; color: #fff; font-weight: 600; font-size: 12px; }
+.lg-cell { padding: 10px 14px; font-size: 12px; display: flex; align-items: center; }
+.lg-cell.center { justify-content: center; }
+
+.filter-bar { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid #ddd; background: #fff; font-size: 11px; cursor: pointer; font-weight: 500; }
+.filter-btn.active { background: #2C2420; color: #fff; border-color: #2C2420; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>JOYS — Inventaire STL & Licences</h1>
+  <p>44 produits Shopify · Statut licences · Couts · Marges</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('catalogue')">Catalogue Produits</div>
+  <div class="tab" onclick="switchTab('guide')">Guide Licences</div>
+</div>
+
+<div class="stats-bar" id="statsBar"></div>
+
+<div class="content">
+  <div class="section active" id="sec-catalogue">
+    <div class="add-bar">
+      <button onclick="openModal()">+ Ajouter un produit</button>
+      <button class="secondary" onclick="exportJSON()">Exporter JSON</button>
+      <button class="secondary" onclick="document.getElementById('importFile').click()">Importer JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    </div>
+    <div class="search-bar"><input type="text" id="searchInput" placeholder="Rechercher un produit..." oninput="renderAll()"></div>
+    <div class="filter-bar" id="filterBar"></div>
+    <div class="product-grid" id="productGrid"></div>
+  </div>
+  <div class="section" id="sec-guide">
+    <div class="license-guide" id="licenseGuide"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">Ajouter un produit</h2>
+    <input type="hidden" id="editId">
+    <label>Nom du produit *</label>
+    <input type="text" id="f-name" placeholder="Ex: Dragon Articule 3D">
+    <div class="field-row">
+      <div><label>Categorie</label>
+        <select id="f-category">
+          <option value="">-- Choisir --</option>
+          <option>Porte-cles</option>
+          <option>Trophees</option>
+          <option>Figurines</option>
+          <option>Moules chocolat</option>
+          <option>Veilleuses / Lampes</option>
+          <option>Lithophanies</option>
+          <option>Accessoires bureau</option>
+          <option>Accessoires gaming</option>
+          <option>Deco / Art</option>
+          <option>Pochoirs</option>
+          <option>Sur-mesure B2B</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div><label>Licence commerciale</label>
+        <select id="f-license">
+          <option value="unknown">🟧 A verifier</option>
+          <option value="ok">✅ OUI - Vente autorisee</option>
+          <option value="no">❌ NON - Usage personnel</option>
+          <option value="own">✅ Design propre JOYS</option>
+        </select>
+      </div>
+    </div>
+    <label>Source STL (site web)</label>
+    <select id="f-source">
+      <option value="">-- Choisir --</option>
+      <option>Cults3D</option><option>Thingiverse</option><option>MyMiniFactory</option>
+      <option>Printables</option><option>CGTrader</option><option>Design propre JOYS</option>
+      <option>Sur mesure client</option><option>Autre</option>
+    </select>
+    <label>Lien page STL (URL de la page produit)</label>
+    <input type="url" id="f-link" placeholder="https://cults3d.com/...">
+    <label>Fichier STL (nom du fichier ou chemin sur le PC)</label>
+    <input type="text" id="f-file" placeholder="Ex: Dragon_v2_final.stl ou C:/STL/dragon.stl">
+    <label>Designer / Auteur</label>
+    <input type="text" id="f-designer" placeholder="Ex: CinderWing3D">
+    <div class="field-row">
+      <div><label>Cout fichier STL (EUR)</label><input type="number" id="f-stlcost" step="0.01" placeholder="0.00"></div>
+      <div><label>Filament (g)</label><input type="number" id="f-filament" step="1" placeholder="85"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Cout filament (EUR)</label><input type="number" id="f-filcost" step="0.01" placeholder=""></div>
+      <div><label>Temps impression (h)</label><input type="number" id="f-time" step="0.5" placeholder="4.5"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Post-traitement (EUR)</label><input type="number" id="f-postprod" step="0.01" placeholder="Poncage, LED..."></div>
+      <div><label>Prix vente JOYS (EUR)</label><input type="number" id="f-price" step="0.01" placeholder="39.90"></div>
+    </div>
+    <label>Photo (URL)</label>
+    <input type="text" id="f-photo" placeholder="URL image produit">
+    <label>Notes</label>
+    <textarea id="f-notes" placeholder="Infos, remarques..."></textarea>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal()">Annuler</button>
+      <button class="save" onclick="saveProduct()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'joys_stl_inventory_v2';
+let products = [];
+let currentFilter = 'all';
+
+const DEFAULT_PRODUCTS = [
+  {id:1,name:"Porte-clef Trophee imprime 3D, finition or premium",category:"Porte-cles",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:2,name:"Porte-cles Mini-Maillot Football Personnalise",category:"Porte-cles",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"4 variantes"},
+  {id:3,name:"Trophee Football",category:"Trophees",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:4,name:"Porte-cles Prenom Personnalise — Imprime 3D en France",category:"Porte-cles",source:"Design propre JOYS",link:"",file:"",designer:"JOYS",license:"own",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"18 variantes. Design propre = OK"},
+  {id:5,name:"Porte-Cles Mini Appareil Photo — Ta Photo Dans Ta Poche",category:"Porte-cles",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"3 variantes"},
+  {id:6,name:"Porte-cles QR Code — Instagram / Contact / Lien",category:"Porte-cles",source:"Design propre JOYS",link:"",file:"",designer:"JOYS",license:"own",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"2 variantes. Genere sur mesure"},
+  {id:7,name:"Porte-cles Spotify Code — Votre Chanson Preferee",category:"Porte-cles",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:8,name:"Porte-cles Logo Entreprise — Goodies 3D Sur-Mesure",category:"Sur-mesure B2B",source:"Design propre JOYS",link:"",file:"",designer:"JOYS",license:"own",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"4 variantes. Sur mesure = OK"},
+  {id:9,name:"Dragon Articule Imprime 3D — Edition Collector",category:"Figurines",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"VERIFIER LICENCE - probablement STL externe"},
+  {id:10,name:"Pieuvre Porte-Bouteille — Imprimee 3D",category:"Deco / Art",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:11,name:"Lampe Lune et Astronaute",category:"Veilleuses / Lampes",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:12,name:"Cadre Photo Lumineux 3D — Lithophanie Murale",category:"Lithophanies",source:"Design propre JOYS",link:"",file:"",designer:"JOYS",license:"own",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"Genere depuis photo client"},
+  {id:13,name:"Ville Mural — Deco Personnalisee",category:"Deco / Art",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"0 en stock"},
+  {id:14,name:"Coq Decoratif 3D — Piece d Art Francaise",category:"Deco / Art",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:15,name:"Pack Goodies Entreprise x50 — Porte-cles Logo",category:"Sur-mesure B2B",source:"Design propre JOYS",link:"",file:"",designer:"JOYS",license:"own",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"ARCHIVE. Sur mesure = OK"},
+  {id:16,name:"Mini Trophee Football Personnalise — Chaussure Or",category:"Trophees",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"4 variantes"},
+  {id:17,name:"Vase Design Geometrique — Objet Deco Contemporain",category:"Deco / Art",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"8 variantes"},
+  {id:18,name:"Lampe Lotus LED — Veilleuse Fleur Ambiance Zen",category:"Veilleuses / Lampes",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:19,name:"Support Combo Telephone & Ecouteurs — 2-en-1 Bureau",category:"Accessoires bureau",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:20,name:"Porte-Casque Bureau Gaming / Audio — Support Ecouteurs",category:"Accessoires gaming",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:21,name:"Support Manette Gaming Universel — PS5 Xbox Switch",category:"Accessoires gaming",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:22,name:"Support Manette Gaming — Homme Masque Design | PS5",category:"Accessoires gaming",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:23,name:"Support Telephone Bureau",category:"Accessoires bureau",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:24,name:"Station de Charge Multi-Appareils — Organisateur",category:"Accessoires bureau",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:25,name:"Organiseur Bureau Design Vague — Plateau Multi",category:"Accessoires bureau",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"8 variantes, 900 en stock"},
+  {id:26,name:"Organiseur Bureau Elegant — Double Plateau Nervure",category:"Accessoires bureau",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:27,name:"Figurine Personnage — Avec Prenom Personnalise",category:"Figurines",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:28,name:"Moule Chocolat Trois Coeurs — Saint-Valentin & Mariage",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:29,name:"Moule Sucette Pere Noel — Chocolat & Bonbon",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:30,name:"Moule Rose des Vents",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:31,name:"Moule Chocolat Les Amoureux — Couple Grave | Saint-Valentin",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:32,name:"Moule Chocolat Poulailler de Paques — Multi-Empreintes",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:33,name:"Moule Chocolat Ourson — Bonbons, Gelifie, Alimentaire 3D",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:34,name:"Moule Chocolat Sapin de Noel — Patisserie Festive",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:35,name:"Moule Chocolat Poule de Paques — Produit Alimentaire",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:36,name:"Moule Chocolat Lutins de Noel | Deco Patisserie",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:37,name:"Moule Chocolat Etoile Filante — Patisserie Magique",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:38,name:"Moule Chocolat Equipe de Foot | Cadeau Supporter",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:39,name:"Moule Chocolat Grinch — Special Noel",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"GRINCH = personnage sous copyright. RISQUE ELEVE."},
+  {id:40,name:"Moule Fonds Marins — Poisson, Coquillage, Etoile",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+  {id:41,name:"Pochoirs Cocktail & Cafe — Set Art Latte & Mixologie",category:"Pochoirs",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"1100 en stock, 2 variantes"},
+  {id:42,name:"Porte-Cles Film d Horreur — Goodies Fan Icones Cult",category:"Porte-cles",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:"ATTENTION: icones films = potentiel copyright"},
+  {id:43,name:"Moule Chocolat & Bonbon (doublon?)",category:"Moules chocolat",source:"",link:"",file:"",designer:"",license:"unknown",stlcost:0,filament:0,filcost:0,time:0,postprod:0,price:0,photo:"",notes:""},
+];
+
+function loadData() {
+  try {
+    const d = localStorage.getItem(STORAGE_KEY);
+    if (d) { products = JSON.parse(d); return; }
+  } catch(e) {}
+  products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+  saveData();
+}
+
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(products)); } catch(e) {}
+}
+
+function getCost(p) { return (p.stlcost||0)+(p.filcost||0)+(p.postprod||0); }
+function getMargin(p) { const c=getCost(p); if(!p.price||!c) return null; return p.price-c; }
+function getMarginPct(p) { const m=getMargin(p); if(m===null||!p.price) return null; return Math.round((m/p.price)*100); }
+
+function licenseLabel(l) {
+  if(l==='ok') return {text:'✅ VENTE OK',cls:'ok'};
+  if(l==='no') return {text:'❌ INTERDIT',cls:'no'};
+  if(l==='own') return {text:'✅ DESIGN JOYS',cls:'ok'};
+  return {text:'🟧 A VERIFIER',cls:'unknown'};
+}
+
+function renderStats() {
+  const t=products.length, ok=products.filter(p=>p.license==='ok'||p.license==='own').length;
+  const no=products.filter(p=>p.license==='no').length;
+  const unk=products.filter(p=>p.license==='unknown'||!p.license).length;
+  document.getElementById('statsBar').innerHTML=`
+    <div class="stat"><div class="stat-num">${t}</div><div class="stat-label">Total</div></div>
+    <div class="stat green"><div class="stat-num">${ok}</div><div class="stat-label">✅ Vendables</div></div>
+    <div class="stat red"><div class="stat-num">${no}</div><div class="stat-label">❌ Interdits</div></div>
+    <div class="stat orange"><div class="stat-num">${unk}</div><div class="stat-label">🟧 A verifier</div></div>`;
+}
+
+function renderFilters() {
+  const f=currentFilter;
+  document.getElementById('filterBar').innerHTML=`
+    <div class="filter-btn ${f==='all'?'active':''}" onclick="setFilter('all')">Tous</div>
+    <div class="filter-btn ${f==='ok'?'active':''}" onclick="setFilter('ok')">✅ Vendables</div>
+    <div class="filter-btn ${f==='no'?'active':''}" onclick="setFilter('no')">❌ Interdits</div>
+    <div class="filter-btn ${f==='unknown'?'active':''}" onclick="setFilter('unknown')">🟧 A verifier</div>`;
+}
+
+function setFilter(f) { currentFilter=f; renderAll(); }
+
+function renderProducts() {
+  let list=products;
+  if(currentFilter==='ok') list=list.filter(p=>p.license==='ok'||p.license==='own');
+  if(currentFilter==='no') list=list.filter(p=>p.license==='no');
+  if(currentFilter==='unknown') list=list.filter(p=>p.license==='unknown'||!p.license);
+  const q=(document.getElementById('searchInput').value||'').toLowerCase();
+  if(q) list=list.filter(p=>p.name.toLowerCase().includes(q)||((p.category||'').toLowerCase().includes(q)));
+  if(!list.length){document.getElementById('productGrid').innerHTML='<div style="text-align:center;padding:40px;color:#999">Aucun produit trouve.</div>';return;}
+  let h='';
+  list.forEach(p=>{
+    const lic=licenseLabel(p.license);
+    const cost=getCost(p);const margin=getMargin(p);const mp=getMarginPct(p);
+    const cls=lic.cls==='ok'?'license-ok':lic.cls==='no'?'license-no':'license-unknown';
+    h+=`<div class="product-card ${cls}">
+      <div class="pc-top">
+        <div><div class="pc-name">${esc(p.name)}</div><div class="pc-category">${esc(p.category||'Non classe')}</div></div>
+        <div class="pc-license ${lic.cls}">${lic.text}</div>
+      </div>
+      <div class="pc-details">
+        <div class="pc-detail"><div class="pc-detail-label">Source</div><div class="pc-detail-value">${esc(p.source||'—')}</div></div>
+        <div class="pc-detail"><div class="pc-detail-label">Designer</div><div class="pc-detail-value">${esc(p.designer||'—')}</div></div>
+        <div class="pc-detail"><div class="pc-detail-label">Lien page STL</div><div class="pc-detail-value">${p.link?`<a href="${esc(p.link)}" target="_blank">Ouvrir</a>`:'—'}</div></div>
+        <div class="pc-detail"><div class="pc-detail-label">Fichier STL</div><div class="pc-detail-value">${esc(p.file||'—')}</div></div>
+        <div class="pc-detail"><div class="pc-detail-label">Cout prod</div><div class="pc-detail-value">${cost>0?cost.toFixed(2)+' EUR':'—'}</div></div>
+        <div class="pc-detail"><div class="pc-detail-label">Prix vente</div><div class="pc-detail-value">${p.price?p.price.toFixed(2)+' EUR':'—'}</div></div>
+        <div class="pc-detail"><div class="pc-detail-label">Marge</div><div class="pc-detail-value">${margin!==null?margin.toFixed(2)+' EUR ('+mp+'%)':'—'}</div></div>
+        <div class="pc-detail"><div class="pc-detail-label">Filament / Temps</div><div class="pc-detail-value">${p.filament?p.filament+'g':'—'} / ${p.time?p.time+'h':'—'}</div></div>
+      </div>
+      ${p.notes?`<div class="pc-notes">${esc(p.notes)}</div>`:''}
+      <div class="pc-actions">
+        <button onclick="editProduct(${p.id})">Modifier</button>
+        <button class="del" onclick="deleteProduct(${p.id})">Supprimer</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('productGrid').innerHTML=h;
+}
+
+function renderGuide() {
+  const lics=[
+    ['Personal Use Only','Usage perso uniquement. Vente interdite.','❌ NON'],
+    ['Non-Commercial (NC)','Pas de commerce. Meme chose.','❌ NON'],
+    ['Commercial Use Allowed','Licence autorisant la vente des prints.','✅ OUI'],
+    ['Creative Commons CC-BY','Libre, crediter le designer.','✅ OUI'],
+    ['CC-BY-NC','NC = Non Commercial = interdit.','❌ NON'],
+    ['CC-BY-SA','OK commercial si meme licence.','✅ OUI*'],
+    ['STL achete (licence comm.)','Fichier paye avec droit de vente.','✅ OUI'],
+    ['Design propre JOYS','Cree par Johnny ou Yanis.','✅ OUI'],
+    ['Sur mesure client','Client fournit logo/photo.','✅ OUI'],
+    ['Personnage sous copyright','Grinch, Disney, Marvel, etc.','❌ RISQUE'],
+  ];
+  let h='<div class="lg-row header"><div class="lg-cell">Licence</div><div class="lg-cell">Description</div><div class="lg-cell center">Vente?</div></div>';
+  lics.forEach(([t,d,o])=>{
+    const ok=o.includes('✅');const bg=ok?'#E8F5E9':'#FFEBEE';const c=ok?'#2E7D32':'#C62828';
+    h+=`<div class="lg-row"><div class="lg-cell" style="font-weight:600">${t}</div><div class="lg-cell">${d}</div><div class="lg-cell center" style="background:${bg};color:${c};font-weight:700">${o}</div></div>`;
+  });
+  document.getElementById('licenseGuide').innerHTML=h;
+}
+
+function renderAll(){renderStats();renderFilters();renderProducts();renderGuide();}
+
+function openModal(id){
+  const m=document.getElementById('modal');
+  const fields=['f-name','f-category','f-source','f-link','f-file','f-designer','f-stlcost','f-filament','f-filcost','f-time','f-postprod','f-price','f-photo','f-notes'];
+  if(id){
+    const p=products.find(x=>x.id===id);if(!p)return;
+    document.getElementById('modalTitle').textContent='Modifier le produit';
+    document.getElementById('editId').value=id;
+    document.getElementById('f-name').value=p.name||'';
+    document.getElementById('f-category').value=p.category||'';
+    document.getElementById('f-source').value=p.source||'';
+    document.getElementById('f-link').value=p.link||'';
+    document.getElementById('f-file').value=p.file||'';
+    document.getElementById('f-designer').value=p.designer||'';
+    document.getElementById('f-license').value=p.license||'unknown';
+    document.getElementById('f-stlcost').value=p.stlcost||'';
+    document.getElementById('f-filament').value=p.filament||'';
+    document.getElementById('f-filcost').value=p.filcost||'';
+    document.getElementById('f-time').value=p.time||'';
+    document.getElementById('f-postprod').value=p.postprod||'';
+    document.getElementById('f-price').value=p.price||'';
+    document.getElementById('f-photo').value=p.photo||'';
+    document.getElementById('f-notes').value=p.notes||'';
+  } else {
+    document.getElementById('modalTitle').textContent='Ajouter un produit';
+    document.getElementById('editId').value='';
+    fields.forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+    document.getElementById('f-license').value='unknown';
+  }
+  m.classList.add('show');
+}
+
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+
+function saveProduct(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('Nom obligatoire');return;}
+  const editId=document.getElementById('editId').value;
+  const data={name,
+    category:document.getElementById('f-category').value,
+    source:document.getElementById('f-source').value,
+    link:document.getElementById('f-link').value.trim(),
+    file:document.getElementById('f-file').value.trim(),
+    designer:document.getElementById('f-designer').value.trim(),
+    license:document.getElementById('f-license').value,
+    stlcost:parseFloat(document.getElementById('f-stlcost').value)||0,
+    filament:parseFloat(document.getElementById('f-filament').value)||0,
+    filcost:parseFloat(document.getElementById('f-filcost').value)||0,
+    time:parseFloat(document.getElementById('f-time').value)||0,
+    postprod:parseFloat(document.getElementById('f-postprod').value)||0,
+    price:parseFloat(document.getElementById('f-price').value)||0,
+    photo:document.getElementById('f-photo').value.trim(),
+    notes:document.getElementById('f-notes').value.trim()};
+  if(editId){const i=products.findIndex(p=>p.id===parseInt(editId));if(i>=0)products[i]={...products[i],...data};}
+  else{data.id=products.length?Math.max(...products.map(p=>p.id))+1:1;products.push(data);}
+  saveData();closeModal();renderAll();
+}
+
+function editProduct(id){openModal(id);}
+function deleteProduct(id){if(!confirm('Supprimer ?'))return;products=products.filter(p=>p.id!==id);saveData();renderAll();}
+
+function exportJSON(){
+  const b=new Blob([JSON.stringify(products,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='joys_inventaire_stl.json';a.click();
+}
+function importJSON(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=function(ev){try{const d=JSON.parse(ev.target.result);if(Array.isArray(d)){products=d;saveData();renderAll();alert('Import OK: '+d.length+' produits');}}catch(err){alert('Erreur: '+err.message);}};
+  r.readAsText(f);
+}
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('sec-'+tab).classList.add('active');
+}
+function esc(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+loadData();renderAll();
+</script>
+</body>
+</html>
