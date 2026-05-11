@@ -1,0 +1,1599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>TradieCatch — Mobile Demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EEEEF6;
+    --surface: #FFFFFF;
+    --border: #E2E2EE;
+    --text: #16162A;
+    --muted: #8080A8;
+    --accent: #3B82F6;
+    --accent-dark: #1E40AF;
+    --accent-shadow: rgba(59,130,246,.25);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
+  body.trade-plumber { --accent:#3B82F6; --accent-dark:#1E40AF; --accent-shadow: rgba(59,130,246,.25); }
+  body.trade-hvac { --accent:#06B6D4; --accent-dark:#155E75; --accent-shadow: rgba(6,182,212,.25); }
+  body.trade-sparky { --accent:#F59E0B; --accent-dark:#B45309; --accent-shadow: rgba(245,158,11,.25); }
+  body.trade-pool { --accent:#0891B2; --accent-dark:#0E7490; --accent-shadow: rgba(8,145,178,.25); }
+
+  * { -webkit-tap-highlight-color: transparent; }
+  html, body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overscroll-behavior: none;
+    padding-top: var(--safe-top);
+  }
+
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+  .pill { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:600; }
+  .btn { padding:14px 18px; border-radius:14px; font-weight:600; transition:all .15s; cursor:pointer; font-size:15px; border:none; min-height:48px; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--accent); color:#fff; box-shadow: 0 4px 14px -2px var(--accent-shadow); }
+  .btn-success { background:#10B981; color:#fff; }
+  .btn-warning { background:#F59E0B; color:#fff; }
+  .btn-ghost { background:#F1F5F9; color: var(--text); }
+  .btn-danger-light { background:#FEF2F2; color:#B91C1C; }
+  .input { width:100%; border:1.5px solid var(--border); border-radius:12px; padding:14px 16px; font-size:16px; background:#fff; }
+  .input:focus { outline:none; border-color: var(--accent); }
+  .chip-btn { padding:14px; border-radius:12px; border:2px solid var(--border); background:#fff; cursor:pointer; transition:all .15s; text-align:center; min-height:48px; font-size:14px; font-weight:600; }
+  .chip-btn:active { transform: scale(.97); }
+  .chip-btn.selected { border-color: var(--accent); background: var(--accent); color:#fff; }
+  .stat-label { font-size:11px; font-weight:700; color: var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .toggle { width:44px; height:26px; background:#E5E7EB; border-radius:999px; position:relative; cursor:pointer; transition:background .2s; flex-shrink:0; }
+  .toggle.on { background:#10B981; }
+  .toggle::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:999px; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+  .toggle.on::after { left:21px; }
+  .photo-ph { aspect-ratio:1; border-radius:10px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:32px; opacity:.85; }
+  .anim-fade { animation: fade .25s ease; }
+  @keyframes fade { from { opacity:0; transform: translateY(8px);} to { opacity:1; transform:none;} }
+  @keyframes pulseNew { 0%,100% { box-shadow: 0 0 0 3px rgba(16,185,129,.15); } 50% { box-shadow: 0 0 0 8px rgba(16,185,129,.05); } }
+  .pulse-new { animation: pulseNew 2.5s ease infinite; }
+
+  /* Layout */
+  #app { min-height: 100vh; padding-bottom: calc(80px + var(--safe-bottom)); }
+  .topbar { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 12px 16px; }
+  .page { padding: 16px; }
+  .bar { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-radius: 4px 4px 0 0; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 1px solid var(--border);
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    padding-bottom: var(--safe-bottom);
+    z-index: 50;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.06);
+  }
+  .nav-tab {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 10px 4px 12px;
+    color: var(--muted);
+    font-size: 10px; font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    min-height: 60px;
+  }
+  .nav-tab .nav-icon { font-size: 22px; margin-bottom: 4px; }
+  .nav-tab.active { color: var(--accent); }
+  .nav-tab.active::before {
+    content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 3px;
+    background: var(--accent); border-radius: 0 0 4px 4px;
+  }
+  .nav-tab .badge {
+    position: absolute; top: 6px; right: 25%;
+    background: #EF4444; color: #fff;
+    font-size: 9px; font-weight: 700;
+    min-width: 16px; height: 16px;
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px;
+  }
+
+  /* SMS bubbles */
+  .sms-in { background:#E5E7EB; color:#0b1220; border-radius: 18px 18px 18px 4px; padding:10px 14px; max-width:80%; font-size:14px; }
+  .sms-out { background:#34C759; color:#fff; border-radius: 18px 18px 4px 18px; padding:10px 14px; max-width:80%; font-size:14px; }
+  .sms-system { background:#E5E7EB; color:#475569; padding:6px 14px; border-radius:999px; font-size:11px; font-weight:600; display:inline-block; }
+
+  /* Bigger touch targets */
+  button, .clickable { min-height: 44px; }
+
+  /* Toast */
+  #toast { position:fixed; top: calc(20px + var(--safe-top)); left:50%; transform: translateX(-50%) translateY(-100px);
+    background:#10B981; color:#fff; padding:12px 20px; border-radius:14px; font-weight:600;
+    box-shadow:0 10px 30px rgba(16,185,129,.4); transition: transform .3s; z-index:9999; font-size:14px; }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Trade selection home */
+  .trade-card { background: #fff; border:2px solid var(--border); border-radius:18px; padding:20px; cursor:pointer; transition: all .2s; }
+  .trade-card:active { transform: scale(.97); border-color: var(--accent); }
+
+  /* Demo flow overlay (full screen takeover) */
+  .flow-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: #F2F2F7;
+    display: flex; flex-direction: column;
+    animation: slideUp .3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .flow-header { background: #fff; padding: 14px 16px; padding-top: calc(14px + var(--safe-top)); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .flow-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .flow-controls { padding: 12px 16px; padding-bottom: calc(12px + var(--safe-bottom)); background: #fff; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; }
+  .step-dots { display:flex; gap:5px; }
+  .step-dot { width:8px; height:8px; border-radius:999px; background:#CBD5E1; }
+  .step-dot.active { background: var(--accent); transform: scale(1.3); }
+  .step-dot.done { background: var(--accent); opacity:.5; }
+
+  /* Lockscreen for tradie POV */
+  .lockscreen-bg { background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%); }
+
+  /* WhatsApp bubble */
+  .wa-bubble { background:#dcf8c6; color:#000; border-radius: 10px; padding:12px 14px; font-size:14px; line-height:1.4; }
+
+  /* Calendar mobile (day view) */
+  .day-pill { padding: 12px 6px; border-radius: 12px; text-align: center; cursor: pointer; transition: all .15s; flex-shrink: 0; min-width: 56px; }
+  .day-pill .day-num { font-size: 18px; font-weight: 700; }
+  .day-pill .day-name { font-size: 10px; font-weight: 600; text-transform: uppercase; opacity: .6; }
+  .day-pill.active { background: var(--accent); color: #fff; }
+  .day-pill.active .day-name { opacity: 1; }
+
+  .event-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer; }
+  .event-card.new { border-color: var(--accent); border-width: 2px; }
+
+  /* Messages */
+  .conv-item { padding: 14px 16px; border-bottom: 1px solid #F1F5F9; display: flex; gap: 12px; cursor: pointer; }
+  .conv-item:active { background: #F8FAFF; }
+  .avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: 14px; flex-shrink: 0; }
+
+  .progress-step { width:28px; height:28px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; background:#F1F5F9; color: var(--muted); flex-shrink: 0; }
+  .progress-step.active { background: var(--accent); color:#fff; }
+  .progress-step.done { background:#10B981; color:#fff; }
+
+  /* Hide on mobile-only utility */
+  .scrollbar-thin::-webkit-scrollbar { width: 0; height: 0; }
+
+  /* Force min height for content areas */
+  .min-screen { min-height: calc(100vh - 60px - 80px - var(--safe-top) - var(--safe-bottom)); }
+</style>
+</head>
+<body class="trade-plumber">
+
+<div id="toast"></div>
+<div id="app"></div>
+<div id="overlay-container"></div>
+
+<script>
+/* ============================================================
+   TRADES CONFIG
+   ============================================================ */
+const TRADES = {
+  plumber: {
+    slug: 'plumber', name: 'Plumber', plural: 'Plumbers', icon: '🔧',
+    business: { name: 'Bayside Plumbing', owner: 'Mark Reilly', suburb: 'Logan', phone: '+61 7 5555 0188', tracking: '+61 7 3040 8821' },
+    issueTypes: [
+      { id: 'hotwater', icon: '🚿', label: 'Hot water' },
+      { id: 'leak', icon: '💧', label: 'Leak' },
+      { id: 'drain', icon: '🚰', label: 'Drain' },
+      { id: 'tap', icon: '🪛', label: 'Tap' },
+      { id: 'toilet', icon: '🚽', label: 'Toilet' },
+      { id: 'gas', icon: '🔥', label: 'Gas' },
+      { id: 'pipe', icon: '🔧', label: 'Pipework' },
+      { id: 'other', icon: '❓', label: 'Other' }
+    ],
+    suburbs: ['Nerang', 'Logan', 'Beenleigh', 'Other'],
+    pricing: { callout: 120, hourly: 110, weekend_pct: 75 },
+    catalog: [
+      { name: 'Blocked drain', price: '$250', time: '1.5h' },
+      { name: 'Hot water gas', price: '$2,200-2,800', time: '3h' },
+      { name: 'Tap washer', price: '$150', time: '45min' },
+      { name: 'Leak detection', price: '$350', time: '1h' }
+    ],
+    aiQuote: { amount: 2690, confidence: 88, label: 'Hot water replacement', breakdown: [
+      { l: 'Callout fee', a: 120 },
+      { l: 'Labor 3h × $110', a: 330 },
+      { l: 'Rinnai 26 (Reece Logan)', a: 2150 },
+      { l: 'Copper fittings (12yr rule)', a: 90 }
+    ], note: 'Confirm gas pressure on site.' },
+    aiMemory: {
+      pricing: ['+$200 on installs >10 years', 'Weekend: +75%', 'Min leak detection: $300'],
+      timing: ['Drains: 1.5h avg', 'Hot water: 3h avg', 'Tap washer: 30-45min'],
+      suppliers: ['Reece Logan — Rinnai 26: $2,150', 'Reece — Bosch 26L: $1,890'],
+      preferences: ['No jobs >30km', 'No roof plumbing']
+    },
+    monthlyRev: 34820
+  },
+  hvac: {
+    slug: 'hvac', name: 'HVAC', plural: 'Air-con techs', icon: '❄️',
+    business: { name: 'Coastal Cool', owner: 'Ben Carter', suburb: 'Surfers Paradise', phone: '+61 7 5555 0234', tracking: '+61 7 3040 8822' },
+    issueTypes: [
+      { id: 'notcooling', icon: '🌡️', label: 'Not cool' },
+      { id: 'noise', icon: '🔊', label: 'Noise' },
+      { id: 'install', icon: '🆕', label: 'Install' },
+      { id: 'service', icon: '🧹', label: 'Service' },
+      { id: 'replace', icon: '🔄', label: 'Replace' },
+      { id: 'leak', icon: '💧', label: 'Leak' },
+      { id: 'notheating', icon: '🔥', label: 'No heat' },
+      { id: 'other', icon: '❓', label: 'Other' }
+    ],
+    suburbs: ['Robina', 'Surfers', 'Burleigh', 'Other'],
+    pricing: { callout: 80, hourly: 140, weekend_pct: 75 },
+    catalog: [
+      { name: 'Annual service', price: '$190', time: '1h' },
+      { name: 'Gas recharge', price: '$280-450', time: '1h' },
+      { name: 'Split 5kW install', price: '$2,800-4,500', time: '1.5d' }
+    ],
+    aiQuote: { amount: 380, confidence: 82, label: 'Diagnostic + gas recharge', breakdown: [
+      { l: 'Callout', a: 80 }, { l: 'Diagnostic 1h', a: 140 }, { l: 'R32 gas recharge', a: 160 }
+    ]},
+    aiMemory: {
+      pricing: ['Always 2 days for install', 'Weekend: +75%', 'Summer: +$50 priority'],
+      timing: ['Install: 1.5 days', 'Service: 1h', 'Gas recharge: 1h'],
+      suppliers: ['Beijer Ref — Daikin Cora 5kW: $1,890'],
+      preferences: ['No ducted in apartments']
+    },
+    monthlyRev: 58400
+  },
+  sparky: {
+    slug: 'sparky', name: 'Electrician', plural: 'Sparkies', icon: '⚡',
+    business: { name: 'Lightning Sparkies', owner: "Ryan O'Brien", suburb: 'Brisbane CBD', phone: '+61 7 5555 0398', tracking: '+61 7 3040 8823' },
+    issueTypes: [
+      { id: 'powerout', icon: '⚡', label: 'Power out' },
+      { id: 'gpo', icon: '🔌', label: 'GPO' },
+      { id: 'light', icon: '💡', label: 'Light' },
+      { id: 'switchboard', icon: '🔋', label: 'Switchboard' },
+      { id: 'safety', icon: '⚠️', label: 'Safety' },
+      { id: 'solar', icon: '☀️', label: 'Solar' },
+      { id: 'hotwater', icon: '🔥', label: 'Hot water' },
+      { id: 'other', icon: '❓', label: 'Other' }
+    ],
+    suburbs: ['Fortitude V.', 'New Farm', 'West End', 'Other'],
+    pricing: { callout: 90, hourly: 130, weekend_pct: 60 },
+    catalog: [
+      { name: 'GPO replacement', price: '$180', time: '45min' },
+      { name: 'Switchboard upgrade', price: '$1,800-3,500', time: '6-8h' },
+      { name: 'Safety switch', price: '$250-320', time: '1h' }
+    ],
+    aiQuote: { amount: 280, confidence: 82, label: 'Safety switch fault', breakdown: [
+      { l: 'Callout', a: 90 }, { l: 'Diagnostic 1h', a: 130 }, { l: 'New RCD', a: 60 }
+    ]},
+    aiMemory: {
+      pricing: ['Switchboard always +$600 (Energex)', 'Weekend: +60%', 'Min: $180'],
+      timing: ['GPO: 45min', 'Switchboard: 6-8h'],
+      suppliers: ['MM Electrical — Hager kit: $480'],
+      preferences: ['No solar from others']
+    },
+    monthlyRev: 41200
+  },
+  pool: {
+    slug: 'pool', name: 'Pool service', plural: 'Pool guys', icon: '💧',
+    business: { name: 'Bluewater Pools', owner: 'Dave Henderson', suburb: 'Burleigh', phone: '+61 7 5555 0188', tracking: '+61 7 3040 8824' },
+    issueTypes: [
+      { id: 'green', icon: '🌿', label: 'Green' },
+      { id: 'cloudy', icon: '💧', label: 'Cloudy' },
+      { id: 'pump', icon: '⚙️', label: 'Pump' },
+      { id: 'salt', icon: '🧂', label: 'Salt' },
+      { id: 'leak', icon: '💦', label: 'Leak' },
+      { id: 'clean', icon: '🧹', label: 'Clean' },
+      { id: 'equip', icon: '🔧', label: 'Equipment' },
+      { id: 'other', icon: '❓', label: 'Other' }
+    ],
+    suburbs: ['Mermaid', 'Robina', 'Broadbeach', 'Other'],
+    pricing: { callout: 65, hourly: 95, weekend_pct: 60 },
+    catalog: [
+      { name: 'Weekly clean', price: '$55-75', time: '35min' },
+      { name: 'Green pool recovery', price: '$350-650', time: '2-4 visits' },
+      { name: 'Salt cell', price: '$420-780', time: '45min' }
+    ],
+    aiQuote: { amount: 480, confidence: 87, label: 'Green pool recovery', breakdown: [
+      { l: 'Initial + shock', a: 280 }, { l: 'Follow-up visit', a: 120 }, { l: 'Final check', a: 80 }
+    ]},
+    aiMemory: {
+      pricing: ['+$80 on installs >5yrs', 'Weekend: +60%', 'Min green pool: $350'],
+      timing: ['Weekly clean: 35min', 'Green: 2-4 visits'],
+      suppliers: ['Mr Pool Man — Hayward cell: $385'],
+      preferences: ['No jobs >30km']
+    },
+    monthlyRev: 28940
+  }
+};
+
+const initialState = () => ({
+  currentTrade: null,
+  customer: { name: 'Sarah Mitchell', phone: '0412 845 392', address: '14 Coral Ave, Nerang QLD 4211', suburb: 'Nerang' },
+  newLeadStatus: 'submitted',
+  newLeadDraft: {
+    address: '14 Coral Ave, Nerang QLD 4211', suburb: 'Nerang',
+    issue_type: 'hotwater', issue_label: 'Hot water',
+    description: 'Hot water unit leaking from the bottom, started yesterday. Gas Rinnai outside, about 12 years old.',
+    photos: ['p1', 'p2', 'p3'], urgency: '24h', availability: ['Tomorrow AM', 'Thu AM']
+  },
+  newLeadFinalQuote: null,
+  activeMessage: 'sarah',
+  activeTab: 'home',
+  agendaDay: 1, // Tuesday
+  smsThread: [
+    { type: 'system', text: 'Missed call — auto-SMS sent (30s)', time: 'Yesterday 4:42 PM' },
+    { type: 'out_system', placeholder: 'auto_sms', time: 'Yesterday 4:42 PM' },
+    { type: 'in', text: 'YES', time: 'Yesterday 4:43 PM' },
+    { type: 'out_system', text: 'Perfect! Here\'s your link: <span class="underline">tradiecatch.app/r/sM9xK2</span>', time: 'Yesterday 4:43 PM' },
+    { type: 'system', text: 'Form filled — new lead', time: 'Yesterday 4:51 PM' },
+    { type: 'out_owner', placeholder: 'quote_sms', time: 'Yesterday 5:14 PM' },
+    { type: 'in', text: 'Great, paying now! 👍', time: 'Yesterday 5:17 PM' },
+    { type: 'system', text: 'Deposit $538 received ✓', time: 'Yesterday 5:18 PM' },
+    { type: 'out_system', text: 'Deposit confirmed ✓ See you tomorrow Tue 10am-12pm!', time: 'Yesterday 5:18 PM' },
+    { type: 'in', text: 'Thanks so much! 🙌', time: 'Yesterday 5:19 PM' }
+  ],
+  referralCount: 2,
+  referralEarnings: 497,
+  referrals: [
+    { name: 'Tony M.', business: 'Mitchell Plumbing', date: '12 Apr', status: 'signed', reward: '$497' },
+    { name: 'Steve D.', business: 'Davies Sparkies', date: '28 Apr', status: 'signed', reward: '$497' },
+    { name: 'Brad W.', business: 'BW Plumbing', date: '5 May', status: 'demo', reward: 'pending' },
+    { name: 'Jake H.', business: 'Harper HVAC', date: '8 May', status: 'pending', reward: 'pending' }
+  ]
+});
+
+const Store = {
+  data: {},
+  load() { const s = localStorage.getItem('tradiecatch_mobile_v1'); if (s) { try { this.data = JSON.parse(s); } catch { this.data = initialState(); } } else { this.data = initialState(); } },
+  save() { localStorage.setItem('tradiecatch_mobile_v1', JSON.stringify(this.data)); },
+  reset() { this.data = initialState(); this.save(); }
+};
+Store.load();
+
+function getTrade() { return Store.data.currentTrade ? TRADES[Store.data.currentTrade] : null; }
+function applyTradeColor() { document.body.className = Store.data.currentTrade ? `trade-${Store.data.currentTrade}` : 'trade-plumber'; }
+function setTrade(slug) { Store.data.currentTrade = slug; Store.save(); applyTradeColor(); }
+function resetDemo() { if (confirm('Reset demo?')) { Store.reset(); applyTradeColor(); switchTab('home'); } }
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+
+function switchTab(tab) {
+  Store.data.activeTab = tab;
+  Store.save();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window.addEventListener('load', () => { applyTradeColor(); render(); });
+
+function render() {
+  const app = document.getElementById('app');
+  if (!Store.data.currentTrade) { app.innerHTML = renderTradeSelector(); return; }
+  const tab = Store.data.activeTab || 'home';
+  const pages = { home: pageHome, leads: pageLeads, agenda: pageAgenda, messages: pageMessages, more: pageMore };
+  const t = getTrade();
+  const newLead = Store.data.newLeadStatus !== 'idle';
+
+  app.innerHTML = `
+    <div class="topbar flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0" style="background: var(--accent); color:#fff;">${t.icon}</div>
+        <div>
+          <div class="font-extrabold text-base leading-tight">${t.business.name}</div>
+          <div class="text-[10px]" style="color: var(--muted)">${t.business.owner} • ${t.name}</div>
+        </div>
+      </div>
+      <button class="w-10 h-10 rounded-lg flex items-center justify-center relative" style="background: #F1F5F9;" onclick="showDemoMenu()">
+        🎬
+        ${newLead ? `<div class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">1</div>` : ''}
+      </button>
+    </div>
+
+    <div class="anim-fade">${pages[tab] ? pages[tab]() : pageHome()}</div>
+
+    <nav class="bottom-nav">
+      ${[
+        ['home','🏠','Home'],
+        ['leads','📥','Leads'],
+        ['agenda','📅','Agenda'],
+        ['messages','💬','Messages'],
+        ['more','⋯','More']
+      ].map(([id, icon, name]) => `
+        <div class="nav-tab ${tab === id ? 'active' : ''}" onclick="switchTab('${id}')">
+          <div class="nav-icon">${icon}</div>
+          <div>${name}</div>
+          ${id === 'leads' && newLead ? '<div class="badge">1</div>' : ''}
+          ${id === 'messages' ? '<div class="badge">3</div>' : ''}
+        </div>
+      `).join('')}
+    </nav>
+  `;
+}
+
+/* ============================================================
+   TRADE SELECTOR (home/onboarding)
+   ============================================================ */
+function renderTradeSelector() {
+  return `
+    <div class="min-h-screen flex flex-col items-center justify-center px-5 py-10" style="background: linear-gradient(135deg, #F8F9FF 0%, #EEEEF6 100%);">
+      <div class="text-center mb-8 anim-fade">
+        <div class="inline-flex items-center gap-2 mb-5">
+          <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl text-white" style="background: linear-gradient(135deg, #5B5BF7, #4747D1);">🎯</div>
+          <div class="text-left">
+            <div class="text-2xl font-extrabold">TradieCatch</div>
+            <div class="text-xs" style="color: var(--muted)">Mobile Demo</div>
+          </div>
+        </div>
+        <h1 class="text-3xl font-extrabold mb-3 leading-tight">Pick your trade</h1>
+        <p class="text-sm max-w-sm mx-auto" style="color: var(--muted)">
+          Le dashboard se configure selon ton métier
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 w-full max-w-sm anim-fade">
+        ${Object.values(TRADES).map(t => `
+          <div class="trade-card text-center" onclick="onboardTrade('${t.slug}')">
+            <div class="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center text-2xl mb-3" style="background: ${t.slug === 'plumber' ? '#DBEAFE' : t.slug === 'hvac' ? '#CFFAFE' : t.slug === 'sparky' ? '#FEF3C7' : '#CFFAFE'};">${t.icon}</div>
+            <div class="font-bold text-base mb-1">${t.name}</div>
+            <div class="text-[10px]" style="color: var(--muted)">${t.business.name}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="mt-8 max-w-sm anim-fade">
+        <div class="card p-4 text-xs">
+          <div class="font-bold uppercase mb-2" style="color: var(--muted)">📱 Mobile demo</div>
+          <ol class="space-y-1 list-decimal pl-4">
+            <li>Bottom tabs : Home, Leads, Agenda, Messages, More</li>
+            <li>Top right 🎬 : démos POV Customer / Tradie</li>
+            <li>Trade switcher dans "More"</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function onboardTrade(slug) { setTrade(slug); switchTab('home'); }
+
+/* ============================================================
+   PAGE: HOME (Overview)
+   ============================================================ */
+function pageHome() {
+  const t = getTrade();
+  const newLead = Store.data.newLeadStatus !== 'idle';
+  const monthlyRev = t.monthlyRev + (Store.data.newLeadFinalQuote || 0);
+
+  return `
+    <div class="page space-y-4">
+      ${newLead ? `
+        <div class="card p-4 anim-fade" style="border:2px solid #10B981; background: linear-gradient(135deg, #ECFDF5, #D1FAE5);">
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">🎉</div>
+            <div class="flex-1">
+              <div class="font-bold text-emerald-900 text-sm">New lead just came in!</div>
+              <div class="text-xs text-emerald-700 mb-2">${Store.data.customer.name} — ${Store.data.newLeadDraft.suburb} • ${Store.data.newLeadDraft.issue_label}</div>
+              <button class="btn btn-success text-xs px-3 py-2" style="min-height:36px;" onclick="openTradieFlow()">Open dossier →</button>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="card p-4">
+          <div class="stat-label mb-1">This month</div>
+          <div class="text-2xl font-extrabold">$${(monthlyRev/1000).toFixed(1)}k</div>
+          <div class="text-xs text-emerald-600 font-semibold">↑ 28%</div>
+        </div>
+        <div class="card p-4">
+          <div class="stat-label mb-1">Leads</div>
+          <div class="text-2xl font-extrabold">${42 + (newLead ? 1 : 0)}</div>
+          <div class="text-xs text-emerald-600 font-semibold">↑ 18%</div>
+        </div>
+        <div class="card p-4">
+          <div class="stat-label mb-1">Conversion</div>
+          <div class="text-2xl font-extrabold">86%</div>
+          <div class="text-xs text-emerald-600 font-semibold">↑ 5pts</div>
+        </div>
+        <div class="card p-4">
+          <div class="stat-label mb-1">AI accuracy</div>
+          <div class="text-2xl font-extrabold">87%</div>
+          <div class="text-xs text-emerald-600 font-semibold">↑ 8pts</div>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <div class="stat-label">Today</div>
+            <div class="text-base font-bold">Tuesday, May 12</div>
+          </div>
+          <button class="text-xs font-semibold" style="color: var(--accent);" onclick="switchTab('agenda')">See all →</button>
+        </div>
+        <div class="space-y-2">
+          ${[
+            { time: '8:00', label: 'Julie Roberts', sub: 'Blocked drain • $250', status: '⏱️ In progress', color: '#ECFDF5' },
+            { time: '10:00', label: Store.data.customer.name, sub: `Hot water • $${(Store.data.newLeadFinalQuote || t.aiQuote.amount).toLocaleString()}`, status: '⏰ Next', color: 'var(--accent)', textColor: '#fff' },
+            { time: '14:30', label: 'Mike Thompson', sub: 'Tap repair • $180', status: 'Confirmed', color: '#F8FAFC' }
+          ].map(r => `
+            <div class="rounded-xl p-3 flex items-center gap-3" style="background: ${r.color}; color: ${r.textColor || 'var(--text)'};">
+              <div class="text-xs font-bold opacity-80" style="min-width:42px;">${r.time}</div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm truncate">${r.label}</div>
+                <div class="text-[11px] opacity-80 truncate">${r.sub}</div>
+              </div>
+              <div class="text-[10px] font-semibold opacity-90">${r.status}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card p-4" style="background: linear-gradient(135deg, #16162A, #1E1E3F); color:#fff; border:none;">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-xs font-bold" style="color:#A0A0C0;">🧠 AI INSIGHTS</div>
+          <span class="pill" style="background: rgba(16,185,129,.2); color:#6EE7B7;">87%</span>
+        </div>
+        <div class="text-sm leading-snug mb-2">${insightFor(t)}</div>
+        <div class="text-xs opacity-70 border-t pt-2" style="border-color: rgba(255,255,255,.1);">📈 ${t.business.suburb} = best zone (12 leads this month)</div>
+      </div>
+
+      <div class="card p-4" style="background: linear-gradient(135deg, #064E3B, #047857); color:#fff; border:none;">
+        <div class="text-xs font-bold mb-1" style="color:#A7F3D0;">🎁 REFERRAL EARNINGS</div>
+        <div class="text-3xl font-extrabold mb-1">$${Store.data.referralEarnings}</div>
+        <div class="text-xs text-emerald-100 mb-3">${Store.data.referralCount} mates signed · 1 more = $200 cash</div>
+        <button class="btn w-full text-sm" style="background: #fff; color: #047857;" onclick="switchTab('more'); setTimeout(() => openMore('referrals'), 100);">Refer a mate →</button>
+      </div>
+
+      <div class="card p-4">
+        <div class="stat-label mb-2">Recovered — 30 days</div>
+        <div class="text-2xl font-extrabold mb-3">$${monthlyRev.toLocaleString()}</div>
+        <div class="flex items-end gap-0.5 h-24">
+          ${Array.from({length: 30}, (_, i) => { const v = 25 + Math.sin(i / 3) * 25 + (i / 30) * 55; return `<div class="flex-1 bar" style="height:${Math.min(95, v)}%${i === 29 ? '; background: linear-gradient(180deg, #10B981, #047857);' : ''}"></div>`; }).join('')}
+        </div>
+      </div>
+
+      <div class="text-center text-xs py-4" style="color: var(--muted)">
+        TradieCatch Mobile · v1
+      </div>
+    </div>
+  `;
+}
+
+function insightFor(t) {
+  const m = { plumber: 'You quoted 4 hot water jobs above $2,400 last week. Update default?', hvac: 'Summer rush — stock Daikin Cora 5kW.', sparky: 'Switchboards up 40%. Block more Tuesdays.', pool: 'Green pool jobs trending — stock chemicals.' };
+  return m[t.slug];
+}
+
+/* ============================================================
+   PAGE: LEADS
+   ============================================================ */
+function pageLeads() {
+  const t = getTrade();
+  const newLead = Store.data.newLeadStatus !== 'idle';
+  const tabs = [
+    { id: 'new', label: 'New', color: '#EF4444', count: newLead ? 1 : 0 },
+    { id: 'quoted', label: 'Quoted', color: '#F59E0B', count: 2 },
+    { id: 'booked', label: 'Booked', color: 'var(--accent)', count: 3 },
+    { id: 'completed', label: 'Done', color: '#10B981', count: 3 }
+  ];
+  const activeTab = Store.data.leadsTab || 'new';
+
+  let cards = '';
+  if (activeTab === 'new') {
+    if (newLead) {
+      cards = `
+        <div class="card p-4 pulse-new" style="border:2px solid #10B981;" onclick="openTradieFlow()">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <div class="font-semibold">${Store.data.customer.name}</div>
+              <div class="text-xs" style="color: var(--muted)">📍 ${Store.data.newLeadDraft.suburb} • ${Store.data.newLeadDraft.issue_label}</div>
+            </div>
+            <span class="pill bg-emerald-100 text-emerald-700">JUST NOW</span>
+          </div>
+          <div class="flex gap-1 mb-2">
+            <div class="photo-ph w-12 h-12" style="background: linear-gradient(135deg, var(--accent), var(--accent-dark));">🚿</div>
+            <div class="photo-ph w-12 h-12" style="background: linear-gradient(135deg, #94A3B8, #475569);">📷</div>
+            <div class="photo-ph w-12 h-12" style="background: linear-gradient(135deg, #FCA5A5, #B91C1C);">📷</div>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <div class="font-bold" style="color: var(--accent-dark);">AI quote: $${t.aiQuote.amount.toLocaleString()}</div>
+            <div style="color: var(--muted)">${t.aiQuote.confidence}% conf</div>
+          </div>
+          <button class="btn btn-primary w-full mt-3 text-sm">Open dossier →</button>
+        </div>
+      `;
+    } else {
+      cards = `<div class="card p-6 text-center" style="color: var(--muted)">No new leads</div>`;
+    }
+  } else if (activeTab === 'quoted') {
+    cards = `
+      <div class="card p-4">
+        <div class="font-semibold mb-1">Tom Becker</div>
+        <div class="text-xs mb-2" style="color: var(--muted)">📍 Broadbeach • Hot water</div>
+        <div class="text-xs mb-2">⏳ Sent 2h ago — no reply</div>
+        <div class="flex items-center justify-between">
+          <div class="font-bold">$2,450</div>
+          <button class="text-xs font-semibold" style="color: var(--accent);">Follow up →</button>
+        </div>
+      </div>
+      <div class="card p-4">
+        <div class="font-semibold mb-1">Rachel Quinn</div>
+        <div class="text-xs mb-2" style="color: var(--muted)">📍 Coomera • Leak</div>
+        <div class="text-xs mb-2">👀 Viewed quote 3x</div>
+        <div class="font-bold">$680</div>
+      </div>
+    `;
+  } else if (activeTab === 'booked') {
+    cards = `
+      <div class="card p-4" style="border-left:4px solid var(--accent);">
+        <div class="font-semibold mb-1">Julie Roberts</div>
+        <div class="text-xs mb-2" style="color: var(--muted)">📍 Beenleigh • Blocked drain</div>
+        <div class="text-xs font-semibold text-emerald-700 mb-2">📅 Today 8:00 AM</div>
+        <div class="flex items-center justify-between">
+          <div class="font-bold">$250</div>
+          <span class="pill bg-emerald-100 text-emerald-700">Deposit ✓</span>
+        </div>
+      </div>
+      <div class="card p-4" style="border-left:4px solid var(--accent);">
+        <div class="font-semibold mb-1">Tim Kowalski</div>
+        <div class="text-xs mb-2" style="color: var(--muted)">📍 Logan • Leaking tap</div>
+        <div class="text-xs font-semibold mb-2">📅 Tomorrow 10:00 AM</div>
+        <div class="font-bold">$180</div>
+      </div>
+      <div class="card p-4" style="border-left:4px solid var(--accent);">
+        <div class="font-semibold mb-1">Mike Thompson</div>
+        <div class="text-xs mb-2" style="color: var(--muted)">📍 Burleigh • Tap</div>
+        <div class="text-xs font-semibold mb-2">📅 Today 2:30 PM</div>
+        <div class="font-bold">$180</div>
+      </div>
+    `;
+  } else {
+    cards = ['David Park • Surfers • $1,240','Anna Petrov • Broadbeach • $720','Joe Bennett • Currumbin • $1,180'].map(s => {
+      const p = s.split(' • ');
+      return `
+        <div class="card p-4 opacity-90" style="border-left:4px solid #10B981;">
+          <div class="font-semibold mb-1">${p[0]}</div>
+          <div class="text-xs mb-2" style="color: var(--muted)">📍 ${p[1]}</div>
+          <div class="font-bold text-emerald-700">${p[2]} • Paid ✓</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  return `
+    <div class="page space-y-4">
+      <h1 class="text-2xl font-extrabold">Leads</h1>
+
+      <div class="flex gap-2 overflow-x-auto scrollbar-thin -mx-4 px-4 pb-1">
+        ${tabs.map(tb => `
+          <button class="px-4 py-2.5 rounded-full font-semibold text-sm flex-shrink-0 flex items-center gap-2" style="background: ${activeTab === tb.id ? tb.color : '#F1F5F9'}; color: ${activeTab === tb.id ? '#fff' : 'var(--text)'};" onclick="setLeadsTab('${tb.id}')">
+            ${tb.label}
+            <span style="background: ${activeTab === tb.id ? 'rgba(255,255,255,.25)' : '#fff'}; padding:1px 7px; border-radius:999px; font-size:11px;">${tb.count}</span>
+          </button>
+        `).join('')}
+      </div>
+
+      <div class="space-y-3">${cards}</div>
+    </div>
+  `;
+}
+
+function setLeadsTab(id) { Store.data.leadsTab = id; Store.save(); render(); }
+
+/* ============================================================
+   PAGE: AGENDA (day view)
+   ============================================================ */
+function pageAgenda() {
+  const t = getTrade();
+  const events = [
+    { day: 0, start: 8, end: 10, customer: 'Julie Roberts', issue: 'Blocked drain', suburb: 'Beenleigh', amount: 250, type: 'booked' },
+    { day: 0, start: 14, end: 15.5, customer: 'Mike Thompson', issue: 'Tap repair', suburb: 'Burleigh', amount: 180, type: 'booked' },
+    { day: 1, start: 10, end: 12, customer: 'Tim Kowalski', issue: 'Leaking tap', suburb: 'Logan', amount: 180, type: 'booked' },
+    { day: 2, start: 9, end: 11, customer: 'Brad Williams', issue: 'Drain', suburb: 'Helensvale', amount: 320, type: 'booked' },
+    { day: 2, start: 14, end: 16, customer: 'Sophie Park', issue: 'Toilet', suburb: 'Robina', amount: 380, type: 'booked' },
+    { day: 3, start: 10, end: 12, customer: Store.data.customer.name, issue: 'Hot water', suburb: 'Nerang', amount: Store.data.newLeadFinalQuote || t.aiQuote.amount, type: 'new' },
+    { day: 4, start: 8, end: 10, customer: 'Tom Becker', issue: 'Hot water', suburb: 'Broadbeach', amount: 1850, type: 'booked' }
+  ];
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const dates = [11, 12, 13, 14, 15, 16, 17];
+  const activeDay = Store.data.agendaDay !== undefined ? Store.data.agendaDay : 1;
+  const dayEvents = events.filter(e => e.day === activeDay).sort((a, b) => a.start - b.start);
+
+  const total = dayEvents.reduce((sum, e) => sum + e.amount, 0);
+  const hours = dayEvents.reduce((sum, e) => sum + (e.end - e.start), 0);
+
+  return `
+    <div class="page space-y-4">
+      <div>
+        <h1 class="text-2xl font-extrabold">Agenda</h1>
+        <div class="text-xs" style="color: var(--muted)">Week of May 11-17 · Synced with Google ✓</div>
+      </div>
+
+      <div class="flex gap-2 overflow-x-auto scrollbar-thin -mx-4 px-4 pb-1">
+        ${days.map((d, i) => `
+          <div class="day-pill ${activeDay === i ? 'active' : ''}" onclick="setAgendaDay(${i})" style="background: ${activeDay === i ? 'var(--accent)' : '#fff'}; border: 1px solid var(--border);">
+            <div class="day-name">${d}</div>
+            <div class="day-num">${dates[i]}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="grid grid-cols-3 gap-2">
+        <div class="card p-3 text-center">
+          <div class="stat-label">Jobs</div>
+          <div class="text-xl font-bold">${dayEvents.length}</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="stat-label">Hours</div>
+          <div class="text-xl font-bold">${hours}h</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="stat-label">Revenue</div>
+          <div class="text-xl font-bold">$${(total/1000).toFixed(1)}k</div>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        ${dayEvents.length === 0 ? `
+          <div class="card p-8 text-center">
+            <div class="text-4xl mb-2">📭</div>
+            <div class="font-semibold mb-1">No jobs</div>
+            <div class="text-xs" style="color: var(--muted)">Free slots available — perfect for new leads</div>
+          </div>
+        ` : dayEvents.map(e => `
+          <div class="event-card ${e.type === 'new' ? 'new pulse-new' : ''}" onclick='showEventDetail(${JSON.stringify(e).replace(/'/g, "&apos;")})'>
+            <div class="flex items-start gap-3">
+              <div class="flex-shrink-0 px-3 py-2 rounded-lg" style="background: ${e.type === 'new' ? 'var(--accent)' : '#F8FAFC'}; color: ${e.type === 'new' ? '#fff' : 'var(--text)'};">
+                <div class="text-lg font-bold">${e.start}:00</div>
+                <div class="text-[10px] opacity-80">${e.end}:00</div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <div class="font-semibold truncate">${e.customer}</div>
+                  ${e.type === 'new' ? '<span class="pill bg-emerald-100 text-emerald-700 text-[10px]">🆕</span>' : ''}
+                </div>
+                <div class="text-xs mb-1" style="color: var(--muted)">${e.issue} · ${e.suburb}</div>
+                <div class="text-sm font-bold">$${e.amount.toLocaleString()}</div>
+              </div>
+              <div class="text-xs" style="color: var(--muted)">›</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function setAgendaDay(d) { Store.data.agendaDay = d; Store.save(); render(); }
+
+function showEventDetail(e) {
+  document.getElementById('overlay-container').innerHTML = `
+    <div class="flow-overlay" style="background: rgba(0,0,0,.4);" onclick="closeOverlay()">
+      <div style="margin-top: auto; background: #fff; border-radius: 24px 24px 0 0; padding: 24px 20px; padding-bottom: calc(24px + var(--safe-bottom));" onclick="event.stopPropagation()">
+        <div class="w-10 h-1 rounded-full mx-auto mb-4" style="background: #CBD5E1;"></div>
+        <div class="text-xs font-bold uppercase mb-1" style="color: var(--muted)">${e.type === 'new' ? '🆕 New booking' : 'Booking'}</div>
+        <div class="text-2xl font-extrabold mb-1">${e.customer}</div>
+        <div class="text-sm mb-4" style="color: var(--muted)">${e.issue} · ${e.suburb}</div>
+        <div class="space-y-3 mb-5">
+          <div class="flex justify-between"><span style="color: var(--muted)" class="text-sm">Time</span><span class="font-semibold">${e.start}:00 - ${e.end}:00</span></div>
+          <div class="flex justify-between"><span style="color: var(--muted)" class="text-sm">Amount</span><span class="font-semibold text-lg">$${e.amount.toLocaleString()}</span></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2 mb-2">
+          <button class="btn btn-ghost text-sm">📞 Call</button>
+          <button class="btn btn-ghost text-sm">💬 Msg</button>
+          <button class="btn btn-primary text-sm">🗺️ Map</button>
+        </div>
+        <button class="btn btn-ghost w-full mt-2" onclick="closeOverlay()">Close</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   PAGE: MESSAGES
+   ============================================================ */
+function pageMessages() {
+  const t = getTrade();
+  const conversations = [
+    { id: 'sarah', name: Store.data.customer.name, last: 'Thanks so much! 🙌', time: '5:19 PM', issue: 'Hot water', avatar: 'SM', color: 'bg-pink-500' },
+    { id: 'tim', name: 'Tim Kowalski', last: 'Tomorrow 10am sounds great!', time: '2h', issue: 'Leaking tap', avatar: 'TK', color: 'bg-amber-500' },
+    { id: 'julie', name: 'Julie Roberts', last: 'See you at 8am', time: 'Yest', issue: 'Blocked drain', avatar: 'JR', color: 'bg-cyan-500' }
+  ];
+
+  return `
+    <div class="page space-y-4">
+      <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-extrabold">Messages</h1>
+        <button class="w-10 h-10 rounded-full flex items-center justify-center" style="background: var(--accent); color: #fff;">✏️</button>
+      </div>
+      <input type="text" placeholder="🔍 Search messages..." class="input" />
+
+      <div class="card overflow-hidden">
+        ${conversations.map(c => `
+          <div class="conv-item" onclick="openThread('${c.id}')">
+            <div class="avatar ${c.color}">${c.avatar}</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline justify-between gap-2">
+                <div class="font-semibold truncate">${c.name}</div>
+                <div class="text-xs flex-shrink-0" style="color: var(--muted)">${c.time}</div>
+              </div>
+              <div class="text-xs" style="color: var(--muted)">${c.issue}</div>
+              <div class="text-sm truncate mt-0.5">${c.last}</div>
+            </div>
+            <div class="text-xs self-center" style="color: var(--muted)">›</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="text-center text-xs py-4" style="color: var(--muted)">
+        All replies sent via TradieCatch SMS bot
+      </div>
+    </div>
+  `;
+}
+
+function openThread(id) {
+  const t = getTrade();
+  const thread = Store.data.smsThread.map(m => {
+    let text = m.text || '';
+    if (m.placeholder === 'auto_sms') text = `Hey, <strong>${t.business.owner.split(' ')[0]} from ${t.business.name}</strong> — sorry I missed your call, I'm out at a job. Reply <strong>YES</strong> and I'll send you a quick form (60s).`;
+    if (m.placeholder === 'quote_sms') {
+      const quote = Store.data.newLeadFinalQuote || t.aiQuote.amount;
+      text = `${Store.data.customer.name.split(' ')[0]} — sorted! Tomorrow Tue 10am-12pm. Quote: <strong>$${quote.toLocaleString()}</strong>. Lock it in with deposit ($${Math.round(quote * 0.2)}): <span class="underline">tradiecatch.app/pay/xK9</span>`;
+    }
+    return { ...m, text };
+  });
+
+  document.getElementById('overlay-container').innerHTML = `
+    <div class="flow-overlay">
+      <div class="flow-header">
+        <button class="text-2xl px-2" onclick="closeOverlay()">←</button>
+        <div class="avatar bg-pink-500">SM</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold truncate">${Store.data.customer.name}</div>
+          <div class="text-xs" style="color: var(--muted)">${Store.data.customer.phone}</div>
+        </div>
+        <button class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: #F1F5F9;">📞</button>
+      </div>
+
+      <div class="flow-body p-4 space-y-3" style="background: #FAFAFB;">
+        ${thread.map(m => {
+          if (m.type === 'system') return `<div class="text-center"><span class="sms-system">${m.text}</span><div class="text-[10px] mt-1" style="color: var(--muted)">${m.time}</div></div>`;
+          if (m.type === 'in') return `<div class="flex flex-col items-start"><div class="sms-in">${m.text}</div><div class="text-[10px] mt-1" style="color: var(--muted)">${m.time}</div></div>`;
+          const sender = m.type === 'out_owner' ? t.business.owner.split(' ')[0] : 'TradieCatch';
+          return `<div class="flex flex-col items-end"><div class="text-[10px] mb-1" style="color: var(--muted)">via ${sender}</div><div class="sms-out">${m.text}</div><div class="text-[10px] mt-1" style="color: var(--muted)">${m.time}</div></div>`;
+        }).join('')}
+      </div>
+
+      <div class="flow-controls">
+        <input type="text" placeholder="Type a message..." class="input flex-1" style="min-height:44px;" />
+        <button class="btn btn-primary" style="padding: 0 18px;">→</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   PAGE: MORE
+   ============================================================ */
+function pageMore() {
+  const t = getTrade();
+  const active = Store.data.moreView;
+
+  if (active === 'ai') return moreAI();
+  if (active === 'pricing') return morePricing();
+  if (active === 'referrals') return moreReferrals();
+  if (active === 'settings') return moreSettings();
+
+  return `
+    <div class="page space-y-4">
+      <h1 class="text-2xl font-extrabold">More</h1>
+
+      <div class="card p-4 flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-lg" style="background: var(--accent);">${t.business.owner.split(' ').map(s => s[0]).join('')}</div>
+        <div class="flex-1">
+          <div class="font-bold">${t.business.owner}</div>
+          <div class="text-xs" style="color: var(--muted)">${t.business.name} · ${t.name}</div>
+        </div>
+        <span class="pill bg-emerald-100 text-emerald-700">PRO</span>
+      </div>
+
+      <div class="card p-3" style="background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color:#fff; border:none;">
+        <div class="text-xs font-semibold opacity-80 mb-1">RECOVERED THIS MONTH</div>
+        <div class="text-3xl font-extrabold">$${(t.monthlyRev + (Store.data.newLeadFinalQuote || 0)).toLocaleString()}</div>
+      </div>
+
+      <div class="card divide-y" style="border-color: var(--border);">
+        ${[
+          ['🧠','AI Memory','See what your AI learned', 'ai'],
+          ['💰','Pricing rules','Edit your default pricing', 'pricing'],
+          ['🎁','Referrals','$' + Store.data.referralEarnings + ' earned · ' + Store.data.referralCount + ' signed', 'referrals'],
+          ['⚙️','Settings','Phone, SMS, integrations', 'settings']
+        ].map(([icon, name, sub, id]) => `
+          <div class="flex items-center gap-3 p-4 cursor-pointer" onclick="openMore('${id}')">
+            <div class="text-2xl flex-shrink-0">${icon}</div>
+            <div class="flex-1">
+              <div class="font-semibold">${name}</div>
+              <div class="text-xs" style="color: var(--muted)">${sub}</div>
+            </div>
+            <div class="text-xl" style="color: var(--muted)">›</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="card divide-y" style="border-color: var(--border);">
+        <div class="flex items-center gap-3 p-4 cursor-pointer" onclick="showTradeSwitcher()">
+          <div class="text-2xl flex-shrink-0">🔄</div>
+          <div class="flex-1">
+            <div class="font-semibold">Switch trade</div>
+            <div class="text-xs" style="color: var(--muted)">Try the demo with another trade</div>
+          </div>
+          <div class="text-xl" style="color: var(--muted)">›</div>
+        </div>
+        <div class="flex items-center gap-3 p-4 cursor-pointer" onclick="resetDemo()">
+          <div class="text-2xl flex-shrink-0">↻</div>
+          <div class="flex-1">
+            <div class="font-semibold text-amber-600">Reset demo</div>
+            <div class="text-xs" style="color: var(--muted)">Clear all data</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center text-xs py-4" style="color: var(--muted)">
+        TradieCatch Mobile · v1
+      </div>
+    </div>
+  `;
+}
+
+function openMore(view) { Store.data.moreView = view; Store.save(); render(); }
+function closeMore() { Store.data.moreView = null; Store.save(); render(); }
+
+function moreAI() {
+  const t = getTrade();
+  const r = t.aiMemory;
+  return `
+    <div class="page space-y-4">
+      <div class="flex items-center gap-3">
+        <button class="text-2xl" onclick="closeMore()">←</button>
+        <h1 class="text-2xl font-extrabold">AI Memory</h1>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2">
+        <div class="card p-3 text-center"><div class="stat-label">Rules</div><div class="text-2xl font-bold">${r.pricing.length + r.timing.length + r.suppliers.length + r.preferences.length}</div></div>
+        <div class="card p-3 text-center"><div class="stat-label">Accuracy</div><div class="text-2xl font-bold text-emerald-600">87%</div></div>
+        <div class="card p-3 text-center"><div class="stat-label">Avg adj</div><div class="text-2xl font-bold">-$32</div></div>
+      </div>
+
+      <div class="card p-4">
+        <div class="stat-label mb-2">Learning curve</div>
+        <div class="flex items-end gap-2 h-32">
+          ${[{l:'M1',v:48},{l:'M2',v:65},{l:'M3',v:79},{l:'Now',v:87,green:true},{l:'Target',v:95,muted:true}].map(b => `
+            <div class="flex-1 flex flex-col items-center justify-end">
+              <div class="bar w-full" style="height:${b.v}%${b.green ? '; background: linear-gradient(180deg,#10B981,#047857);' : b.muted ? '; background:#CBD5E1; opacity:.4;' : ''}"></div>
+              <div class="text-[10px] mt-1" style="color: var(--muted)">${b.l}</div>
+              <div class="text-[10px] font-bold ${b.green ? 'text-emerald-700' : ''}">${b.v}%</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      ${[['💰','Pricing',r.pricing],['⏱️','Timing',r.timing],['🛒','Suppliers',r.suppliers],['🚫','Preferences',r.preferences]].map(([icon, name, rules]) => `
+        <div class="card p-4">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xl">${icon}</span>
+            <div class="font-bold">${name}</div>
+            <span class="ml-auto pill bg-slate-100 text-slate-600">${rules.length}</span>
+          </div>
+          <div class="space-y-2">
+            ${rules.map(rule => `
+              <div class="flex items-start gap-2 p-2 rounded-lg" style="background: var(--bg);">
+                <span class="text-emerald-600 mt-0.5 text-xs">✓</span>
+                <div class="flex-1 text-xs">${rule}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function morePricing() {
+  const t = getTrade();
+  const p = t.pricing;
+  return `
+    <div class="page space-y-4">
+      <div class="flex items-center gap-3">
+        <button class="text-2xl" onclick="closeMore()">←</button>
+        <h1 class="text-2xl font-extrabold">Pricing</h1>
+      </div>
+
+      <div class="card p-4">
+        <div class="stat-label mb-3">Base rates</div>
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-bold block mb-1" style="color: var(--muted)">CALLOUT FEE</label>
+            <div class="flex items-center input"><span style="color: var(--muted)">$</span><input class="flex-1 outline-none ml-1 font-semibold bg-transparent" value="${p.callout}" /></div>
+          </div>
+          <div>
+            <label class="text-xs font-bold block mb-1" style="color: var(--muted)">HOURLY RATE</label>
+            <div class="flex items-center input"><span style="color: var(--muted)">$</span><input class="flex-1 outline-none ml-1 font-semibold bg-transparent" value="${p.hourly}" /></div>
+          </div>
+          <div>
+            <label class="text-xs font-bold block mb-1" style="color: var(--muted)">WEEKEND SURCHARGE</label>
+            <div class="flex items-center input"><input class="flex-1 outline-none font-semibold bg-transparent" value="${p.weekend_pct}" /><span style="color: var(--muted)">%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card overflow-hidden">
+        <div class="p-4 border-b" style="border-color: var(--border);">
+          <div class="font-bold">Job catalog</div>
+          <div class="text-xs" style="color: var(--muted)">Common ${t.name.toLowerCase()} jobs</div>
+        </div>
+        ${t.catalog.map(j => `
+          <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--border);">
+            <div>
+              <div class="font-semibold text-sm">${j.name}</div>
+              <div class="text-xs" style="color: var(--muted)">${j.time}</div>
+            </div>
+            <div class="font-bold text-sm">${j.price}</div>
+          </div>
+        `).join('')}
+        <div class="p-4 text-center cursor-pointer" style="color: var(--accent); font-weight:600;">+ Add job</div>
+      </div>
+    </div>
+  `;
+}
+
+function moreReferrals() {
+  const t = getTrade();
+  const refCode = `${t.business.owner.replace(/[^A-Z]/gi, '').substring(0,4).toUpperCase()}${Math.floor(Math.random() * 9000 + 1000)}`;
+  const link = `tradiecatch.com.au/r/${refCode}`;
+  const count = Store.data.referralCount;
+  const tiers = [
+    { count: 1, reward: '1 free month', value: '$497' },
+    { count: 3, reward: '3 months free + $200 cash', value: '$1,691' },
+    { count: 5, reward: '6 months + $500 cash + VIP', value: '$3,482' },
+    { count: 10, reward: 'Lifetime 20% off + $1,500', value: '$5,000+' }
+  ];
+
+  return `
+    <div class="page space-y-4">
+      <div class="flex items-center gap-3">
+        <button class="text-2xl" onclick="closeMore()">←</button>
+        <h1 class="text-2xl font-extrabold">Referrals 🎁</h1>
+      </div>
+
+      <div class="card p-5" style="background: linear-gradient(135deg, #064E3B, #047857); color:#fff; border:none;">
+        <div class="text-xs font-bold mb-2" style="color:#A7F3D0;">YOUR EARNINGS</div>
+        <div class="text-4xl font-extrabold mb-1">$${Store.data.referralEarnings}</div>
+        <div class="text-xs text-emerald-100">${count} mates signed · ${Store.data.referrals.filter(r => r.status !== 'signed').length} pending</div>
+      </div>
+
+      <div class="card p-4">
+        <div class="stat-label mb-2">Your unique link</div>
+        <div class="rounded-lg p-3 text-xs font-mono mb-3 break-all" style="background: var(--bg);" id="ref-link">${link}</div>
+        <div class="grid grid-cols-2 gap-2">
+          <button class="btn btn-primary text-sm" onclick="copyMobileLink('${link}')">📋 Copy</button>
+          <button class="btn btn-success text-sm" onclick="shareMobileRef('${link}')">📱 Share</button>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <div class="stat-label mb-3">Reward tiers</div>
+        <div class="space-y-3">
+          ${tiers.map(tier => {
+            const unlocked = count >= tier.count;
+            const progress = Math.min(100, (count / tier.count) * 100);
+            return `
+              <div class="border rounded-xl p-3" style="border-color: ${unlocked ? '#86EFAC' : 'var(--border)'}; background: ${unlocked ? '#ECFDF5' : '#fff'};">
+                <div class="flex items-center gap-3">
+                  <div class="progress-step ${unlocked ? 'done' : count >= tier.count - 1 ? 'active' : ''}">${unlocked ? '✓' : tier.count}</div>
+                  <div class="flex-1">
+                    <div class="font-bold text-sm">${tier.count} mates → ${tier.reward}</div>
+                    <div class="text-xs mt-1" style="color: var(--muted)">Value: <strong>${tier.value}</strong></div>
+                  </div>
+                </div>
+                <div class="h-2 rounded-full overflow-hidden mt-2" style="background: var(--bg);">
+                  <div class="h-2 ${unlocked ? 'bg-emerald-500' : 'bg-amber-400'} rounded-full" style="width:${progress}%"></div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <div class="card overflow-hidden">
+        <div class="p-4 border-b" style="border-color: var(--border);"><div class="font-bold">Your referrals</div></div>
+        ${Store.data.referrals.map(r => `
+          <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--border);">
+            <div>
+              <div class="font-semibold text-sm">${r.name}</div>
+              <div class="text-xs" style="color: var(--muted)">${r.business} · ${r.date}</div>
+            </div>
+            <span class="pill ${r.status === 'signed' ? 'bg-emerald-100 text-emerald-700' : r.status === 'demo' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'} text-[10px]">${r.status === 'signed' ? '✓' : r.status === 'demo' ? '📅' : '⏳'} ${r.status}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function copyMobileLink(link) {
+  if (navigator.clipboard) navigator.clipboard.writeText(link);
+  showToast('Link copied! 🎁');
+}
+
+function shareMobileRef(link) {
+  const msg = `Mate, you using TradieCatch? It catches every missed call and books the customer for you. $200 off setup: ${link}`;
+  if (navigator.share) {
+    navigator.share({ title: 'TradieCatch', text: msg, url: link }).catch(() => {});
+  } else {
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+}
+
+function moreSettings() {
+  const t = getTrade();
+  return `
+    <div class="page space-y-4">
+      <div class="flex items-center gap-3">
+        <button class="text-2xl" onclick="closeMore()">←</button>
+        <h1 class="text-2xl font-extrabold">Settings</h1>
+      </div>
+
+      <div class="card p-4">
+        <div class="font-bold mb-1">🏢 Business profile</div>
+        <div class="text-xs mb-4" style="color: var(--muted)">How you appear to customers</div>
+        <div class="space-y-3">
+          <div><label class="text-xs font-bold block mb-1" style="color: var(--muted)">BUSINESS NAME</label><input class="input" value="${t.business.name}" /></div>
+          <div><label class="text-xs font-bold block mb-1" style="color: var(--muted)">OWNER</label><input class="input" value="${t.business.owner}" /></div>
+          <div><label class="text-xs font-bold block mb-1" style="color: var(--muted)">SERVICE AREA</label><input class="input" value="${t.business.suburb} + 25km" /></div>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <div class="font-bold mb-1">📞 Phone & SMS</div>
+        <div class="text-xs mb-4" style="color: var(--muted)">Customizable auto-reply</div>
+        <div class="mb-4">
+          <label class="text-xs font-bold block mb-1" style="color: var(--muted)">AUTO-SMS TEMPLATE</label>
+          <textarea class="input" rows="3">Hey, ${t.business.owner.split(' ')[0]} from ${t.business.name} — sorry I missed your call. Reply YES and I'll send you a form.</textarea>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3"><div class="toggle on" onclick="this.classList.toggle('on')"></div><div class="text-sm flex-1">Auto-SMS after 3 rings</div></div>
+          <div class="flex items-center gap-3"><div class="toggle on" onclick="this.classList.toggle('on')"></div><div class="text-sm flex-1">WhatsApp notifications</div></div>
+          <div class="flex items-center gap-3"><div class="toggle" onclick="this.classList.toggle('on')"></div><div class="text-sm flex-1">Voice AI (premium)</div></div>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <div class="font-bold mb-1">🔌 Connections</div>
+        <div class="text-xs mb-4" style="color: var(--muted)">Integrations</div>
+        <div class="space-y-2">
+          ${[['📅','Google Calendar','connected'],['💳','Stripe','connected'],['💚','WhatsApp Business','connected'],['📊','Xero','disconnected']].map(([icon, name, status]) => `
+            <div class="flex items-center gap-3 p-3 rounded-lg border" style="border-color: var(--border);">
+              <div class="text-xl">${icon}</div>
+              <div class="flex-1 font-semibold text-sm">${name}</div>
+              ${status === 'connected' ? '<span class="pill bg-emerald-100 text-emerald-700">✓</span>' : '<button class="btn btn-ghost text-xs" style="min-height:32px; padding:6px 12px;">Connect</button>'}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function showTradeSwitcher() {
+  document.getElementById('overlay-container').innerHTML = `
+    <div class="flow-overlay" style="background: rgba(0,0,0,.4);" onclick="closeOverlay()">
+      <div style="margin-top: auto; background: #fff; border-radius: 24px 24px 0 0; padding: 24px 20px; padding-bottom: calc(24px + var(--safe-bottom));" onclick="event.stopPropagation()">
+        <div class="w-10 h-1 rounded-full mx-auto mb-4" style="background: #CBD5E1;"></div>
+        <div class="text-xl font-bold mb-1">Switch trade</div>
+        <div class="text-sm mb-5" style="color: var(--muted)">Demo data will reset</div>
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          ${Object.values(TRADES).map(t => `
+            <div class="trade-card text-center ${Store.data.currentTrade === t.slug ? 'border-accent' : ''}" style="${Store.data.currentTrade === t.slug ? 'border-color: var(--accent);' : ''}" onclick="switchTrade('${t.slug}')">
+              <div class="text-3xl mb-1">${t.icon}</div>
+              <div class="font-bold text-sm">${t.name}</div>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn btn-ghost w-full" onclick="closeOverlay()">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+function switchTrade(slug) {
+  Store.reset();
+  setTrade(slug);
+  Store.data.activeTab = 'home';
+  Store.save();
+  closeOverlay();
+  render();
+  showToast(`Switched to ${TRADES[slug].name}`);
+}
+
+function closeOverlay() { document.getElementById('overlay-container').innerHTML = ''; }
+
+/* ============================================================
+   DEMO FLOWS (Customer + Tradie POV)
+   ============================================================ */
+function showDemoMenu() {
+  const t = getTrade();
+  document.getElementById('overlay-container').innerHTML = `
+    <div class="flow-overlay" style="background: rgba(0,0,0,.4);" onclick="closeOverlay()">
+      <div style="margin-top: auto; background: #fff; border-radius: 24px 24px 0 0; padding: 24px 20px; padding-bottom: calc(24px + var(--safe-bottom));" onclick="event.stopPropagation()">
+        <div class="w-10 h-1 rounded-full mx-auto mb-4" style="background: #CBD5E1;"></div>
+        <div class="text-xl font-bold mb-1">Demo flows</div>
+        <div class="text-sm mb-5" style="color: var(--muted)">Show what happens behind the scenes</div>
+
+        <div class="space-y-3 mb-3">
+          <div class="card p-4 cursor-pointer" onclick="openCustomerFlow()">
+            <div class="flex items-start gap-3">
+              <div class="text-3xl">📱</div>
+              <div class="flex-1">
+                <div class="font-bold">Customer POV</div>
+                <div class="text-xs mb-2" style="color: var(--muted)">8 steps — From missed call to form submission</div>
+                <div class="text-xs font-semibold" style="color: var(--accent);">${Store.data.customer.name} → ${t.business.name}</div>
+              </div>
+              <div class="text-xl" style="color: var(--muted)">›</div>
+            </div>
+          </div>
+
+          <div class="card p-4 cursor-pointer" onclick="openTradieFlow()">
+            <div class="flex items-start gap-3">
+              <div class="text-3xl">💬</div>
+              <div class="flex-1">
+                <div class="font-bold">Tradie POV</div>
+                <div class="text-xs mb-2" style="color: var(--muted)">5 steps — WhatsApp notif → dossier → validate</div>
+                <div class="text-xs font-semibold" style="color: var(--accent);">${t.business.owner} receives the lead</div>
+              </div>
+              <div class="text-xl" style="color: var(--muted)">›</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-ghost w-full" onclick="closeOverlay()">Close</button>
+      </div>
+    </div>
+  `;
+}
+
+/* CUSTOMER FLOW — 8 steps */
+let customerStep = 1;
+const CUSTOMER_TOTAL = 8;
+function openCustomerFlow() { customerStep = 1; renderCustomerFlow(); }
+
+function renderCustomerFlow() {
+  const t = getTrade();
+  const draft = Store.data.newLeadDraft;
+  let body = '';
+
+  if (customerStep === 1) {
+    body = `
+      <div style="background: #fff; padding: 12px 16px; border-bottom: 1px solid var(--border);">
+        <div class="font-bold">${t.business.name}</div>
+        <div class="text-xs" style="color: var(--muted)">${t.business.tracking}</div>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="text-center text-xs" style="color: var(--muted)">Just now</div>
+        <div class="sms-in">Hey, <strong style="color: var(--accent-dark);">${t.business.owner.split(' ')[0]} from ${t.business.name}</strong> — sorry I missed your call, I'm on a job. Reply <strong>YES</strong> and I'll send you a quick form so I can come back with a quote and time slot. Cheers!</div>
+      </div>
+    `;
+  } else if (customerStep === 2) {
+    body = `
+      <div style="background: #fff; padding: 12px 16px; border-bottom: 1px solid var(--border);"><div class="font-bold">${t.business.name}</div></div>
+      <div class="p-4 space-y-3">
+        <div class="sms-in">Hey, ${t.business.owner.split(' ')[0]} from ${t.business.name}...</div>
+        <div class="flex justify-end"><div class="sms-out">YES</div></div>
+      </div>
+    `;
+  } else if (customerStep === 3) {
+    body = `
+      <div style="background: #fff; padding: 12px 16px; border-bottom: 1px solid var(--border);"><div class="font-bold">${t.business.name}</div></div>
+      <div class="p-4 space-y-3">
+        <div class="flex justify-end"><div class="sms-out">YES</div></div>
+        <div class="sms-in">Perfect! Here's your form — takes 60 seconds:<br/>👉 <span class="underline" style="color: var(--accent-dark);">tradiecatch.app/r/sM9xK2</span></div>
+      </div>
+    `;
+  } else if (customerStep === 4) {
+    body = `
+      <div style="background: var(--accent);" class="px-4 py-3 text-white">
+        <div class="text-xs opacity-90">tradiecatch.app/r/sM9xK2 🔒</div>
+        <div class="text-sm font-bold">${t.business.name}</div>
+      </div>
+      <div class="p-4 space-y-4">
+        <div>
+          <div class="text-xs font-semibold mb-2" style="color: var(--muted)">Step 1 of 4</div>
+          <div class="h-1.5 rounded-full" style="background:#E2E8F0;"><div class="h-1.5 rounded-full" style="width:25%; background: var(--accent);"></div></div>
+        </div>
+        <label class="text-base font-bold block">📍 Where are you?</label>
+        <input class="input" value="${draft.address}" />
+        <div class="text-xs" style="color: var(--muted)">Quick pick:</div>
+        <div class="grid grid-cols-2 gap-2">${t.suburbs.map(s => `<button class="chip-btn ${draft.suburb === s ? 'selected' : ''}">${s}</button>`).join('')}</div>
+      </div>
+    `;
+  } else if (customerStep === 5) {
+    body = `
+      <div style="background: var(--accent);" class="px-4 py-3 text-white"><div class="text-xs opacity-90">tradiecatch.app/r/sM9xK2 🔒</div><div class="text-sm font-bold">${t.business.name}</div></div>
+      <div class="p-4 space-y-4">
+        <div>
+          <div class="text-xs font-semibold mb-2" style="color: var(--muted)">Step 2 of 4</div>
+          <div class="h-1.5 rounded-full" style="background:#E2E8F0;"><div class="h-1.5 rounded-full" style="width:50%; background: var(--accent);"></div></div>
+        </div>
+        <label class="text-base font-bold block">🔧 What's the issue?</label>
+        <div class="grid grid-cols-2 gap-2">${t.issueTypes.map(it => `
+          <button class="chip-btn ${draft.issue_type === it.id ? 'selected' : ''}">
+            <div class="text-2xl mb-1">${it.icon}</div>
+            <div class="text-xs">${it.label}</div>
+          </button>
+        `).join('')}</div>
+      </div>
+    `;
+  } else if (customerStep === 6) {
+    body = `
+      <div style="background: var(--accent);" class="px-4 py-3 text-white"><div class="text-xs opacity-90">tradiecatch.app/r/sM9xK2 🔒</div><div class="text-sm font-bold">${t.business.name}</div></div>
+      <div class="p-4 space-y-4">
+        <div>
+          <div class="text-xs font-semibold mb-2" style="color: var(--muted)">Step 3 of 4</div>
+          <div class="h-1.5 rounded-full" style="background:#E2E8F0;"><div class="h-1.5 rounded-full" style="width:75%; background: var(--accent);"></div></div>
+        </div>
+        <label class="text-base font-bold block">📝 Tell ${t.business.owner.split(' ')[0]} more</label>
+        <textarea class="input" rows="4">${draft.description}</textarea>
+        <label class="text-base font-bold block">📸 Photos</label>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="photo-ph" style="background: linear-gradient(135deg, var(--accent), var(--accent-dark));">${t.issueTypes.find(i => i.id === draft.issue_type)?.icon || '📷'}</div>
+          <div class="photo-ph" style="background: linear-gradient(135deg, #94A3B8, #475569);">📷</div>
+          <div class="photo-ph" style="background: linear-gradient(135deg, #FCA5A5, #B91C1C);">📷</div>
+        </div>
+      </div>
+    `;
+  } else if (customerStep === 7) {
+    body = `
+      <div style="background: var(--accent);" class="px-4 py-3 text-white"><div class="text-xs opacity-90">tradiecatch.app/r/sM9xK2 🔒</div><div class="text-sm font-bold">${t.business.name}</div></div>
+      <div class="p-4 space-y-4">
+        <div>
+          <div class="text-xs font-semibold mb-2" style="color: var(--muted)">Step 4 of 4</div>
+          <div class="h-1.5 rounded-full" style="background:#E2E8F0;"><div class="h-1.5 rounded-full" style="width:100%; background: var(--accent);"></div></div>
+        </div>
+        <label class="text-base font-bold block">⏰ How urgent?</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button class="chip-btn"><div>🔥</div><div class="text-xs">TODAY</div></button>
+          <button class="chip-btn selected"><div>⏰</div><div class="text-xs">24h</div></button>
+          <button class="chip-btn"><div>📅</div><div class="text-xs">Week</div></button>
+        </div>
+        <label class="text-base font-bold block">🗓️ When?</label>
+        <div class="grid grid-cols-2 gap-2">${['Tomorrow AM','Tomorrow PM','Wed AM','Thu AM'].map((s, i) => `<button class="chip-btn ${i === 0 || i === 3 ? 'selected' : ''}">${s}</button>`).join('')}</div>
+      </div>
+    `;
+  } else if (customerStep === 8) {
+    body = `
+      <div class="p-6 text-center" style="background: #fff; min-height: 100%;">
+        <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-5 text-3xl" style="background:#D1FAE5;">✅</div>
+        <div class="text-2xl font-bold mb-2">Thanks ${Store.data.customer.name.split(' ')[0]}!</div>
+        <p style="color: var(--muted)" class="text-sm leading-relaxed">${t.business.owner} has received everything.<br/>He'll come back to you within the hour. ⏱️</p>
+        <div class="mt-6 bg-slate-50 rounded-xl p-4 text-left text-sm">
+          <div class="font-bold mb-2 text-xs" style="color: var(--muted)">YOUR REQUEST</div>
+          <div>📍 ${Store.data.customer.address}</div>
+          <div>🔧 ${t.issueTypes.find(i => i.id === Store.data.newLeadDraft.issue_type)?.label}</div>
+          <div>📸 3 photos</div>
+        </div>
+        <div class="mt-4 p-3 rounded-lg text-xs" style="background:#FEF3C7; color:#78350F;">
+          💡 No price shown — ${t.business.owner.split(' ')[0]} reviews first.
+        </div>
+      </div>
+    `;
+  }
+
+  const dots = Array.from({length: CUSTOMER_TOTAL}, (_, i) => `<div class="step-dot ${i + 1 === customerStep ? 'active' : i + 1 < customerStep ? 'done' : ''}"></div>`).join('');
+
+  document.getElementById('overlay-container').innerHTML = `
+    <div class="flow-overlay">
+      <div class="flow-header">
+        <button class="text-2xl px-2" onclick="closeOverlay()">✕</button>
+        <div class="flex-1 text-center">
+          <div class="text-xs font-bold uppercase" style="color: var(--muted)">📱 Customer POV</div>
+          <div class="text-sm font-semibold">${Store.data.customer.name}</div>
+        </div>
+        <div style="width:40px;"></div>
+      </div>
+      <div class="flow-body">${body}</div>
+      <div class="flow-controls">
+        <button class="btn btn-ghost" onclick="customerPrev()" ${customerStep === 1 ? 'disabled style="opacity:.4"' : ''}>←</button>
+        <div class="flex-1 text-center">
+          <div class="text-xs font-semibold" style="color: var(--muted)">Step ${customerStep}/${CUSTOMER_TOTAL}</div>
+          <div class="step-dots justify-center mt-1">${dots}</div>
+        </div>
+        <button class="btn btn-primary" onclick="customerNext()" ${customerStep === CUSTOMER_TOTAL ? 'disabled style="opacity:.4"' : ''}>${customerStep === CUSTOMER_TOTAL - 1 ? 'Submit ✓' : '→'}</button>
+      </div>
+    </div>
+  `;
+}
+function customerNext() { if (customerStep < CUSTOMER_TOTAL) { customerStep++; renderCustomerFlow(); } }
+function customerPrev() { if (customerStep > 1) { customerStep--; renderCustomerFlow(); } }
+
+/* TRADIE FLOW — 5 steps */
+let tradieStep = 1;
+const TRADIE_TOTAL = 5;
+function openTradieFlow() { tradieStep = 1; renderTradieFlow(); }
+
+function renderTradieFlow() {
+  const t = getTrade();
+  let body = '';
+  const useDarkHeader = tradieStep === 1;
+
+  if (tradieStep === 1) {
+    body = `
+      <div class="lockscreen-bg flex flex-col p-5" style="min-height: 100%; color: #fff;">
+        <div class="text-center mt-12">
+          <div class="text-6xl font-extralight">9:41</div>
+          <div class="text-sm font-medium opacity-80 mt-1">Tuesday, May 12</div>
+        </div>
+        <div class="mt-10">
+          <div class="rounded-2xl p-4" style="background: rgba(255,255,255,.18); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.1);">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-6 h-6 rounded-md bg-emerald-500 flex items-center justify-center text-xs">📱</div>
+              <div class="text-xs font-bold">TRADIECATCH</div>
+              <div class="ml-auto text-[10px] opacity-60">now</div>
+            </div>
+            <div class="text-sm leading-snug">
+              🚨 <strong>NEW LEAD</strong>: ${Store.data.customer.name.split(' ')[0]} M. · Nerang · ${t.issueTypes.find(i => i.id === Store.data.newLeadDraft.issue_type)?.label} · AI $${t.aiQuote.amount.toLocaleString()}
+              <div class="text-xs opacity-80 mt-1">Tap to open</div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-auto text-center text-xs opacity-60 pb-4">swipe up to open</div>
+      </div>
+    `;
+  } else if (tradieStep === 2) {
+    body = `
+      <div style="background:#075E54;" class="px-4 py-3 text-white flex items-center gap-3">
+        <div class="text-xl">←</div>
+        <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center font-bold">TC</div>
+        <div>
+          <div class="font-bold text-sm">TradieCatch Bot</div>
+          <div class="text-xs opacity-90">online</div>
+        </div>
+      </div>
+      <div class="px-3 py-4" style="background:#e5ddd5; min-height: 100%;">
+        <div class="text-[10px] text-center mb-3" style="color:#666;">TODAY</div>
+        <div>
+          <div class="wa-bubble">
+            🚨 <strong>NEW LEAD</strong><br/>
+            👤 ${Store.data.customer.name}<br/>
+            📍 ${Store.data.customer.address}<br/>
+            🔧 ${t.issueTypes.find(i => i.id === Store.data.newLeadDraft.issue_type)?.label} (Rinnai, 12yr)<br/>
+            📸 3 photos<br/>
+            💰 <strong>AI quote: $${t.aiQuote.amount.toLocaleString()}</strong> (${t.aiQuote.confidence}%)<br/>
+            ⏰ TODAY<br/><br/>
+            👉 <span class="underline font-bold">Open the dossier</span>
+          </div>
+          <div class="text-[10px] mt-1" style="color:#666;">9:42 AM ✓✓</div>
+        </div>
+      </div>
+    `;
+  } else if (tradieStep === 3) {
+    body = `
+      <div style="background: var(--accent);" class="px-4 py-3 text-white">
+        <div class="text-xs opacity-80">← Dossier</div>
+        <div class="font-bold">Lead — ${Store.data.customer.name}</div>
+      </div>
+      <div class="p-4 space-y-3 bg-white" style="min-height: 100%;">
+        <div class="bg-slate-50 rounded-xl p-3 text-sm">
+          <div class="text-xs font-bold mb-1" style="color: var(--muted)">CONTACT</div>
+          <div>${Store.data.customer.name}</div>
+          <div>📞 ${Store.data.customer.phone}</div>
+          <div>📍 ${Store.data.customer.address}</div>
+        </div>
+        <div>
+          <div class="text-xs font-bold mb-2" style="color: var(--muted)">PHOTOS (3)</div>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="photo-ph" style="background: linear-gradient(135deg, var(--accent), var(--accent-dark));">${t.issueTypes.find(i => i.id === Store.data.newLeadDraft.issue_type)?.icon}</div>
+            <div class="photo-ph" style="background: linear-gradient(135deg, #94A3B8, #475569);">📷</div>
+            <div class="photo-ph" style="background: linear-gradient(135deg, #FCA5A5, #B91C1C);">📷</div>
+          </div>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3 text-sm">
+          <div class="text-xs font-bold mb-1" style="color: var(--muted)">DESCRIPTION</div>
+          <div class="italic">"${Store.data.newLeadDraft.description}"</div>
+        </div>
+        <div class="rounded-xl p-3 border-2" style="border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, white);">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold" style="color: var(--accent-dark);">🤖 AI ANALYSIS</div>
+            <span class="pill" style="background: color-mix(in srgb, var(--accent) 15%, white); color: var(--accent-dark);">${t.aiQuote.confidence}% conf</span>
+          </div>
+          <div class="text-sm font-semibold mb-1">${t.aiQuote.label}</div>
+          <div class="text-3xl font-extrabold mb-3" style="color: var(--accent-dark);">$${t.aiQuote.amount.toLocaleString()}</div>
+          <ul class="text-xs space-y-1 mb-3">
+            ${t.aiQuote.breakdown.map(b => `<li>• ${b.l}: <strong>$${b.a.toLocaleString()}</strong></li>`).join('')}
+          </ul>
+          ${t.aiQuote.note ? `<div class="bg-amber-100 text-amber-900 rounded-lg p-2 text-xs">⚠️ ${t.aiQuote.note}</div>` : ''}
+        </div>
+      </div>
+    `;
+  } else if (tradieStep === 4) {
+    body = `
+      <div class="bg-white flex flex-col items-center justify-center p-6" style="min-height: 100%;">
+        <div class="text-5xl mb-4 animate-pulse">📤</div>
+        <div class="text-xl font-bold mb-2">Sending quote...</div>
+        <div class="text-sm text-center" style="color: var(--muted)">SMS sent to ${Store.data.customer.name}<br/>with Stripe link</div>
+        <div class="mt-6 w-full max-w-xs">
+          <div class="h-2 rounded-full overflow-hidden" style="background:#E2E8F0;">
+            <div class="h-2 rounded-full" style="background: var(--accent); width: 70%; animation: progress 1.5s ease-out forwards;"></div>
+          </div>
+        </div>
+      </div>
+      <style>@keyframes progress { from { width: 0; } to { width: 100%; } }</style>
+    `;
+    setTimeout(() => { if (tradieStep === 4) tradieNext(); }, 1600);
+  } else if (tradieStep === 5) {
+    body = `
+      <div class="bg-white flex flex-col items-center p-6 pt-12" style="min-height: 100%;">
+        <div class="w-20 h-20 rounded-full flex items-center justify-center mb-5 text-3xl" style="background:#D1FAE5;">✅</div>
+        <div class="text-2xl font-bold mb-2">Quote sent!</div>
+        <div class="text-sm text-center mb-6" style="color: var(--muted)">Awaiting ${Store.data.customer.name.split(' ')[0]}'s deposit</div>
+        <div class="w-full bg-slate-50 rounded-xl p-4 text-sm mb-4">
+          <div class="font-bold mb-2 text-xs" style="color: var(--muted)">QUOTE SENT</div>
+          <div>💰 $${t.aiQuote.amount.toLocaleString()}</div>
+          <div>📅 Tomorrow Tue 10am-12pm</div>
+          <div>📍 ${Store.data.customer.address}</div>
+        </div>
+        <div class="w-full rounded-xl p-4 border-2 anim-fade" style="background:#ECFDF5; border-color:#10B981;">
+          <div class="flex items-center gap-2 mb-1"><div class="text-lg">💸</div><div class="font-bold text-emerald-800">Deposit received!</div></div>
+          <div class="text-xs text-emerald-700">Stripe • $${Math.round(t.aiQuote.amount * 0.2)} • Just now</div>
+          <div class="text-xs text-emerald-700 mt-1">Calendar confirmed ✓</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const dots = Array.from({length: TRADIE_TOTAL}, (_, i) => `<div class="step-dot ${i + 1 === tradieStep ? 'active' : i + 1 < tradieStep ? 'done' : ''}"></div>`).join('');
+  const titles = ['Lock screen — push notif', 'WhatsApp message', 'PWA dossier', 'Sending...', 'Quote sent + paid'];
+
+  document.getElementById('overlay-container').innerHTML = `
+    <div class="flow-overlay">
+      <div class="flow-header" style="${useDarkHeader ? 'background: #1e1b4b; color: #fff;' : ''}">
+        <button class="text-2xl px-2" style="${useDarkHeader ? 'color: #fff;' : ''}" onclick="closeOverlay()">✕</button>
+        <div class="flex-1 text-center">
+          <div class="text-xs font-bold uppercase opacity-70">💬 Tradie POV</div>
+          <div class="text-sm font-semibold">${titles[tradieStep - 1]}</div>
+        </div>
+        <div style="width:40px;"></div>
+      </div>
+      <div class="flow-body">${body}</div>
+      <div class="flow-controls">
+        <button class="btn btn-ghost" onclick="tradiePrev()" ${tradieStep === 1 ? 'disabled style="opacity:.4"' : ''}>←</button>
+        <div class="flex-1 text-center">
+          <div class="text-xs font-semibold" style="color: var(--muted)">Step ${tradieStep}/${TRADIE_TOTAL}</div>
+          <div class="step-dots justify-center mt-1">${dots}</div>
+        </div>
+        ${tradieStep === TRADIE_TOTAL ?
+          `<button class="btn btn-success" onclick="finishTradieFlow()">Done ✓</button>` :
+          `<button class="btn btn-primary" onclick="tradieNext()">${tradieStep === 3 ? '✓ Send' : '→'}</button>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+function tradieNext() { if (tradieStep < TRADIE_TOTAL) { tradieStep++; renderTradieFlow(); } }
+function tradiePrev() { if (tradieStep > 1) { tradieStep--; renderTradieFlow(); } }
+function finishTradieFlow() {
+  const t = getTrade();
+  Store.data.newLeadFinalQuote = t.aiQuote.amount;
+  Store.data.newLeadStatus = 'paid';
+  Store.save();
+  closeOverlay();
+  showToast('✅ Quote sent + deposit received');
+  switchTab('home');
+}
+</script>
+
+</body>
+</html>
