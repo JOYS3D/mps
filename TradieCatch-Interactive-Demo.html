@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradieCatch — Interactive Demo</title>
+<style>
+:root {
+  --accent: #F59E0B;
+  --accent-dim: rgba(245,158,11,0.12);
+  --accent-border: rgba(245,158,11,0.35);
+  --bg: #0d0d12;
+  --surface: #14141c;
+  --card: #1a1a24;
+  --border: #252535;
+  --text: #e8e8f2;
+  --muted: #7070a0;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+/* ─── SCREENS ─── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; }
+
+/* ─────────────────────────────────────────────
+   SCREEN 1 — ONBOARDING
+───────────────────────────────────────────── */
+#s-onboard {
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 20px;
+  background: radial-gradient(ellipse at 30% 20%, rgba(245,158,11,0.06) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 80%, rgba(245,158,11,0.04) 0%, transparent 60%),
+              var(--bg);
+}
+.ob-logo { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 6px; text-align: center; }
+.ob-logo span { color: var(--accent); }
+.ob-tagline { color: var(--muted); font-size: 14px; margin-bottom: 44px; text-align: center; }
+
+.ob-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 22px;
+  padding: 40px; width: 100%; max-width: 580px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+}
+.ob-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.ob-card > p { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.form-group input {
+  width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 12px 16px; color: var(--text); font-size: 15px; outline: none; transition: border-color .2s;
+}
+.form-group input:focus { border-color: var(--accent); }
+.form-group input::placeholder { color: var(--muted); }
+
+/* Trade selector */
+.trade-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 0; }
+.trade-btn {
+  background: var(--surface); border: 2px solid var(--border); border-radius: 14px;
+  padding: 16px 8px 14px; cursor: pointer; text-align: center; transition: all .2s; color: var(--text);
+}
+.trade-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+.trade-btn.sel { border-color: var(--accent); background: var(--accent-dim); }
+.trade-btn .t-emoji { font-size: 26px; display: block; margin-bottom: 8px; }
+.trade-btn .t-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Color presets */
+.color-row { display: flex; gap: 10px; align-items: center; }
+.color-dot {
+  width: 30px; height: 30px; border-radius: 8px; border: 3px solid transparent;
+  cursor: pointer; transition: all .2s; flex-shrink: 0;
+}
+.color-dot:hover { transform: scale(1.12); }
+.color-dot.sel { border-color: #fff; transform: scale(1.15); }
+.color-dot-custom { width: 30px; height: 30px; border-radius: 8px; border: 2px dashed var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+#custom-color-input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+/* SMS preview in onboarding */
+.sms-preview-ob {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-top: 24px;
+}
+.sms-preview-ob-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.sms-bubble-ob {
+  background: #25253a; border-radius: 16px 16px 16px 4px; padding: 12px 16px;
+  font-size: 13.5px; line-height: 1.6; max-width: 90%; color: var(--text);
+}
+.sms-hl { font-weight: 700; }
+
+.btn-launch {
+  width: 100%; padding: 16px; background: var(--accent); color: #000; border: none; border-radius: 12px;
+  font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 28px; transition: all .2s; letter-spacing: 0.3px;
+}
+.btn-launch:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(245,158,11,0.3); }
+
+/* ─────────────────────────────────────────────
+   SCREEN 2 — MISSED CALL ANIMATION
+───────────────────────────────────────────── */
+#s-missed {
+  flex-direction: column; align-items: center; justify-content: center;
+  background: #090912; text-align: center; padding: 40px 20px;
+}
+
+.missed-content { max-width: 440px; }
+.missed-step { opacity: 0; transform: translateY(20px); transition: all .6s cubic-bezier(.22,1,.36,1); margin-bottom: 0; }
+.missed-step.show { opacity: 1; transform: translateY(0); }
+
+.phone-ring {
+  width: 100px; height: 100px; border-radius: 50%; background: #ef4444;
+  display: flex; align-items: center; justify-content: center; font-size: 40px;
+  margin: 0 auto 32px; position: relative;
+}
+.phone-ring::before, .phone-ring::after {
+  content: ''; position: absolute; border-radius: 50%; border: 2px solid #ef4444;
+  animation: ripple 1.5s infinite;
+}
+.phone-ring::before { width: 130px; height: 130px; animation-delay: 0s; }
+.phone-ring::after { width: 165px; height: 165px; animation-delay: 0.5s; }
+@keyframes ripple { 0% { opacity: 0.8; transform: scale(0.8); } 100% { opacity: 0; transform: scale(1.2); } }
+
+.phone-miss {
+  width: 100px; height: 100px; border-radius: 50%; background: #1a1a28;
+  border: 3px solid var(--border);
+  display: flex; align-items: center; justify-content: center; font-size: 40px;
+  margin: 0 auto 32px; position: relative;
+}
+.missed-label { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.missed-sub { color: var(--muted); font-size: 15px; margin-bottom: 32px; }
+
+.sms-anim-bubble {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px 20px;
+  text-align: left; font-size: 14px; line-height: 1.6; margin: 0 auto 24px;
+  max-width: 340px; position: relative;
+}
+.sms-anim-header { font-size: 11px; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.sms-anim-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; }
+
+.btn-enter-dash {
+  padding: 14px 36px; background: var(--accent); color: #000; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 800; cursor: pointer; transition: all .2s;
+}
+.btn-enter-dash:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(245,158,11,0.3); }
+
+.missed-skip { color: var(--muted); font-size: 13px; cursor: pointer; margin-top: 16px; text-decoration: underline; }
+.missed-skip:hover { color: var(--text); }
+
+/* ─────────────────────────────────────────────
+   SCREEN 3 — DASHBOARD
+───────────────────────────────────────────── */
+#s-dash { flex-direction: column; }
+
+.demo-topbar {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 8px 20px; font-size: 12px; color: var(--muted);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.demo-pill {
+  background: var(--accent-dim); color: var(--accent); font-size: 10px; font-weight: 800;
+  padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.8px;
+  border: 1px solid var(--accent-border);
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-biz { font-weight: 600; color: var(--text); font-size: 13px; }
+
+.dash-body { display: flex; flex: 1; height: calc(100vh - 41px); overflow: hidden; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 230px; background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+}
+.sb-head { padding: 20px; border-bottom: 1px solid var(--border); }
+.sb-logo-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.sb-logo-img { width: 38px; height: 38px; border-radius: 10px; object-fit: cover; border: 2px solid var(--border); }
+.sb-logo-initials {
+  width: 38px; height: 38px; border-radius: 10px; background: var(--accent-dim); border: 2px solid var(--accent-border);
+  display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: var(--accent); flex-shrink: 0;
+}
+.sb-biz-name { font-size: 13px; font-weight: 700; line-height: 1.2; }
+.sb-trade-badge {
+  display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+  padding: 3px 8px; border-radius: 20px; margin-top: 4px;
+  background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border);
+}
+
+.sb-nav { padding: 12px 0; flex: 1; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 11px 20px;
+  cursor: pointer; transition: all .15s; font-size: 14px; font-weight: 500; color: var(--muted); position: relative;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--accent); background: var(--accent-dim); }
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--accent); border-radius: 0 2px 2px 0;
+}
+.nav-icon { font-size: 17px; width: 22px; text-align: center; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--accent); color: #000;
+  font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 20px;
+}
+
+.sb-bottom { padding: 16px 20px; border-top: 1px solid var(--border); margin-top: auto; }
+.sb-owner { font-size: 12px; color: var(--muted); }
+.sb-owner span { color: var(--text); font-weight: 600; }
+
+/* MAIN AREA */
+.main { flex: 1; overflow-y: auto; padding: 28px 32px; }
+.page-head { margin-bottom: 24px; }
+.page-head h1 { font-size: 22px; font-weight: 800; }
+.page-head p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+/* ─── PAGES (hidden/shown) ─── */
+.dash-page { display: none; }
+.dash-page.active { display: block; }
+
+/* ─── STATS ROW ─── */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.stat-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px;
+}
+.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; margin-bottom: 8px; }
+.stat-value { font-size: 30px; font-weight: 900; line-height: 1; }
+.stat-sub { font-size: 12px; color: var(--success); margin-top: 6px; font-weight: 600; }
+.stat-sub.up::before { content: '↑ '; }
+.stat-accent { color: var(--accent); }
+
+/* ─── CARD ─── */
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px; margin-bottom: 16px;
+}
+.card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.card-title { font-size: 15px; font-weight: 700; }
+.card-action { font-size: 12px; color: var(--accent); cursor: pointer; font-weight: 600; }
+
+/* ─── LEAD LIST ─── */
+.lead-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: .15s;
+}
+.lead-item:last-child { border-bottom: none; padding-bottom: 0; }
+.lead-item:hover { opacity: 0.75; }
+.lead-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; flex-shrink: 0;
+}
+.lead-info { flex: 1; min-width: 0; }
+.lead-name { font-size: 14px; font-weight: 700; }
+.lead-detail { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lead-meta { text-align: right; flex-shrink: 0; }
+.lead-amount { font-size: 14px; font-weight: 800; }
+.lead-time { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* ─── BADGES ─── */
+.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-new { background: rgba(245,158,11,0.18); color: #F59E0B; border: 1px solid rgba(245,158,11,0.3); }
+.badge-quoted { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.25); }
+.badge-booked { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.25); }
+.badge-new .pulse { width: 6px; height: 6px; background: #F59E0B; border-radius: 50%; margin-right: 5px; animation: pulse 1.2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+/* ─── LEAD DETAIL ─── */
+.lead-detail-wrap { display: none; }
+.lead-detail-wrap.show { display: block; }
+.lead-list-wrap { display: block; }
+.lead-list-wrap.hidden { display: none; }
+
+.back-btn {
+  display: inline-flex; align-items: center; gap: 8px; color: var(--muted);
+  font-size: 13px; cursor: pointer; margin-bottom: 20px; transition: color .15s;
+}
+.back-btn:hover { color: var(--text); }
+
+.lead-detail-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; }
+
+.customer-info { }
+.info-row { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+.info-row:last-child { border-bottom: none; }
+.info-icon { font-size: 16px; width: 24px; flex-shrink: 0; margin-top: 1px; }
+.info-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; }
+.info-value { font-size: 14px; font-weight: 600; margin-top: 2px; }
+
+.urgency-tag { display: inline-block; padding: 4px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+.urgency-tag.medium { background: rgba(245,158,11,0.15); color: #F59E0B; border-color: rgba(245,158,11,0.3); }
+.urgency-tag.low { background: rgba(34,197,94,0.1); color: #22c55e; border-color: rgba(34,197,94,0.25); }
+
+/* AI Quote card */
+.quote-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.quote-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.ai-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent); display: flex; align-items: center; gap: 6px; }
+.ai-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s infinite; }
+
+.quote-breakdown { background: var(--card); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+.q-row { display: flex; justify-content: space-between; padding: 10px 14px; font-size: 14px; border-bottom: 1px solid var(--border); }
+.q-row:last-child { border-bottom: none; }
+.q-row .ql { color: var(--muted); }
+.q-row.q-total { font-weight: 800; font-size: 16px; background: rgba(255,255,255,0.02); }
+.q-row.q-total .ql { color: var(--text); }
+
+.conf-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.conf-label { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+.conf-bar { flex: 1; background: var(--border); border-radius: 20px; height: 5px; overflow: hidden; }
+.conf-fill { height: 100%; border-radius: 20px; background: var(--success); width: 0; transition: width 1.2s ease; }
+.conf-pct { font-size: 12px; font-weight: 800; color: var(--success); }
+
+/* Action buttons */
+.action-row { display: flex; gap: 8px; margin-top: 16px; }
+.btn { padding: 11px 16px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; flex: 1; }
+.btn-primary { background: var(--accent); color: #000; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--accent); }
+.btn-danger { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+.btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+/* Adjust panel */
+.adjust-panel {
+  display: none; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 14px;
+}
+.adjust-panel.show { display: block; animation: fadeUp .3s ease; }
+.adjust-panel label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; display: block; margin-bottom: 8px; }
+.price-input-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.price-prefix { font-size: 22px; font-weight: 800; color: var(--muted); }
+.price-input {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; color: var(--text); font-size: 24px; font-weight: 900; width: 150px; outline: none;
+}
+.price-input:focus { border-color: var(--accent); }
+.reason-textarea {
+  width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; color: var(--text); font-size: 14px; resize: vertical; min-height: 80px;
+  outline: none; font-family: inherit; line-height: 1.5;
+}
+.reason-textarea:focus { border-color: var(--accent); }
+.reason-hint { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+
+/* AI learning feedback */
+.ai-learning-box {
+  display: none; background: rgba(245,158,11,0.07); border: 1px solid var(--accent-border);
+  border-radius: 12px; padding: 16px; margin-top: 12px;
+}
+.ai-learning-box.show { display: block; animation: fadeUp .4s ease; }
+.ai-learning-title { font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.ai-rule-item {
+  background: var(--card); border-radius: 8px; padding: 10px 12px; margin-top: 8px;
+  font-size: 13px; border-left: 3px solid var(--accent); line-height: 1.5;
+  animation: fadeUp .3s ease;
+}
+.ai-rule-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+
+/* Validate success */
+.validate-success {
+  display: none; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.3);
+  border-radius: 12px; padding: 20px; text-align: center; margin-top: 14px;
+}
+.validate-success.show { display: block; animation: fadeUp .4s ease; }
+.validate-success .vs-icon { font-size: 36px; margin-bottom: 10px; }
+.validate-success .vs-title { font-size: 16px; font-weight: 800; color: var(--success); margin-bottom: 4px; }
+.validate-success .vs-sub { font-size: 13px; color: var(--muted); }
+.sms-sent-preview { background: var(--card); border-radius: 12px; padding: 14px; margin-top: 14px; text-align: left; }
+.sms-sent-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; }
+.sms-sent-bubble { background: #1a2a1a; border: 1px solid rgba(34,197,94,0.2); border-radius: 12px 12px 12px 4px; padding: 10px 14px; font-size: 13px; line-height: 1.6; color: var(--text); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
+
+/* ─── AI MEMORY PAGE ─── */
+.memory-top-row { display: grid; grid-template-columns: 1fr 3fr; gap: 16px; margin-bottom: 24px; }
+.accuracy-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; text-align: center;
+}
+.acc-number { font-size: 52px; font-weight: 900; color: var(--accent); line-height: 1; }
+.acc-label { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.acc-trend { font-size: 12px; color: var(--success); font-weight: 700; margin-top: 8px; }
+.acc-trend::before { content: '↑ '; }
+.acc-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+.memory-stats { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.mem-stat { text-align: center; }
+.mem-stat-num { font-size: 28px; font-weight: 900; }
+.mem-stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; margin-top: 4px; }
+
+.memory-section { margin-bottom: 20px; }
+.mem-section-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted);
+}
+.mem-section-icon { font-size: 16px; }
+.mem-section-count { margin-left: auto; background: var(--surface); border: 1px solid var(--border); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; color: var(--text); }
+
+.memory-rule {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px;
+  margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px; font-size: 14px;
+}
+.memory-rule.new-rule { border-color: var(--accent-border); background: var(--accent-dim); animation: fadeUp .5s ease; }
+.mr-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.mr-content { flex: 1; }
+.mr-text { font-size: 14px; font-weight: 500; line-height: 1.4; }
+.mr-source { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.mr-badge { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; margin-top: 2px; }
+.mr-high { background: rgba(34,197,94,0.15); color: #22c55e; }
+.mr-med { background: rgba(245,158,11,0.15); color: #F59E0B; }
+
+/* ─── CUSTOMISE PAGE ─── */
+.customise-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.cust-section { margin-bottom: 24px; }
+.cust-section-title { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; }
+.cust-field { margin-bottom: 16px; }
+.cust-field label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.cust-field input, .cust-field textarea {
+  width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 11px 14px; color: var(--text); font-size: 14px; outline: none; font-family: inherit; resize: none;
+}
+.cust-field input:focus, .cust-field textarea:focus { border-color: var(--accent); }
+.cust-field input::placeholder, .cust-field textarea::placeholder { color: var(--muted); }
+
+.logo-zone {
+  border: 2px dashed var(--border); border-radius: 12px; padding: 24px; text-align: center;
+  cursor: pointer; transition: all .2s; position: relative; overflow: hidden;
+}
+.logo-zone:hover { border-color: var(--accent); background: var(--accent-dim); }
+.logo-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.logo-zone-img { display: none; max-width: 72px; max-height: 72px; margin: 0 auto 10px; border-radius: 10px; }
+.logo-zone-text { font-size: 13px; color: var(--muted); }
+.logo-zone-icon { font-size: 28px; margin-bottom: 8px; }
+
+/* Color swatches in customise */
+.color-swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+.color-swatch {
+  width: 36px; height: 36px; border-radius: 10px; border: 3px solid transparent;
+  cursor: pointer; transition: all .2s;
+}
+.color-swatch:hover { transform: scale(1.1); }
+.color-swatch.sel { border-color: #fff; }
+.custom-color-wrap { position: relative; }
+.custom-color-trigger { width: 36px; height: 36px; border-radius: 10px; border: 2px dashed var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.cust-color-input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+/* Phone mockup preview */
+.phone-wrap { position: sticky; top: 20px; }
+.phone-outer {
+  background: #1a1a2e; border: 3px solid #2a2a4a; border-radius: 38px;
+  padding: 18px 10px; max-width: 230px; margin: 0 auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+}
+.phone-notch { width: 70px; height: 6px; background: #2a2a4a; border-radius: 3px; margin: 0 auto 14px; }
+.phone-screen-inner { background: #f2f2f7; border-radius: 26px; padding: 16px; min-height: 320px; }
+.ph-status { font-size: 10px; color: #666; display: flex; justify-content: space-between; margin-bottom: 12px; }
+.ph-header { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 4px; }
+.ph-subhead { font-size: 10px; color: #888; margin-bottom: 16px; }
+.ph-divider { height: 1px; background: #ddd; margin: 12px 0; }
+.ph-bubble {
+  background: #e5e7eb; border-radius: 14px 14px 14px 3px; padding: 10px 12px;
+  font-size: 11px; line-height: 1.55; color: #111; max-width: 92%; margin-bottom: 6px;
+}
+.ph-hl { color: #000; font-weight: 700; }
+.ph-time { font-size: 9px; color: #999; margin-left: 4px; }
+.ph-reply { background: var(--accent); border-radius: 14px 14px 3px 14px; padding: 8px 12px; font-size: 11px; font-weight: 700; color: #000; max-width: 60%; margin-left: auto; margin-bottom: 6px; text-align: center; }
+
+.btn-save { padding: 12px 24px; background: var(--accent); color: #000; border: none; border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all .2s; }
+.btn-save:hover { filter: brightness(1.1); }
+
+/* ─── PRICING PAGE ─── */
+.pricing-section { margin-bottom: 28px; }
+.pricing-section-title { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 16px; }
+.pricing-row { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.pricing-row:last-child { border-bottom: none; }
+.pricing-row-info { flex: 1; }
+.pricing-row-label { font-size: 14px; font-weight: 600; }
+.pricing-row-desc { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.pricing-input-wrap { position: relative; }
+.pricing-prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; font-weight: 700; color: var(--muted); }
+.pricing-inp {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 10px 12px 10px 28px; color: var(--text); font-size: 17px; font-weight: 800; width: 120px; outline: none;
+}
+.pricing-inp:focus { border-color: var(--accent); }
+.pricing-pct { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 700; color: var(--muted); }
+.pricing-inp-pct { padding-right: 28px; }
+
+.mrr-preview { background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: 12px; padding: 20px; text-align: center; }
+.mrr-label { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+.mrr-amount { font-size: 36px; font-weight: 900; color: var(--accent); }
+.mrr-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* ─── ACTIVITY FEED ─── */
+.activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); margin-top: 5px; flex-shrink: 0; }
+.activity-dot.green { background: var(--success); }
+.activity-dot.yellow { background: var(--accent); }
+.activity-dot.purple { background: #a78bfa; }
+.activity-text { font-size: 13px; line-height: 1.5; }
+.activity-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ─── LIVE NOTIFICATION ─── */
+.live-notif {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--card); border: 1px solid var(--accent-border);
+  border-radius: 16px; padding: 16px 20px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,158,11,0.15);
+  max-width: 300px; z-index: 999; cursor: pointer; transition: all .2s;
+  animation: slideIn .5s cubic-bezier(.22,1,.36,1);
+}
+.live-notif:hover { transform: translateY(-2px); box-shadow: 0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(245,158,11,0.25); }
+.live-notif.gone { animation: slideOut .4s ease forwards; }
+@keyframes slideIn { from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1} }
+@keyframes slideOut { from{transform:translateX(0);opacity:1}to{transform:translateX(120%);opacity:0} }
+.notif-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.notif-dot2 { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1s infinite; }
+.notif-type { font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.7px; }
+.notif-close { margin-left: auto; color: var(--muted); font-size: 16px; cursor: pointer; }
+.notif-body { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.notif-sub { font-size: 12px; color: var(--muted); }
+.notif-tap { font-size: 11px; color: var(--accent); margin-top: 8px; font-weight: 600; }
+
+/* ─── OVERVIEW RECENT ACTIVITY ─── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* UTILS */
+.hidden { display: none !important; }
+.mt-12 { margin-top: 12px; }
+.mt-20 { margin-top: 20px; }
+.flex-c { display: flex; align-items: center; gap: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     SCREEN 1 — PERSONALISE YOUR DEMO
+════════════════════════════════════════ -->
+<div id="s-onboard" class="screen active">
+  <div class="ob-logo">Tradie<span>Catch</span></div>
+  <p class="ob-tagline">Missed calls caught. Leads booked. Money kept.</p>
+
+  <div class="ob-card">
+    <h2>Personalise the demo in 30 seconds</h2>
+    <p>Enter your details and watch the whole system update with your business name, colours and messages.</p>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Your Business Name</label>
+        <input id="biz-name" type="text" placeholder="e.g. Bayside Plumbing" oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>Your Name</label>
+        <input id="owner-name" type="text" placeholder="e.g. Mark" oninput="updatePreview()">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Your Trade</label>
+      <div class="trade-grid">
+        <div class="trade-btn sel" onclick="selectTrade('plumber',this)">
+          <span class="t-emoji">🔧</span><span class="t-label">Plumber</span>
+        </div>
+        <div class="trade-btn" onclick="selectTrade('hvac',this)">
+          <span class="t-emoji">❄️</span><span class="t-label">HVAC Tech</span>
+        </div>
+        <div class="trade-btn" onclick="selectTrade('sparky',this)">
+          <span class="t-emoji">⚡</span><span class="t-label">Electrician</span>
+        </div>
+        <div class="trade-btn" onclick="selectTrade('pool',this)">
+          <span class="t-emoji">💧</span><span class="t-label">Pool Guy</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Brand Colour</label>
+      <div class="color-row">
+        <div class="color-dot sel" style="background:#F59E0B" onclick="pickColor('#F59E0B',this)" title="Amber"></div>
+        <div class="color-dot" style="background:#06B6D4" onclick="pickColor('#06B6D4',this)" title="Cyan"></div>
+        <div class="color-dot" style="background:#22c55e" onclick="pickColor('#22c55e',this)" title="Green"></div>
+        <div class="color-dot" style="background:#8B5CF6" onclick="pickColor('#8B5CF6',this)" title="Purple"></div>
+        <div class="color-dot" style="background:#ef4444" onclick="pickColor('#ef4444',this)" title="Red"></div>
+        <div class="color-dot" style="background:#ec4899" onclick="pickColor('#ec4899',this)" title="Pink"></div>
+        <div class="color-dot-custom" onclick="document.getElementById('cc').click()" title="Custom colour">🎨</div>
+        <input type="color" id="cc" value="#F59E0B" style="position:absolute;opacity:0;width:0;height:0" onchange="pickColor(this.value,null)">
+      </div>
+    </div>
+
+    <div class="sms-preview-ob">
+      <div class="sms-preview-ob-label">📱 Preview — Auto-SMS your customer gets:</div>
+      <div class="sms-bubble-ob" id="sms-preview-ob">
+        Hey, <span class="sms-hl" id="sph-biz" style="color:var(--accent)">Your Business</span> here — sorry I missed your call, I'm on a job right now.<br><br>
+        Reply <strong>YES</strong> and I'll send you a quick form so you can tell me what you need. I'll come back to you within the hour. 🙏
+      </div>
+    </div>
+
+    <button class="btn-launch" onclick="launchMissed()">Launch my dashboard →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SCREEN 2 — MISSED CALL ANIMATION
+════════════════════════════════════════ -->
+<div id="s-missed" class="screen">
+  <div class="missed-content">
+
+    <div class="missed-step" id="ms-1">
+      <div class="phone-ring">📞</div>
+      <div class="missed-label">A customer just called...</div>
+      <div class="missed-sub">You're on a job. Can't pick up.</div>
+    </div>
+
+    <div class="missed-step" id="ms-2" style="margin-top:0">
+      <div class="phone-miss">📵</div>
+      <div class="missed-label" style="color:#ef4444">Missed call.</div>
+      <div class="missed-sub">Old system: they call your competitor next.</div>
+    </div>
+
+    <div class="missed-step" id="ms-3" style="margin-top:0">
+      <div class="missed-label" style="color:var(--accent)">TradieCatch caught it. ✓</div>
+      <div class="missed-sub">Auto-SMS fired in 30 seconds:</div>
+      <div class="sms-anim-bubble" style="margin-top:20px">
+        <div class="sms-anim-header">
+          <span class="sms-anim-dot"></span>
+          SMS delivered — 30s after missed call
+        </div>
+        <span id="ms-sms-text">Hey, <strong style="color:var(--accent)">Bayside Plumbing</strong> here — sorry I missed your call, I'm on a job right now.<br><br>Reply <strong>YES</strong> and I'll send you a quick form so you can tell me what you need.</span>
+      </div>
+      <button class="btn-enter-dash" onclick="enterDash()">Open my dashboard →</button>
+      <div class="missed-skip" onclick="enterDash()">Skip animation</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SCREEN 3 — DASHBOARD
+════════════════════════════════════════ -->
+<div id="s-dash" class="screen">
+
+  <!-- Top bar -->
+  <div class="demo-topbar">
+    <div class="flex-c">
+      <span class="demo-pill">🎯 Live Demo</span>
+      <span style="margin-left:8px;font-size:12px">This is <em>your</em> TradieCatch dashboard</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-biz" id="tb-biz">Bayside Plumbing</span>
+      <span style="color:var(--border)">|</span>
+      <span id="tb-plan" style="color:var(--accent);font-size:12px;font-weight:700">Plumber Plan</span>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sb-head">
+        <div class="sb-logo-wrap">
+          <div class="sb-logo-initials" id="sb-initials">BP</div>
+          <img id="sb-logo-img" class="sb-logo-img hidden" src="" alt="logo">
+          <div>
+            <div class="sb-biz-name" id="sb-biz-name">Bayside Plumbing</div>
+            <span class="sb-trade-badge" id="sb-trade-badge">🔧 Plumber</span>
+          </div>
+        </div>
+      </div>
+      <div class="sb-nav">
+        <div class="nav-item active" onclick="showPage('overview',this)">
+          <span class="nav-icon">📊</span> Overview
+        </div>
+        <div class="nav-item" onclick="showPage('leads',this)">
+          <span class="nav-icon">📥</span> Leads
+          <span class="nav-badge" id="nb-leads">1</span>
+        </div>
+        <div class="nav-item" onclick="showPage('memory',this)">
+          <span class="nav-icon">🧠</span> AI Memory
+        </div>
+        <div class="nav-item" onclick="showPage('customise',this)">
+          <span class="nav-icon">🎨</span> Customise
+        </div>
+        <div class="nav-item" onclick="showPage('pricing',this)">
+          <span class="nav-icon">💰</span> Pricing
+        </div>
+      </div>
+      <div class="sb-bottom">
+        <div class="sb-owner">Logged in as</div>
+        <div class="sb-owner"><span id="sb-owner">Mark</span></div>
+      </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="main">
+
+      <!-- ── OVERVIEW PAGE ── -->
+      <div class="dash-page active" id="page-overview">
+        <div class="page-head">
+          <h1>Overview</h1>
+          <p id="ov-sub">This week at Bayside Plumbing</p>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">Leads captured</div>
+            <div class="stat-value stat-accent">3</div>
+            <div class="stat-sub up">vs 0 without TradieCatch</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Revenue recovered</div>
+            <div class="stat-value stat-accent" id="ov-revenue">$1,640</div>
+            <div class="stat-sub up">money you'd have lost</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Time saved</div>
+            <div class="stat-value stat-accent">2.5h</div>
+            <div class="stat-sub up">no back-and-forth calls</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">AI quote accuracy</div>
+            <div class="stat-value stat-accent">87%</div>
+            <div class="stat-sub up">from 48% in month 1</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="card-hd">
+              <span class="card-title">Recent Leads</span>
+              <span class="card-action" onclick="showPage('leads',document.querySelector('[onclick*=leads]'))">View all →</span>
+            </div>
+            <div class="lead-item" onclick="goToLead()">
+              <div class="lead-avatar" style="background:rgba(245,158,11,0.15);color:var(--accent)">SM</div>
+              <div class="lead-info">
+                <div class="lead-name">Sarah Mitchell <span class="badge badge-new"><span class="pulse"></span>New</span></div>
+                <div class="lead-detail" id="ov-lead1-detail">Hot water not working · Nerang</div>
+              </div>
+              <div class="lead-meta">
+                <div class="lead-amount" id="ov-lead1-amt">$680</div>
+                <div class="lead-time">2 min ago</div>
+              </div>
+            </div>
+            <div class="lead-item">
+              <div class="lead-avatar" style="background:rgba(139,92,246,0.15);color:#a78bfa">TK</div>
+              <div class="lead-info">
+                <div class="lead-name">Tim Kowalski <span class="badge badge-booked">Booked ✓</span></div>
+                <div class="lead-detail">Leaking tap · Logan</div>
+              </div>
+              <div class="lead-meta">
+                <div class="lead-amount">$320</div>
+                <div class="lead-time">Yesterday</div>
+              </div>
+            </div>
+            <div class="lead-item">
+              <div class="lead-avatar" style="background:rgba(34,197,94,0.15);color:#22c55e">JR</div>
+              <div class="lead-info">
+                <div class="lead-name">Julie Roberts <span class="badge badge-booked">Booked ✓</span></div>
+                <div class="lead-detail">Blocked drain · Beenleigh</div>
+              </div>
+              <div class="lead-meta">
+                <div class="lead-amount">$640</div>
+                <div class="lead-time">Mon</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-hd"><span class="card-title">Activity</span></div>
+            <div class="activity-item">
+              <div class="activity-dot yellow"></div>
+              <div>
+                <div class="activity-text"><strong>New lead captured</strong> — Sarah Mitchell, Nerang. AI quote: <span id="act-quote">$680</span></div>
+                <div class="activity-time">2 minutes ago</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot green"></div>
+              <div>
+                <div class="activity-text"><strong>Tim Kowalski confirmed</strong> — paid $64 deposit · Tue 10am locked in</div>
+                <div class="activity-time">Yesterday, 3:12pm</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot purple"></div>
+              <div>
+                <div class="activity-text"><strong>AI learned 2 new rules</strong> from your last quote adjustment</div>
+                <div class="activity-time">Mon, 11:47am</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot green"></div>
+              <div>
+                <div class="activity-text"><strong>Julie Roberts confirmed</strong> — paid $128 deposit · Tue 8am booked</div>
+                <div class="activity-time">Mon, 9:31am</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LEADS PAGE ── -->
+      <div class="dash-page" id="page-leads">
+
+        <!-- LEAD LIST -->
+        <div id="lead-list-view">
+          <div class="page-head">
+            <h1>Leads</h1>
+            <p>Your captured missed calls this week</p>
+          </div>
+          <div class="card">
+            <div class="card-hd"><span class="card-title">This week</span></div>
+
+            <!-- NEW LEAD -->
+            <div class="lead-item" onclick="openLead()">
+              <div class="lead-avatar" style="background:rgba(245,158,11,0.15);color:var(--accent)">SM</div>
+              <div class="lead-info">
+                <div class="lead-name">Sarah Mitchell &nbsp;<span class="badge badge-new"><span class="pulse"></span>New</span></div>
+                <div class="lead-detail" id="ll-d1">Hot water not working · Nerang · TODAY</div>
+              </div>
+              <div class="lead-meta">
+                <div class="lead-amount" id="ll-a1">AI $680</div>
+                <div class="lead-time">2 min ago</div>
+              </div>
+            </div>
+
+            <div class="lead-item">
+              <div class="lead-avatar" style="background:rgba(139,92,246,0.15);color:#a78bfa">TK</div>
+              <div class="lead-info">
+                <div class="lead-name">Tim Kowalski &nbsp;<span class="badge badge-booked">Booked ✓</span></div>
+                <div class="lead-detail">Leaking tap · Logan · $320 · deposit paid</div>
+              </div>
+              <div class="lead-meta">
+                <div class="lead-amount">$320</div>
+                <div class="lead-time">Yesterday</div>
+              </div>
+            </div>
+
+            <div class="lead-item">
+              <div class="lead-avatar" style="background:rgba(34,197,94,0.15);color:#22c55e">JR</div>
+              <div class="lead-info">
+                <div class="lead-name">Julie Roberts &nbsp;<span class="badge badge-booked">Booked ✓</span></div>
+                <div class="lead-detail">Blocked drain · Beenleigh · $640 · deposit paid</div>
+              </div>
+              <div class="lead-meta">
+                <div class="lead-amount">$640</div>
+                <div class="lead-time">Mon</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LEAD DETAIL VIEW -->
+        <div id="lead-detail-view" class="hidden">
+          <div class="back-btn" onclick="backToLeads()">← Back to leads</div>
+
+          <div class="lead-detail-grid">
+            <!-- Left: customer info -->
+            <div>
+              <div class="card" style="margin-bottom:0">
+                <div class="card-hd">
+                  <span class="card-title">🚨 New Lead — Sarah Mitchell</span>
+                  <span class="badge badge-new"><span class="pulse"></span>Waiting</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon">👤</span>
+                  <div><div class="info-label">Customer</div><div class="info-value">Sarah Mitchell</div></div>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon">📍</span>
+                  <div><div class="info-label">Address</div><div class="info-value">14 Coral Ave, Nerang QLD 4211</div></div>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon">📞</span>
+                  <div><div class="info-label">Phone</div><div class="info-value">0412 547 803</div></div>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon" id="ld-issue-icon">🚿</span>
+                  <div><div class="info-label">Issue</div><div class="info-value" id="ld-issue">Hot water not working — Rinnai gas unit, 12 years old, no hot water since this morning</div></div>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon">⏰</span>
+                  <div><div class="info-label">Urgency</div><div class="info-value"><span class="urgency-tag" id="ld-urgency">TODAY</span></div></div>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon">📸</span>
+                  <div><div class="info-label">Photos</div><div class="info-value">3 photos attached<br><span style="font-size:11px;color:var(--muted)">(Rinnai unit, pilot light, connection)</span></div></div>
+                </div>
+                <div class="info-row">
+                  <span class="info-icon">📅</span>
+                  <div><div class="info-label">Availability</div><div class="info-value">Prefers tomorrow morning or Thurs PM</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: AI quote -->
+            <div>
+              <div class="quote-card">
+                <div class="quote-card-head">
+                  <div class="ai-label"><span class="ai-dot"></span> AI Quote Generated</div>
+                  <div style="font-size:12px;color:var(--muted)">Based on your pricing rules</div>
+                </div>
+
+                <div class="quote-breakdown">
+                  <div class="q-row"><span class="ql" id="qr-1l">Call-out fee</span><span id="qr-1v">$120</span></div>
+                  <div class="q-row"><span class="ql" id="qr-2l">Labour (2h @ $110/h)</span><span id="qr-2v">$220</span></div>
+                  <div class="q-row"><span class="ql" id="qr-3l">Rinnai Infinity 26 unit</span><span id="qr-3v">$2,150</span></div>
+                  <div class="q-row" id="qr-row4"><span class="ql" id="qr-4l">Copper fittings (+10yr rule)</span><span id="qr-4v">$200</span></div>
+                  <div class="q-row q-total"><span class="ql">TOTAL QUOTE</span><span id="qr-total" style="color:var(--accent)">$2,690</span></div>
+                </div>
+
+                <div>
+                  <div class="conf-row">
+                    <span class="conf-label">AI Confidence</span>
+                    <div class="conf-bar"><div class="conf-fill" id="conf-fill" style="width:0%"></div></div>
+                    <span class="conf-pct" id="conf-pct">88%</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--muted);background:var(--surface);border-radius:8px;padding:10px 12px;line-height:1.5">
+                    ⚠️ <strong>Notes to confirm on site:</strong> Confirm exact model. If install >10 years, copper fittings likely needed (+$200 — already included). Check gas pressure.
+                  </div>
+                </div>
+
+                <div class="action-row" id="action-row">
+                  <button class="btn btn-primary" onclick="validateQuote()">✅ Validate &amp; Send</button>
+                  <button class="btn btn-secondary" onclick="openAdjust()">✏️ Adjust</button>
+                  <button class="btn btn-danger" onclick="refuseLead()">✕</button>
+                </div>
+
+                <!-- Adjust panel -->
+                <div class="adjust-panel" id="adjust-panel">
+                  <label>Your price</label>
+                  <div class="price-input-row">
+                    <span class="price-prefix">$</span>
+                    <input type="number" class="price-input" id="adj-price" value="2690" placeholder="2690">
+                  </div>
+                  <label>Why are you changing it? <span style="font-weight:400;text-transform:none;letter-spacing:0">(the AI learns from this)</span></label>
+                  <p class="reason-hint">Write naturally — the AI extracts rules automatically. E.g. "Reece Logan has Rinnai 26 at $2,150. And I always add $200 for copper fittings on old installs."</p>
+                  <textarea class="reason-textarea" id="adj-reason" placeholder="Type your reason here..."></textarea>
+                  <div class="flex-c" style="gap:10px">
+                    <button class="btn btn-primary" onclick="submitAdjust()" style="flex:1">Save &amp; send to customer →</button>
+                    <button class="btn btn-secondary" onclick="cancelAdjust()" style="flex:0;padding:11px 18px">Cancel</button>
+                  </div>
+
+                  <!-- AI learning display -->
+                  <div class="ai-learning-box" id="ai-learn-box">
+                    <div class="ai-learning-title">🧠 AI just learned from your adjustment</div>
+                    <div id="ai-rules-extracted"></div>
+                  </div>
+                </div>
+
+                <!-- Validate success -->
+                <div class="validate-success" id="validate-success">
+                  <div class="vs-icon">✅</div>
+                  <div class="vs-title">Quote sent to Sarah!</div>
+                  <div class="vs-sub">She'll receive this SMS now:</div>
+                  <div class="sms-sent-preview">
+                    <div class="sms-sent-label">📱 SMS sent</div>
+                    <div class="sms-sent-bubble" id="sent-sms">Sarah — sorted! Tomorrow Tue 10am–12pm. Quote: $2,690. Lock it in with a 20% deposit ($538):<br>pay.tradiecatch.com/sarah-m-xxx</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── AI MEMORY PAGE ── -->
+      <div class="dash-page" id="page-memory">
+        <div class="page-head">
+          <h1>🧠 AI Memory</h1>
+          <p>Everything your AI has learned from you — gets smarter with every quote you adjust</p>
+        </div>
+
+        <div class="memory-top-row">
+          <div class="accuracy-card">
+            <div class="acc-number" id="mem-acc">87%</div>
+            <div class="acc-label">Quote accuracy</div>
+            <div class="acc-trend">from 48% in month 1</div>
+            <div class="acc-sub" style="margin-top:8px;font-size:11px">Average error on last 20 quotes: <strong style="color:var(--text)">–$24</strong></div>
+          </div>
+          <div class="memory-stats">
+            <div class="mem-stat">
+              <div class="mem-stat-num stat-accent" id="mem-rules-count">5</div>
+              <div class="mem-stat-label">Pricing rules</div>
+            </div>
+            <div class="mem-stat">
+              <div class="mem-stat-num stat-accent" id="mem-corrections">12</div>
+              <div class="mem-stat-label">Total corrections</div>
+            </div>
+            <div class="mem-stat">
+              <div class="mem-stat-num stat-accent">1-tap</div>
+              <div class="mem-stat-label">validated last 4 quotes</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing Rules -->
+        <div class="memory-section">
+          <div class="mem-section-head">
+            <span class="mem-section-icon">💲</span> Pricing Rules
+            <span class="mem-section-count" id="mem-pr-count">2</span>
+          </div>
+          <div id="mem-pricing-rules">
+            <div class="memory-rule">
+              <span class="mr-icon">✓</span>
+              <div class="mr-content">
+                <div class="mr-text" id="mr-rule1">Reece Logan — Rinnai Infinity 26: $2,150 (was $1,950)</div>
+                <div class="mr-source">From correction #4 · 3 days ago</div>
+              </div>
+              <span class="mr-badge mr-high">High</span>
+            </div>
+            <div class="memory-rule">
+              <span class="mr-icon">✓</span>
+              <div class="mr-content">
+                <div class="mr-text" id="mr-rule2">+$200 copper fittings on installs older than 10 years</div>
+                <div class="mr-source">From correction #7 · 5 days ago</div>
+              </div>
+              <span class="mr-badge mr-high">High</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Suppliers -->
+        <div class="memory-section">
+          <div class="mem-section-head">
+            <span class="mem-section-icon">🏪</span> Suppliers
+            <span class="mem-section-count" id="mem-sup-count">2</span>
+          </div>
+          <div id="mem-supplier-rules">
+            <div class="memory-rule">
+              <span class="mr-icon">✓</span>
+              <div class="mr-content">
+                <div class="mr-text" id="mem-sup-text">Reece Logan — best for hot water units (open 6am)</div>
+                <div class="mr-source">From correction #2 · 12 days ago</div>
+              </div>
+              <span class="mr-badge mr-med">Med</span>
+            </div>
+            <div class="memory-rule">
+              <span class="mr-icon">✓</span>
+              <div class="mr-content">
+                <div class="mr-text">Tradelink Loganholme — Rheem Stellar, better price than Reece on electric HW</div>
+                <div class="mr-source">From correction #6 · 7 days ago</div>
+              </div>
+              <span class="mr-badge mr-med">Med</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Time estimates -->
+        <div class="memory-section">
+          <div class="mem-section-head">
+            <span class="mem-section-icon">⏱️</span> Time Estimates
+            <span class="mem-section-count">1</span>
+          </div>
+          <div>
+            <div class="memory-rule">
+              <span class="mr-icon">✓</span>
+              <div class="mr-content">
+                <div class="mr-text" id="mem-time-text">Blocked drains avg 1.5h (not 2h as default)</div>
+                <div class="mr-source">From correction #3 · 10 days ago</div>
+              </div>
+              <span class="mr-badge mr-high">High</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Job preferences -->
+        <div class="memory-section">
+          <div class="mem-section-head">
+            <span class="mem-section-icon">🗺️</span> Job Preferences
+            <span class="mem-section-count">2</span>
+          </div>
+          <div>
+            <div class="memory-rule">
+              <span class="mr-icon">✓</span>
+              <div class="mr-content">
+                <div class="mr-text" id="mem-pref1">Refuse jobs >35km from Logan</div>
+                <div class="mr-source">From correction #9 · 2 days ago</div>
+              </div>
+              <span class="mr-badge mr-high">High</span>
+            </div>
+            <div class="memory-rule">
+              <span class="mr-icon">✓</span>
+              <div class="mr-content">
+                <div class="mr-text">Weekend surcharge: 75% (not 50% default)</div>
+                <div class="mr-source">From correction #1 · 18 days ago</div>
+              </div>
+              <span class="mr-badge mr-high">High</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CUSTOMISE PAGE ── -->
+      <div class="dash-page" id="page-customise">
+        <div class="page-head">
+          <h1>🎨 Customise</h1>
+          <p>Your brand, your messages, your rules — everything is yours</p>
+        </div>
+
+        <div class="customise-layout">
+          <!-- LEFT: settings -->
+          <div>
+            <div class="cust-section">
+              <div class="cust-section-title">Business Identity</div>
+              <div class="cust-field">
+                <label>Logo</label>
+                <div class="logo-zone" id="logo-zone">
+                  <input type="file" accept="image/*" onchange="uploadLogo(this)">
+                  <img id="logo-preview" class="logo-zone-img" src="" alt="">
+                  <div class="logo-zone-icon" id="logo-icon">🏢</div>
+                  <div class="logo-zone-text" id="logo-text">Click to upload your logo<br><span style="font-size:11px;color:var(--muted)">PNG, JPG — updates everywhere instantly</span></div>
+                </div>
+              </div>
+              <div class="cust-field">
+                <label>Business Name</label>
+                <input type="text" id="cust-biz" placeholder="Your business name" oninput="liveUpdate('biz',this.value)">
+              </div>
+              <div class="cust-field">
+                <label>Your Name (Owner)</label>
+                <input type="text" id="cust-owner" placeholder="Your first name" oninput="liveUpdate('owner',this.value)">
+              </div>
+            </div>
+
+            <div class="cust-section">
+              <div class="cust-section-title">Brand Colour</div>
+              <div class="color-swatches">
+                <div class="color-swatch sel" style="background:#F59E0B" onclick="pickColor('#F59E0B',this,true)"></div>
+                <div class="color-swatch" style="background:#06B6D4" onclick="pickColor('#06B6D4',this,true)"></div>
+                <div class="color-swatch" style="background:#22c55e" onclick="pickColor('#22c55e',this,true)"></div>
+                <div class="color-swatch" style="background:#8B5CF6" onclick="pickColor('#8B5CF6',this,true)"></div>
+                <div class="color-swatch" style="background:#ef4444" onclick="pickColor('#ef4444',this,true)"></div>
+                <div class="color-swatch" style="background:#ec4899" onclick="pickColor('#ec4899',this,true)"></div>
+                <div class="custom-color-wrap">
+                  <div class="custom-color-trigger" onclick="document.getElementById('cc2').click()">🎨</div>
+                  <input type="color" id="cc2" class="cust-color-input" value="#F59E0B" onchange="pickColor(this.value,null,true)">
+                </div>
+              </div>
+            </div>
+
+            <div class="cust-section">
+              <div class="cust-section-title">Auto-SMS to Customer</div>
+              <div class="cust-field">
+                <label>Message template</label>
+                <textarea id="sms-template" rows="5" oninput="updateSMSPhonePreview()"
+                  placeholder="Your auto-reply message...">Hey, {business} here — sorry I missed your call, I'm on a job right now.
+
+Reply YES and I'll send you a quick form so you can tell me what you need. I'll come back to you within the hour. 🙏</textarea>
+                <div style="font-size:11px;color:var(--muted);margin-top:6px">Use {business} for your business name, {name} for customer's name</div>
+              </div>
+            </div>
+
+            <button class="btn-save" onclick="saveCustomise()">✓ Save changes</button>
+          </div>
+
+          <!-- RIGHT: live preview -->
+          <div class="phone-wrap">
+            <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px">Live SMS preview</div>
+            <div class="phone-outer">
+              <div class="phone-notch"></div>
+              <div class="phone-screen-inner">
+                <div class="ph-status"><span>9:41 AM</span><span>📶 ■■■</span></div>
+                <div class="ph-header" id="ph-biz-name">Bayside Plumbing</div>
+                <div class="ph-subhead">SMS Message</div>
+                <div class="ph-divider"></div>
+                <div class="ph-bubble" id="ph-sms-bubble">
+                  Hey, <span class="ph-hl" id="ph-hl-biz">Bayside Plumbing</span> here — sorry I missed your call, I'm on a job right now.<br><br>Reply <strong>YES</strong> and I'll send you a quick form so you can tell me what you need. I'll come back to you within the hour. 🙏
+                </div>
+                <div style="font-size:10px;color:#999;margin-top:4px;padding-left:4px">Delivered ✓✓</div>
+                <div class="ph-reply" style="background:var(--accent)">YES 👍</div>
+              </div>
+            </div>
+            <div style="margin-top:20px">
+              <div class="card" style="padding:16px">
+                <div class="card-hd" style="margin-bottom:10px"><span class="card-title" style="font-size:13px">What else you can customise</span></div>
+                <div style="font-size:13px;color:var(--muted);line-height:1.8">
+                  ✓ Follow-up SMS timing<br>
+                  ✓ Form questions per job type<br>
+                  ✓ Quote email template<br>
+                  ✓ Booking confirmation message<br>
+                  ✓ Deposit % (default 20%)<br>
+                  ✓ Service zone radius<br>
+                  ✓ Business hours / after-hours rules<br>
+                  ✓ WhatsApp notification format
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PRICING PAGE ── -->
+      <div class="dash-page" id="page-pricing">
+        <div class="page-head">
+          <h1>💰 Pricing Rules</h1>
+          <p>The AI uses these as the base for every quote. Update anytime.</p>
+        </div>
+
+        <div class="two-col" style="align-items:start">
+          <div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:16px">Base rates</div>
+              <div class="pricing-section">
+                <div class="pricing-row">
+                  <div class="pricing-row-info">
+                    <div class="pricing-row-label">Call-out fee</div>
+                    <div class="pricing-row-desc">Charged on every job regardless of time</div>
+                  </div>
+                  <div class="pricing-input-wrap">
+                    <span class="pricing-prefix">$</span>
+                    <input type="number" class="pricing-inp" id="pr-callout" value="120" onchange="updateMRR()">
+                  </div>
+                </div>
+                <div class="pricing-row">
+                  <div class="pricing-row-info">
+                    <div class="pricing-row-label">Hourly rate</div>
+                    <div class="pricing-row-desc">Labour per hour on site</div>
+                  </div>
+                  <div class="pricing-input-wrap">
+                    <span class="pricing-prefix">$</span>
+                    <input type="number" class="pricing-inp" id="pr-hourly" value="110" onchange="updateMRR()">
+                  </div>
+                </div>
+                <div class="pricing-row">
+                  <div class="pricing-row-info">
+                    <div class="pricing-row-label">Minimum charge</div>
+                    <div class="pricing-row-desc">Floor price for any job</div>
+                  </div>
+                  <div class="pricing-input-wrap">
+                    <span class="pricing-prefix">$</span>
+                    <input type="number" class="pricing-inp" id="pr-min" value="180" onchange="updateMRR()">
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-title" style="margin-bottom:16px;margin-top:8px">Surcharges</div>
+              <div class="pricing-section">
+                <div class="pricing-row">
+                  <div class="pricing-row-info">
+                    <div class="pricing-row-label">Weekend surcharge</div>
+                    <div class="pricing-row-desc">% on top of base rate</div>
+                  </div>
+                  <div class="pricing-input-wrap">
+                    <input type="number" class="pricing-inp pricing-inp-pct" id="pr-weekend" value="75" onchange="updateMRR()">
+                    <span class="pricing-pct">%</span>
+                  </div>
+                </div>
+                <div class="pricing-row">
+                  <div class="pricing-row-info">
+                    <div class="pricing-row-label">After-hours surcharge</div>
+                    <div class="pricing-row-desc">After 5pm weekdays</div>
+                  </div>
+                  <div class="pricing-input-wrap">
+                    <input type="number" class="pricing-inp pricing-inp-pct" id="pr-after" value="60" onchange="updateMRR()">
+                    <span class="pricing-pct">%</span>
+                  </div>
+                </div>
+                <div class="pricing-row">
+                  <div class="pricing-row-info">
+                    <div class="pricing-row-label">Holiday surcharge</div>
+                    <div class="pricing-row-desc">Public holidays</div>
+                  </div>
+                  <div class="pricing-input-wrap">
+                    <input type="number" class="pricing-inp pricing-inp-pct" id="pr-holiday" value="100" onchange="updateMRR()">
+                    <span class="pricing-pct">%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title" style="margin-bottom:16px">Service area</div>
+              <div class="pricing-row">
+                <div class="pricing-row-info">
+                  <div class="pricing-row-label">Max radius</div>
+                  <div class="pricing-row-desc">AI refuses jobs outside this zone</div>
+                </div>
+                <div class="pricing-input-wrap">
+                  <input type="number" class="pricing-inp" id="pr-radius" value="35" style="padding-left:12px">
+                </div>
+              </div>
+              <div style="font-size:12px;color:var(--muted);margin-top:8px">km from your home base</div>
+            </div>
+
+            <button class="btn-save" onclick="savePricing()">✓ Save pricing rules</button>
+          </div>
+
+          <!-- Right: MRR preview -->
+          <div>
+            <div class="mrr-preview">
+              <div class="mrr-label">At $497/mo — your TradieCatch ROI</div>
+              <div class="mrr-amount">3× ROI</div>
+              <div class="mrr-sub">Guaranteed in month 1 — or you don't pay</div>
+            </div>
+            <div class="card" style="margin-top:16px">
+              <div class="card-title" style="margin-bottom:14px">What the AI uses to quote</div>
+              <div style="font-size:13px;color:var(--muted);line-height:1.9">
+                1. Your base rates (above) ↑<br>
+                2. Job type catalog (per trade)<br>
+                3. Supplier prices it's learned<br>
+                4. Rules from your adjustments<br>
+                5. Photos &amp; customer description<br>
+                6. Suburb / distance to site<br>
+                7. Day/time surcharge rules
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /dash-body -->
+</div><!-- /s-dash -->
+
+<!-- LIVE NOTIFICATION -->
+<div class="live-notif hidden" id="live-notif" onclick="goToLead()">
+  <span class="notif-close" onclick="event.stopPropagation();dismissNotif()">✕</span>
+  <div class="notif-head">
+    <span class="notif-dot2"></span>
+    <span class="notif-type">🚨 New Lead Captured</span>
+  </div>
+  <div class="notif-body" id="notif-body">Sarah Mitchell — Nerang</div>
+  <div class="notif-sub" id="notif-sub">Hot water not working · AI quote: $2,690</div>
+  <div class="notif-tap">Tap to review →</div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────
+const S = {
+  bizName: 'Bayside Plumbing',
+  ownerName: 'Mark',
+  trade: 'plumber',
+  accent: '#F59E0B',
+  smsTemplate: "Hey, {business} here — sorry I missed your call, I'm on a job right now.\n\nReply YES and I'll send you a quick form so you can tell me what you need. I'll come back to you within the hour. 🙏",
+  logoSrc: null,
+  adjustDone: false,
+  validateDone: false,
+  extraRules: [],
+};
+
+const TRADES = {
+  plumber: {
+    label: 'Plumber', emoji: '🔧', accent: '#F59E0B',
+    customer: { name: 'Sarah Mitchell', suburb: 'Nerang', issue: 'Hot water not working — Rinnai gas unit, 12 years old, no hot water since this morning', urgency: 'TODAY', issueIcon: '🚿' },
+    quote: { rows: [
+      { l: 'Call-out fee', v: '$120' },
+      { l: 'Labour (2h @ $110/h)', v: '$220' },
+      { l: 'Rinnai Infinity 26 unit', v: '$2,150' },
+      { l: 'Copper fittings (+10yr rule)', v: '$200' },
+    ], total: '$2,690', totalNum: 2690, conf: 88 },
+    aiRules: [
+      { cat: '💲 Pricing', text: 'Reece Logan — Rinnai Infinity 26: $2,150 (was $1,950)', source: 'Correction #4', conf: 'high' },
+      { cat: '💲 Pricing', text: '+$200 copper fittings on installs older than 10 years', source: 'Correction #7', conf: 'high' },
+      { cat: '⏱️ Time', text: 'Blocked drains avg 1.5h (not 2h)', source: 'Correction #3', conf: 'high' },
+      { cat: '🏪 Supplier', text: 'Reece Logan — best for hot water units (open 6am)', source: 'Correction #2', conf: 'med' },
+      { cat: '🗺️ Preference', text: 'Refuse jobs >35km from Logan', source: 'Correction #9', conf: 'high' },
+    ],
+    revenue: '$1,640',
+    plan: 'Plumber Plan',
+  },
+  hvac: {
+    label: 'HVAC Tech', emoji: '❄️', accent: '#06B6D4',
+    customer: { name: 'Tom Bennett', suburb: 'Robina', issue: 'AC not cooling — Mitsubishi split 6kW, installed 4 years ago, blowing warm air', urgency: 'TODAY', issueIcon: '❄️' },
+    quote: { rows: [
+      { l: 'Call-out fee', v: '$80' },
+      { l: 'Labour (2h @ $140/h)', v: '$280' },
+      { l: 'Refrigerant gas top-up', v: '$60' },
+    ], total: '$420', totalNum: 420, conf: 82 },
+    aiRules: [
+      { cat: '💲 Pricing', text: 'Beijer Ref Burleigh — Daikin Cora 5kW: $1,890', source: 'Correction #3', conf: 'high' },
+      { cat: '⏱️ Time', text: 'Full installs: always quote 2 days (not 1)', source: 'Correction #5', conf: 'high' },
+      { cat: '💲 Pricing', text: 'Summer priority surcharge Oct-Mar: +$50', source: 'Correction #6', conf: 'med' },
+    ],
+    revenue: '$2,100',
+    plan: 'HVAC Plan',
+  },
+  sparky: {
+    label: 'Electrician', emoji: '⚡', accent: '#EAB308',
+    customer: { name: 'Linda Park', suburb: 'Fortitude Valley', issue: 'Safety switch tripping in kitchen — RCD keeps cutting power, happened 3x today', urgency: '24H', issueIcon: '⚡' },
+    quote: { rows: [
+      { l: 'Call-out fee', v: '$90' },
+      { l: 'Labour (2h @ $130/h)', v: '$260' },
+      { l: 'Safety switch replacement', v: '$120' },
+      { l: 'Test & tag (2 circuits)', v: '$90' },
+    ], total: '$560', totalNum: 560, conf: 85 },
+    aiRules: [
+      { cat: '🏪 Supplier', text: 'MM Electrical CBD — Hager switchboard kit: $480', source: 'Correction #2', conf: 'high' },
+      { cat: '💲 Pricing', text: 'Switchboard work always includes Energex shutdown: $600', source: 'Correction #4', conf: 'high' },
+      { cat: '🗺️ Preference', text: 'Refuse solar repairs from other installers (liability)', source: 'Correction #8', conf: 'high' },
+    ],
+    revenue: '$1,420',
+    plan: 'Sparky Plan',
+  },
+  pool: {
+    label: 'Pool Guy', emoji: '💧', accent: '#3B82F6',
+    customer: { name: 'Emma Wilson', suburb: 'Mermaid Waters', issue: 'Green pool — algae outbreak, been green for 4 days, cant use pool', urgency: 'THIS WEEK', issueIcon: '💧' },
+    quote: { rows: [
+      { l: 'Call-out fee', v: '$65' },
+      { l: 'Labour (2h @ $95/h)', v: '$190' },
+      { l: 'Chemicals (algaecide + shock)', v: '$85' },
+      { l: 'Follow-up visit (Mermaid zone)', v: '$40' },
+    ], total: '$380', totalNum: 380, conf: 90 },
+    aiRules: [
+      { cat: '🏪 Supplier', text: 'Mr Pool Man Burleigh — Hayward salt cell: $385', source: 'Correction #2', conf: 'high' },
+      { cat: '💲 Pricing', text: 'Min charge for green pool recovery: $350', source: 'Correction #3', conf: 'high' },
+      { cat: '🗺️ Preference', text: 'Mermaid Waters: always quote +1 visit (higher chlorine demand)', source: 'Correction #5', conf: 'med' },
+    ],
+    revenue: '$960',
+    plan: 'Pool Plan',
+  },
+};
+
+// ─── COLOR PICKER ───────────────────────────
+function pickColor(color, el, fromDash) {
+  S.accent = color;
+  setAccent(color);
+  // deselect all
+  document.querySelectorAll('.color-dot,.color-swatch').forEach(d => d.classList.remove('sel'));
+  if (el) el.classList.add('sel');
+  updatePreview();
+  if (fromDash) updateSMSPhonePreview();
+}
+
+function setAccent(color) {
+  document.documentElement.style.setProperty('--accent', color);
+  // Compute dim
+  const r = parseInt(color.slice(1,3),16), g = parseInt(color.slice(3,5),16), b = parseInt(color.slice(5,7),16);
+  document.documentElement.style.setProperty('--accent-dim', `rgba(${r},${g},${b},0.12)`);
+  document.documentElement.style.setProperty('--accent-border', `rgba(${r},${g},${b},0.35)`);
+}
+
+// ─── TRADE SELECT ────────────────────────────
+function selectTrade(trade, el) {
+  S.trade = trade;
+  document.querySelectorAll('.trade-btn').forEach(b => b.classList.remove('sel'));
+  if (el) el.classList.add('sel');
+  const t = TRADES[trade];
+  pickColor(t.accent, null);
+  // reselect matching color dot
+  document.querySelectorAll('.color-dot').forEach(d => {
+    if (d.style.background === t.accent || d.style.background === hexToRgb(t.accent)) {
+      d.classList.add('sel');
+    }
+  });
+  updatePreview();
+}
+
+function hexToRgb(hex) {
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+// ─── PREVIEW UPDATE (onboard) ────────────────
+function updatePreview() {
+  S.bizName = document.getElementById('biz-name').value || 'Your Business';
+  S.ownerName = document.getElementById('owner-name').value || 'You';
+  const biz = S.bizName;
+  document.getElementById('sph-biz').textContent = biz;
+}
+
+// ─── LAUNCH ANIMATION ────────────────────────
+function launchMissed() {
+  const biz = document.getElementById('biz-name').value.trim() || 'Your Business';
+  const owner = document.getElementById('owner-name').value.trim() || 'You';
+  S.bizName = biz;
+  S.ownerName = owner;
+
+  document.getElementById('ms-sms-text').innerHTML =
+    `Hey, <strong style="color:var(--accent)">${biz}</strong> here — sorry I missed your call, I'm on a job right now.<br><br>Reply <strong>YES</strong> and I'll send you a quick form so you can tell me what you need.`;
+
+  showScreen('s-missed');
+  runMissedAnim();
+}
+
+function runMissedAnim() {
+  const steps = ['ms-1','ms-2','ms-3'];
+  const delays = [0, 2000, 4200];
+  steps.forEach((id, i) => {
+    setTimeout(() => {
+      // hide previous steps
+      steps.forEach(s => document.getElementById(s).classList.remove('show'));
+      document.getElementById(id).classList.add('show');
+    }, delays[i]);
+  });
+}
+
+function enterDash() {
+  showScreen('s-dash');
+  initDash();
+  setTimeout(showLiveNotif, 2500);
+}
+
+// ─── INIT DASHBOARD ──────────────────────────
+function initDash() {
+  const t = TRADES[S.trade];
+  const biz = S.bizName || 'Bayside Plumbing';
+  const owner = S.ownerName || 'Mark';
+  const initials = biz.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+
+  // Topbar
+  document.getElementById('tb-biz').textContent = biz;
+  document.getElementById('tb-plan').textContent = t.plan;
+
+  // Sidebar
+  document.getElementById('sb-biz-name').textContent = biz;
+  document.getElementById('sb-trade-badge').textContent = `${t.emoji} ${t.label}`;
+  document.getElementById('sb-initials').textContent = initials;
+  document.getElementById('sb-owner').textContent = owner;
+
+  // Overview
+  document.getElementById('ov-sub').textContent = `This week at ${biz}`;
+  document.getElementById('ov-revenue').textContent = t.revenue;
+  document.getElementById('act-quote').textContent = t.quote.total;
+
+  // Customise page
+  document.getElementById('cust-biz').value = biz;
+  document.getElementById('cust-owner').value = owner;
+  document.getElementById('ph-biz-name').textContent = biz;
+  document.getElementById('ph-hl-biz').textContent = biz;
+
+  // Lead list detail
+  const c = t.customer;
+  document.getElementById('ll-d1').textContent = `${c.issue.split('—')[0].trim()} · ${c.suburb} · ${c.urgency}`;
+  document.getElementById('ll-a1').textContent = `AI ${t.quote.total}`;
+
+  // Lead detail
+  document.getElementById('ld-issue-icon').textContent = c.issueIcon;
+  document.getElementById('ld-issue').textContent = c.issue;
+  document.getElementById('ld-urgency').textContent = c.urgency;
+  if (c.urgency === '24H') { document.getElementById('ld-urgency').className = 'urgency-tag medium'; }
+  if (c.urgency === 'THIS WEEK') { document.getElementById('ld-urgency').className = 'urgency-tag low'; }
+
+  // Quote breakdown
+  const q = t.quote;
+  const rows = q.rows;
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById(`qr-row${i+1}`);
+    const lel = document.getElementById(`qr-${i+1}l`);
+    const vel = document.getElementById(`qr-${i+1}v`);
+    if (i < rows.length) {
+      lel.textContent = rows[i].l;
+      vel.textContent = rows[i].v;
+      if (el) el.style.display = '';
+    } else {
+      if (el) el.style.display = 'none';
+    }
+  }
+  document.getElementById('qr-total').textContent = q.total;
+  document.getElementById('conf-pct').textContent = q.conf + '%';
+  document.getElementById('adj-price').value = q.totalNum;
+
+  // Sent SMS preview
+  document.getElementById('sent-sms').innerHTML =
+    `${c.name.split(' ')[0]} — sorted! Tomorrow Tue 10am–12pm. Quote: ${q.total}. Lock it in with a 20% deposit ($${Math.round(q.totalNum*0.2)}):<br>pay.tradiecatch.com/${c.name.split(' ')[0].toLowerCase()}-m-xxx`;
+
+  // Activity overview
+  document.getElementById('ov-lead1-detail').textContent = `${c.issue.split('—')[0].trim()} · ${c.suburb}`;
+  document.getElementById('ov-lead1-amt').textContent = q.total;
+
+  // Notification
+  document.getElementById('notif-body').textContent = `${c.name} — ${c.suburb}`;
+  document.getElementById('notif-sub').textContent = `${c.issue.split('—')[0].trim()} · AI quote: ${q.total}`;
+
+  // Memory page — update trade-specific data
+  const ar = t.aiRules;
+  if (ar[0]) document.getElementById('mr-rule1').textContent = ar[0].text;
+  if (ar[1]) document.getElementById('mr-rule2').textContent = ar[1] ? ar[1].text : '';
+  if (ar[2]) document.getElementById('mem-time-text') && (document.getElementById('mem-time-text').textContent = ar[2].text);
+  if (ar[3]) document.getElementById('mem-sup-text') && (document.getElementById('mem-sup-text').textContent = ar[3].text);
+  if (ar[4]) document.getElementById('mem-pref1') && (document.getElementById('mem-pref1').textContent = ar[4].text);
+
+  // Pricing
+  const callout = parseInt(t.quote.rows[0]?.v?.replace(/\D/g,'')) || 120;
+  const hourlyMatch = t.quote.rows[1]?.l?.match(/\$(\d+)/);
+  const hourly = hourlyMatch ? parseInt(hourlyMatch[1]) : 110;
+  document.getElementById('pr-callout').value = callout;
+  document.getElementById('pr-hourly').value = hourly;
+
+  // SMS preview
+  updateSMSPhonePreview();
+
+  // Animate conf bar after a moment
+  setTimeout(() => {
+    document.getElementById('conf-fill').style.width = q.conf + '%';
+  }, 800);
+}
+
+// ─── NAVIGATION ──────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showPage(page, el) {
+  document.querySelectorAll('.dash-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if (el) el.classList.add('active');
+  // Reset lead view when going to leads page
+  if (page === 'leads') {
+    document.getElementById('lead-list-view').classList.remove('hidden');
+    document.getElementById('lead-detail-view').classList.add('hidden');
+  }
+}
+
+// ─── LEAD ACTIONS ────────────────────────────
+function openLead() {
+  document.getElementById('lead-list-view').classList.add('hidden');
+  document.getElementById('lead-detail-view').classList.remove('hidden');
+  setTimeout(() => {
+    document.getElementById('conf-fill').style.width = TRADES[S.trade].quote.conf + '%';
+  }, 300);
+}
+
+function goToLead() {
+  dismissNotif();
+  showPage('leads', document.querySelectorAll('.nav-item')[1]);
+  setTimeout(openLead, 100);
+}
+
+function backToLeads() {
+  document.getElementById('lead-list-view').classList.remove('hidden');
+  document.getElementById('lead-detail-view').classList.add('hidden');
+  // reset panels
+  document.getElementById('adjust-panel').classList.remove('show');
+  document.getElementById('ai-learn-box').classList.remove('show');
+  document.getElementById('validate-success').classList.remove('show');
+  document.getElementById('action-row').classList.remove('hidden');
+  S.adjustDone = false; S.validateDone = false;
+}
+
+function openAdjust() {
+  document.getElementById('adjust-panel').classList.add('show');
+  document.getElementById('validate-success').classList.remove('show');
+  document.getElementById('action-row').classList.add('hidden');
+}
+
+function cancelAdjust() {
+  document.getElementById('adjust-panel').classList.remove('show');
+  document.getElementById('action-row').classList.remove('hidden');
+}
+
+function submitAdjust() {
+  const reason = document.getElementById('adj-reason').value.trim();
+  const price = document.getElementById('adj-price').value || TRADES[S.trade].quote.totalNum;
+
+  // Extract simple rules from reason text (keyword heuristic for demo)
+  const extractedRules = [];
+  if (reason.length > 10) {
+    // Split on sentences and pick key ones
+    const sentences = reason.split(/[.!?]+/).map(s=>s.trim()).filter(s=>s.length > 8);
+    sentences.forEach((s,i) => {
+      if (i < 3) extractedRules.push(s);
+    });
+  } else {
+    extractedRules.push(`Quote adjusted to $${price} for this job type`);
+  }
+
+  // Store extra rules for memory page
+  extractedRules.forEach(r => S.extraRules.push({ text: r, source: 'Your latest adjustment', conf: 'high' }));
+
+  // Show AI learning box
+  const box = document.getElementById('ai-learn-box');
+  const container = document.getElementById('ai-rules-extracted');
+  container.innerHTML = '';
+  extractedRules.forEach((rule, i) => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = 'ai-rule-item';
+      div.innerHTML = `<div class="ai-rule-tag">Rule extracted</div>${rule}`;
+      container.appendChild(div);
+    }, i * 600);
+  });
+  box.classList.add('show');
+
+  // After showing rules, show validation success
+  setTimeout(() => {
+    document.getElementById('adjust-panel').classList.remove('show');
+    document.getElementById('validate-success').classList.add('show');
+
+    // Update sent SMS with new price
+    const c = TRADES[S.trade].customer;
+    document.getElementById('sent-sms').innerHTML =
+      `${c.name.split(' ')[0]} — sorted! Tomorrow Tue 10am–12pm. Quote: $${parseInt(price).toLocaleString()}. Lock it in with a 20% deposit ($${Math.round(price*0.2)}):<br>pay.tradiecatch.com/${c.name.split(' ')[0].toLowerCase()}-m-xxx`;
+
+    // Update memory page
+    updateMemoryPage(extractedRules);
+    S.adjustDone = true;
+  }, extractedRules.length * 600 + 800);
+}
+
+function validateQuote() {
+  document.getElementById('action-row').classList.add('hidden');
+  document.getElementById('validate-success').classList.add('show');
+  S.validateDone = true;
+}
+
+function refuseLead() {
+  document.getElementById('action-row').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">Lead refused. The customer has been notified.</div>';
+}
+
+// ─── MEMORY PAGE UPDATE ──────────────────────
+function updateMemoryPage(newRules) {
+  const container = document.getElementById('mem-pricing-rules');
+  newRules.forEach(rule => {
+    const div = document.createElement('div');
+    div.className = 'memory-rule new-rule';
+    div.innerHTML = `
+      <span class="mr-icon">✨</span>
+      <div class="mr-content">
+        <div class="mr-text">${rule}</div>
+        <div class="mr-source">From your latest adjustment · Just now</div>
+      </div>
+      <span class="mr-badge mr-high">New</span>`;
+    container.appendChild(div);
+  });
+
+  // Update counts
+  const current = parseInt(document.getElementById('mem-pr-count').textContent);
+  document.getElementById('mem-pr-count').textContent = current + newRules.length;
+  const totalRules = parseInt(document.getElementById('mem-rules-count').textContent);
+  document.getElementById('mem-rules-count').textContent = totalRules + newRules.length;
+  const corrections = parseInt(document.getElementById('mem-corrections').textContent);
+  document.getElementById('mem-corrections').textContent = corrections + 1;
+
+  // Bump accuracy
+  const accEl = document.getElementById('mem-acc');
+  const cur = parseInt(accEl.textContent);
+  if (cur < 96) accEl.textContent = (cur + 1) + '%';
+}
+
+// ─── CUSTOMISE LIVE UPDATE ───────────────────
+function liveUpdate(field, value) {
+  if (field === 'biz') {
+    S.bizName = value || 'Your Business';
+    document.getElementById('sb-biz-name').textContent = S.bizName;
+    document.getElementById('tb-biz').textContent = S.bizName;
+    document.getElementById('ov-sub').textContent = `This week at ${S.bizName}`;
+    const initials = S.bizName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('sb-initials').textContent = initials;
+    updateSMSPhonePreview();
+  }
+  if (field === 'owner') {
+    S.ownerName = value || 'You';
+    document.getElementById('sb-owner').textContent = S.ownerName;
+  }
+}
+
+function updateSMSPhonePreview() {
+  const biz = document.getElementById('cust-biz')?.value || S.bizName;
+  const template = document.getElementById('sms-template')?.value || S.smsTemplate;
+  const filled = template.replace(/{business}/g, `<span class="ph-hl">${biz}</span>`).replace(/{name}/g,'the customer').replace(/\n/g,'<br>');
+  const phoneEl = document.getElementById('ph-sms-bubble');
+  if (phoneEl) phoneEl.innerHTML = filled;
+  const phbiz = document.getElementById('ph-biz-name');
+  if (phbiz) phbiz.textContent = biz;
+}
+
+// ─── LOGO UPLOAD ─────────────────────────────
+function uploadLogo(input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    S.logoSrc = e.target.result;
+    // Customise page
+    const preview = document.getElementById('logo-preview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    document.getElementById('logo-icon').style.display = 'none';
+    document.getElementById('logo-text').textContent = 'Logo uploaded ✓';
+    // Sidebar
+    document.getElementById('sb-initials').style.display = 'none';
+    const sbImg = document.getElementById('sb-logo-img');
+    sbImg.src = e.target.result;
+    sbImg.classList.remove('hidden');
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// ─── SAVE ACTIONS ─────────────────────────────
+function saveCustomise() {
+  const biz = document.getElementById('cust-biz').value.trim();
+  if (biz) liveUpdate('biz', biz);
+  const owner = document.getElementById('cust-owner').value.trim();
+  if (owner) liveUpdate('owner', owner);
+  S.smsTemplate = document.getElementById('sms-template').value;
+  showToast('Changes saved ✓');
+}
+
+function savePricing() {
+  showToast('Pricing rules updated ✓');
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--success);color:#000;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:700;z-index:9999;animation:fadeUp .3s ease';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+function updateMRR() {}
+
+// ─── LIVE NOTIFICATION ───────────────────────
+let notifTimer;
+function showLiveNotif() {
+  const el = document.getElementById('live-notif');
+  el.classList.remove('hidden');
+  el.classList.remove('gone');
+  notifTimer = setTimeout(dismissNotif, 8000);
+}
+function dismissNotif() {
+  const el = document.getElementById('live-notif');
+  el.classList.add('gone');
+  setTimeout(() => el.classList.add('hidden'), 400);
+  clearTimeout(notifTimer);
+}
+
+// ─── INIT ────────────────────────────────────
+// Set initial SMS preview on load
+document.addEventListener('DOMContentLoaded', () => {
+  updatePreview();
+});
+</script>
+</body>
+</html>
