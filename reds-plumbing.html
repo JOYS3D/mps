@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>For Jared — Reds Plumbing</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+  body { background: #F8FAFC; color: #0F172A; }
+  .gradient-bg { background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 50%, #0F172A 100%); }
+  .gradient-text { background: linear-gradient(135deg, #60A5FA, #2563EB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .anim-fade { animation: fade .6s ease; }
+  @keyframes fade { from { opacity:0; transform: translateY(12px);} to { opacity:1; transform:none;} }
+  .pulse { animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(37,99,235,.4); } 50% { box-shadow: 0 0 0 12px rgba(37,99,235,0); } }
+  .btn { padding:14px 22px; border-radius:12px; font-weight:600; transition:all .15s; cursor:pointer; font-size:15px; border:none; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; text-decoration:none; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: #2563EB; color:#fff; box-shadow: 0 4px 14px -2px rgba(37,99,235,.4); }
+  .btn-primary:hover { background: #1D4ED8; }
+  .btn-ghost { background:rgba(255,255,255,.1); color:#fff; backdrop-filter: blur(10px); }
+  .btn-white { background:#fff; color:#1E40AF; }
+  .btn-lg { padding:18px 28px; font-size:17px; min-height:58px; }
+  .card { background:#fff; border-radius:16px; box-shadow: 0 1px 4px rgba(0,0,0,.04); border:1px solid #E2E8F0; }
+  .service-icon { width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:28px; background: #EFF6FF; color:#1E40AF; flex-shrink:0; }
+  .badge-trust { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600; background:#EFF6FF; color:#1E40AF; }
+  .phone-mockup { width: 280px; height: 560px; background: #1a1a2e; border-radius: 36px; padding: 10px; box-shadow: 0 30px 80px rgba(0,0,0,.4); margin: 0 auto; }
+  .phone-screen { background:#F2F2F7; border-radius:28px; height:100%; overflow:hidden; }
+  .wa-bubble { background:#dcf8c6; color:#000; border-radius: 10px; padding:10px 12px; font-size:13px; line-height:1.4; }
+  /* Compare boxes */
+  .before-box { background:#FEE2E2; border:2px dashed #FCA5A5; border-radius:14px; padding:18px; }
+  .after-box { background:#DBEAFE; border:2px solid #3B82F6; border-radius:14px; padding:18px; box-shadow: 0 8px 30px -10px rgba(37,99,235,.3); }
+</style>
+</head>
+<body>
+
+<!-- PERSONALIZED HEADER -->
+<header class="gradient-bg text-white">
+  <div class="max-w-5xl mx-auto px-5 py-12 md:py-20">
+    <div class="anim-fade">
+      <div class="text-xs font-bold uppercase tracking-wider opacity-70 mb-3">For Jared — Reds Plumbing</div>
+      <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-5">
+        G'day Jared 👋<br/>
+        I built you a <span class="gradient-text">new website</span><br/>
+        (you don't owe me anything)
+      </h1>
+      <p class="text-lg md:text-xl opacity-90 max-w-2xl mb-8 leading-relaxed">
+        Saw your Wix site for Reds Plumbing — solid trade, but the website doesn't match the quality of your work. So I rebuilt it. Scroll down to see what I came up with.
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <a href="#new-site" class="btn btn-white">See the new site →</a>
+        <a href="#tradiecatch" class="btn btn-ghost">+ I also built you a missed-call tool</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- BEFORE/AFTER -->
+<section class="max-w-5xl mx-auto px-5 py-12">
+  <div class="text-center mb-8 anim-fade">
+    <div class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Quick context</div>
+    <h2 class="text-2xl md:text-3xl font-extrabold">What you have today vs. what you could have in 7 days</h2>
+  </div>
+  <div class="grid md:grid-cols-2 gap-5">
+    <div class="before-box">
+      <div class="text-xs font-bold uppercase text-rose-700 mb-3">Now — redspd.com</div>
+      <ul class="space-y-2 text-sm text-slate-700">
+        <li>❌ Basic Wix template (mid-2010s feel)</li>
+        <li>❌ Low-resolution service images</li>
+        <li>❌ Contact page URL still "/blank-2"</li>
+        <li>❌ CTA not obvious (people don't know how to book)</li>
+        <li>❌ Doesn't reflect your 15+ years of quality work</li>
+      </ul>
+    </div>
+    <div class="after-box">
+      <div class="text-xs font-bold uppercase text-blue-700 mb-3">After — 48-72h delivery</div>
+      <ul class="space-y-2 text-sm text-slate-700">
+        <li>✅ Modern, mobile-first design (60% of visits)</li>
+        <li>✅ Clear "Get a quote" CTA on every page</li>
+        <li>✅ Trust signals: 15 years, family-owned, QBCC</li>
+        <li>✅ Real testimonials front-and-center</li>
+        <li>✅ Loads in &lt;2 seconds on 4G</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- THE NEW SITE -->
+<div id="new-site" class="bg-white">
+  <!-- Hero of the new site -->
+  <section class="max-w-6xl mx-auto px-5 py-12">
+    <div class="text-center mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">↓ THE NEW SITE ↓</div>
+
+    <div class="card overflow-hidden shadow-2xl">
+      <!-- Top nav -->
+      <nav class="px-6 py-4 flex items-center justify-between border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-white" style="background: linear-gradient(135deg, #2563EB, #1E40AF);">R</div>
+          <div>
+            <div class="font-extrabold text-base leading-none">Reds Plumbing</div>
+            <div class="text-[10px] text-slate-500">& Drainage · Logan</div>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-5 text-sm font-semibold text-slate-700">
+          <a class="hover:text-blue-600">Services</a>
+          <a class="hover:text-blue-600">About</a>
+          <a class="hover:text-blue-600">Reviews</a>
+        </div>
+        <a href="tel:0413674882" class="btn btn-primary text-sm pulse">📞 0413 674 882</a>
+      </nav>
+
+      <!-- Hero -->
+      <div class="px-6 py-12 md:py-16" style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);">
+        <div class="grid md:grid-cols-2 gap-8 items-center">
+          <div>
+            <div class="badge-trust mb-4">⭐ Family owned · 15+ years · Logan & Redlands</div>
+            <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4 text-slate-900">
+              Logan's most trusted<br/>
+              <span class="text-blue-600">plumber</span>.<br/>
+              On time. Every time.
+            </h1>
+            <p class="text-lg text-slate-600 mb-6 leading-relaxed">
+              Family owned. QBCC licensed. Gas, hot water, drainage, stormwater — we do it all and we clean up after.
+            </p>
+            <div class="flex flex-wrap gap-3 mb-6">
+              <a href="tel:0413674882" class="btn btn-primary btn-lg">📞 Call Jared now</a>
+              <a class="btn" style="background:#fff; color:#1E40AF; border:1.5px solid #BFDBFE;">Get a free quote</a>
+            </div>
+            <div class="flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-600">
+              <div class="flex items-center gap-1">✅ Same-day service</div>
+              <div class="flex items-center gap-1">✅ Upfront pricing</div>
+              <div class="flex items-center gap-1">✅ Site left clean</div>
+            </div>
+          </div>
+          <div class="relative">
+            <div class="rounded-2xl overflow-hidden bg-blue-100 aspect-square flex items-center justify-center" style="background: linear-gradient(135deg, #3B82F6, #1E40AF);">
+              <div class="text-9xl">🔧</div>
+            </div>
+            <div class="absolute -bottom-3 -right-3 bg-white rounded-xl shadow-xl px-3 py-2 flex items-center gap-2">
+              <div class="text-xl">⚡</div>
+              <div><div class="text-xs font-bold">Same-day jobs</div><div class="text-[10px] text-slate-500">Call before 10am</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Services -->
+      <div class="px-6 py-12">
+        <div class="text-center mb-8">
+          <div class="text-xs font-bold uppercase tracking-wider text-blue-600 mb-2">What we do</div>
+          <h2 class="text-3xl md:text-4xl font-extrabold">All your plumbing. One trusted name.</h2>
+        </div>
+        <div class="grid md:grid-cols-3 gap-4">
+          ${[
+            ['🚿', 'Hot Water', 'Gas, electric, instant — install, repair, replace.'],
+            ['🚰', 'Blocked Drains', 'CCTV inspection + high-pressure jetter. We see it. We clear it.'],
+            ['🔥', 'Gas Fitting', 'Licensed gas plumber. New installs, repairs, compliance certs.'],
+            ['💧', 'Leak Detection', 'Find leaks without tearing walls. Fix it the first time.'],
+            ['🌧️', 'Stormwater', 'Drainage that actually drains. French drains, pits, soak wells.'],
+            ['🚧', 'Mini Excavation', 'Tight access? We bring the right machine.']
+          ].map(([icon, name, desc]) => `
+            <div class="p-5 rounded-xl border border-slate-100 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer">
+              <div class="service-icon mb-3">${icon}</div>
+              <div class="font-bold text-lg mb-1">${name}</div>
+              <div class="text-sm text-slate-600">${desc}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Testimonials -->
+      <div class="px-6 py-12 bg-slate-50">
+        <div class="text-center mb-8">
+          <div class="text-xs font-bold uppercase tracking-wider text-blue-600 mb-2">What customers say</div>
+          <h2 class="text-3xl md:text-4xl font-extrabold">⭐⭐⭐⭐⭐ The real reviews</h2>
+        </div>
+        <div class="max-w-3xl mx-auto card p-6 md:p-8">
+          <div class="text-3xl mb-3 text-blue-600">"</div>
+          <p class="text-lg md:text-xl text-slate-700 leading-relaxed mb-4">
+            Excellent service. Easy to work with from quote to completion. Quality work at a fair price. They left the work site clean — would 100% recommend Reds Plumbing.
+          </p>
+          <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
+            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">PT</div>
+            <div>
+              <div class="font-bold text-sm">Past customer</div>
+              <div class="text-xs text-slate-500">Verified review · Loganholme</div>
+            </div>
+          </div>
+        </div>
+        <div class="text-center mt-5 text-xs text-slate-400 italic">Real review from your existing site. We'd pull more from Google when we ship.</div>
+      </div>
+
+      <!-- Why us -->
+      <div class="px-6 py-12">
+        <div class="grid md:grid-cols-3 gap-6 text-center">
+          <div>
+            <div class="text-4xl mb-2">👨‍👩‍👧</div>
+            <div class="font-bold text-lg mb-1">Family owned</div>
+            <div class="text-sm text-slate-600">Local Logan business. You deal with the owner, not a call centre.</div>
+          </div>
+          <div>
+            <div class="text-4xl mb-2">⏱️</div>
+            <div class="font-bold text-lg mb-1">15+ years on the tools</div>
+            <div class="text-sm text-slate-600">Jared has seen every kind of job. We don't guess — we fix.</div>
+          </div>
+          <div>
+            <div class="text-4xl mb-2">💎</div>
+            <div class="font-bold text-lg mb-1">Quality + fair pricing</div>
+            <div class="text-sm text-slate-600">Upfront quotes. No surprise add-ons. We clean up the site.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="px-6 py-12" style="background: linear-gradient(135deg, #1E40AF, #1E3A8A); color:#fff;">
+        <div class="text-center max-w-2xl mx-auto">
+          <h2 class="text-3xl md:text-4xl font-extrabold mb-3">Got a plumbing problem?</h2>
+          <p class="text-lg opacity-90 mb-6">Call us. Same-day service across Logan & Redlands.</p>
+          <a href="tel:0413674882" class="btn btn-white btn-lg pulse">📞 0413 674 882</a>
+          <div class="mt-5 text-sm opacity-70">Or text us. We text back faster than email.</div>
+        </div>
+      </div>
+
+      <footer class="px-6 py-6 text-center text-xs text-slate-500">
+        Reds Plumbing & Drainage · Loganholme QLD 4129 · QBCC licensed · ABN registered
+      </footer>
+    </div>
+  </section>
+</div>
+
+<!-- TRANSITION -->
+<section class="py-16 px-5 text-center anim-fade" style="background: linear-gradient(135deg, #0F172A, #1E293B); color:#fff;">
+  <div class="max-w-3xl mx-auto">
+    <div class="text-5xl mb-4">👇</div>
+    <div class="text-xs font-bold uppercase tracking-wider opacity-70 mb-2">One more thing, Jared</div>
+    <h2 class="text-3xl md:text-5xl font-extrabold leading-tight mb-4">
+      Plus — I built you a tool that<br/>
+      <span class="gradient-text">catches every missed call</span>
+    </h2>
+    <p class="text-lg opacity-90 max-w-xl mx-auto">
+      I figured a busy plumber misses 20-30 calls a week. Each one walks to the next bloke on Google. So I built TradieCatch — for you specifically.
+    </p>
+  </div>
+</section>
+
+<!-- TRADIECATCH SECTION -->
+<section id="tradiecatch" class="py-16 px-5 bg-white">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="grid md:grid-cols-2 gap-10 items-center">
+      <div>
+        <div class="badge-trust mb-4">⚡ Built for Reds Plumbing</div>
+        <h2 class="text-3xl md:text-5xl font-extrabold leading-tight mb-5">
+          You're on a job.<br/>
+          Phone rings.<br/>
+          <span class="text-blue-600">We catch it.</span>
+        </h2>
+        <p class="text-lg text-slate-600 mb-6 leading-relaxed">
+          When you miss a call, we instantly text the customer: <em>"Hey, Jared from Reds here — sorry I missed you, what do you need?"</em> They reply, fill a 60-sec form (with photos), and the lead lands in your WhatsApp with an AI-suggested price.
+        </p>
+
+        <div class="space-y-3 mb-6">
+          ${[
+            ['📞', 'Missed call → SMS in 30 seconds', 'They get an SMS in your voice with a link'],
+            ['📋', '60-second form (with photos)', 'You see the problem before you arrive'],
+            ['💬', 'WhatsApp notification', 'Photos, customer info, suggested quote — one tap to approve'],
+            ['💳', 'Stripe deposit auto-collected', 'Cash in hand before you start the job']
+          ].map(([icon, title, desc]) => `
+            <div class="flex items-start gap-3">
+              <div class="text-2xl">${icon}</div>
+              <div><div class="font-bold text-sm">${title}</div><div class="text-xs text-slate-500">${desc}</div></div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="rounded-xl p-4" style="background: linear-gradient(135deg, #FEF3C7, #FDE68A); border:1px solid #F59E0B;">
+          <div class="text-xs font-bold uppercase tracking-wider text-amber-800 mb-1">🔥 Founding member offer</div>
+          <div class="font-extrabold text-amber-900 text-lg mb-1">$297/mo locked-in for life</div>
+          <div class="text-xs text-amber-800">+ $750 setup (50% off) · 3 spots left · For first 5 plumbers in Logan</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="phone-mockup">
+          <div class="phone-screen flex flex-col">
+            <div class="bg-emerald-600 px-3 py-3 text-white">
+              <div class="text-[9px] opacity-80">WhatsApp</div>
+              <div class="font-bold text-xs">TradieCatch · Reds Plumbing</div>
+            </div>
+            <div class="flex-1 p-3" style="background:#e5ddd5;">
+              <div class="text-[9px] text-center mb-2 text-slate-500">Just now</div>
+              <div class="wa-bubble">
+                🚨 <strong>NEW LEAD</strong><br/>
+                👤 Sarah Mitchell<br/>
+                📍 Nerang QLD<br/>
+                🔧 Hot water gas (Rinnai)<br/>
+                📸 3 photos<br/><br/>
+                💰 <strong>AI quote: $2,690</strong><br/>
+                <span class="text-[10px] opacity-70">(callout $120 + labor 3h + Rinnai 26 $2,150 + copper fittings)</span><br/>
+                ⏰ TODAY<br/><br/>
+                <span class="underline font-bold">👉 Open dossier</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="py-16 px-5" style="background: linear-gradient(135deg, #1E40AF, #1E3A8A); color:#fff;">
+  <div class="max-w-3xl mx-auto text-center">
+    <h2 class="text-3xl md:text-5xl font-extrabold leading-tight mb-4">
+      Here's the deal, Jared.
+    </h2>
+    <div class="text-left bg-white/10 backdrop-blur rounded-2xl p-6 md:p-8 mb-6 space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="text-2xl">1️⃣</div>
+        <div>
+          <div class="font-bold mb-1">Modern website — $2,500 flat, delivered in 72 hours</div>
+          <div class="text-sm opacity-90">Mobile-first, fast, with real CTA. You keep the domain. I hand you the keys.</div>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 border-t border-white/20 pt-4">
+        <div class="text-2xl">2️⃣</div>
+        <div>
+          <div class="font-bold mb-1">TradieCatch (missed call recovery) — $750 setup + $297/mo for life</div>
+          <div class="text-sm opacity-90">Money-back if you don't recover 3× your fee month 1. I install it. You sit back.</div>
+        </div>
+      </div>
+      <div class="flex items-start gap-3 border-t border-white/20 pt-4">
+        <div class="text-2xl">🎁</div>
+        <div>
+          <div class="font-bold mb-1">If you take both: $300 off the website</div>
+          <div class="text-sm opacity-90">Bundle price: $2,200 site + $750 setup + $297/mo = $2,950 upfront, $297/mo.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center mb-5">
+      <a href="mailto:[YOUR_EMAIL]?subject=Reds Plumbing - YES&body=Hey, I saw the demo. Let's chat." class="btn btn-white btn-lg">📧 Reply YES to the email</a>
+      <a href="tel:[YOUR_PHONE]" class="btn btn-ghost btn-lg">📞 Call me back</a>
+    </div>
+    <div class="text-sm opacity-80">Or text "interested" to [YOUR_NUMBER]. I'll send you a Loom video walking through everything.</div>
+  </div>
+</section>
+
+<footer class="py-8 px-5 text-center text-xs text-slate-400 bg-slate-900 text-white/70">
+  This page was made just for you, Jared. Not a template. Real work. <br/>
+  No obligation — even if you say no, you can keep the website preview.
+</footer>
+
+</body>
+</html>
