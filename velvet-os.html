@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Velvet OS — Agency Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        bg: { DEFAULT: '#0a0a0f', card: '#13131a', hover: '#1a1a23' },
+        brd: { DEFAULT: '#23232e', strong: '#2e2e3a' },
+        txt: { DEFAULT: '#e8e8ef', muted: '#8a8a99', dim: '#5a5a68' },
+        brand: { DEFAULT: '#ff2d87', soft: 'rgba(255,45,135,0.13)', dim: 'rgba(255,45,135,0.27)' },
+        ac: { purple: '#9d5cff', blue: '#3b82f6', green: '#22c55e', yellow: '#eab308', red: '#ef4444', orange: '#ff6b35', pink: '#ff385c' }
+      },
+      fontFamily: { sans: ['Inter','system-ui','sans-serif'] }
+    }
+  }
+}
+</script>
+<style>
+html,body,#root{height:100%;background:#0a0a0f;color:#e8e8ef;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#2e2e3a;border-radius:999px}
+::-webkit-scrollbar-thumb:hover{background:#3e3e4a}
+.recharts-cartesian-axis-tick text{fill:#5a5a68;font-size:11px}
+.recharts-tooltip-wrapper{outline:none!important}
+.recharts-default-tooltip{background:#13131a!important;border:1px solid #2e2e3a!important;border-radius:8px!important;font-size:12px!important}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-is@18/umd/react-is.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/prop-types@15/prop-types.min.js"></script>
+<script crossorigin src="https://unpkg.com/recharts@2.10.4/umd/Recharts.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#8a8a99;font-family:Inter,sans-serif">Chargement…</div></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo } = React;
+const {
+  AreaChart, Area, LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  ScatterChart, Scatter, ZAxis, RadarChart, PolarGrid, PolarAngleAxis,
+  PolarRadiusAxis, Radar, ComposedChart
+} = Recharts;
+
+// ============================================================
+// FAKE DATA (seeded deterministic)
+// ============================================================
+function mulberry32(seed){return function(){let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+const rng = mulberry32(42);
+const rand=(a,b)=>a+rng()*(b-a);
+const randInt=(a,b)=>Math.floor(rand(a,b+1));
+const pick=arr=>arr[Math.floor(rng()*arr.length)];
+
+const fEUR=(n,f=0)=>n.toLocaleString('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:f,maximumFractionDigits:f});
+const fNum=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':String(n);
+const fPct=(n,f=1)=>(n*100).toFixed(f)+'%';
+const fTime=s=>`${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
+
+const modelNames=[
+  {name:'Luna',niche:'GFE / Blonde',avatar:'💋'},
+  {name:'Sasha',niche:'Goth / Alt',avatar:'🖤'},
+  {name:'Maya',niche:'Fitness / Latina',avatar:'🔥'},
+  {name:'Chloé',niche:'Girl-next-door',avatar:'🌸'},
+  {name:'Nyx',niche:'Findom / Dom',avatar:'👠'},
+  {name:'Aria',niche:'Cosplay',avatar:'🎀'},
+  {name:'Vex',niche:'Tattooed / Punk',avatar:'⚡'},
+  {name:'Mila',niche:'Petite / Asian',avatar:'🌙'},
+];
+
+const models = modelNames.map((m,i)=>{
+  const subs=randInt(800,6500);
+  const arpu=rand(18,65);
+  const mrr=subs*arpu;
+  const ppv=mrr*rand(0.4,1.2);
+  const tips=mrr*rand(0.08,0.35);
+  const custom=mrr*rand(0.05,0.4);
+  return {
+    id:`m_${i+1}`, name:m.name, niche:m.niche, avatar:m.avatar,
+    joinedDaysAgo:randInt(30,720), subs,
+    mrr:Math.round(mrr), ppvRevenue:Math.round(ppv), tipsRevenue:Math.round(tips), customRevenue:Math.round(custom),
+    totalRevenue30d:Math.round(mrr+ppv+tips+custom),
+    churnRate:rand(0.04,0.18), arpu:Math.round(arpu*100)/100,
+    chatterCost:Math.round(rand(800,3500)), hoursWorked:Math.round(rand(40,220)),
+    topPlatform:pick(['TikTok','Instagram','Reddit','Tinder','X'])
+  };
+});
+
+const platforms=[
+  {id:'tiktok',name:'TikTok',color:'#ff2d87'},
+  {id:'instagram',name:'Instagram',color:'#9d5cff'},
+  {id:'reddit',name:'Reddit',color:'#ff6b35'},
+  {id:'tinder',name:'Tinder',color:'#ff385c'},
+  {id:'twitter',name:'X / Twitter',color:'#3b82f6'},
+  {id:'youtube',name:'YT Shorts',color:'#ef4444'},
+];
+
+const hooks=[
+  'POV girlfriend texting','What if I told you...','Day in the life of...',
+  'Get ready with me','Reading thirsty DMs','My toxic ex...',
+  'Mirror selfie tease','Outfit haul','Reacting to comments',
+  'Story time: my first OF','Caught my roommate...','Workout fit check'
+];
+
+const videos = Array.from({length:64},(_,i)=>{
+  const m=pick(models); const p=pick(platforms); const h=pick(hooks);
+  const views=randInt(1200,850000); const dur=randInt(8,60); const comp=rand(0.18,0.78);
+  const wt=dur*comp; const ctr=rand(0.005,0.08);
+  const clicks=views*ctr; const conv=rand(0.04,0.22);
+  const subs=Math.floor(clicks*conv); const arpu=rand(25,55);
+  return {
+    id:`v_${i+1}`, title:h, modelName:m.name, platform:p.name, hook:h,
+    postedDaysAgo:randInt(1,60), views, watchTimeAvg:Math.round(wt*10)/10,
+    duration:dur, completionRate:Math.round(comp*1000)/1000,
+    ctrToBio:Math.round(ctr*10000)/10000, subsGenerated:subs,
+    revenue:Math.round(subs*arpu), cost:Math.round(rand(40,350)), thumbnail:m.avatar
+  };
+});
+
+const campaigns = Array.from({length:14},(_,i)=>{
+  const m=pick(models); const p=pick(platforms);
+  const budget=randInt(500,8000); const spent=budget*rand(0.3,1);
+  const imp=Math.round(spent*rand(120,480));
+  const cl=Math.round(imp*rand(0.008,0.04));
+  const conv=Math.round(cl*rand(0.03,0.15));
+  const rev=conv*rand(25,90);
+  return {
+    id:`c_${i+1}`, name:`${m.name} – ${p.name} ${pick(['Push','Boost','Launch','Retarget'])}`,
+    modelName:m.name, platform:p.name,
+    status:pick(['active','active','active','paused','ended']),
+    budget, spent:Math.round(spent), impressions:imp, clicks:cl,
+    conversions:conv, revenue:Math.round(rev),
+    roas:Math.round((rev/spent)*100)/100
+  };
+});
+
+const segments=['whale','whale','gifter','gifter','gifter','chatter','chatter','chatter','chatter','content_only','content_only','content_only','content_only','content_only','complete','complete','complete','churning','churning'];
+const usernames=['alexj','mikedav','bigtipper','drew99','carter_x','james_w','tomk','ryan_b','lucasv','danielm','matt33','ethan22','noah_p','liamq','oliverz','henryx','william','jacobl','masonr','loganb','jaxson','lucash','leoy','camden','knight','ashery','greyson','silas12','ronald','dexterx','beauq','austin'];
+
+const fans = Array.from({length:480},(_,i)=>{
+  const seg=pick(segments); const m=pick(models);
+  let ltv=0,last30=0,msgs=0,ppv=0,tips=0,gifts=0,cust=0;
+  if(seg==='whale'){ltv=rand(2500,18000);last30=rand(400,2200);msgs=randInt(200,1200);ppv=randInt(20,120);tips=randInt(15,80);gifts=randInt(2,25);cust=randInt(5,30)}
+  else if(seg==='gifter'){ltv=rand(600,5500);last30=rand(80,700);msgs=randInt(40,400);ppv=randInt(5,35);tips=randInt(8,40);gifts=randInt(8,35);cust=randInt(1,12)}
+  else if(seg==='chatter'){ltv=rand(40,600);last30=rand(0,80);msgs=randInt(400,2500);ppv=randInt(0,4);tips=randInt(0,8);gifts=randInt(0,1);cust=0}
+  else if(seg==='content_only'){ltv=rand(120,1400);last30=rand(30,220);msgs=randInt(0,25);ppv=randInt(10,60);tips=randInt(0,4);gifts=0;cust=randInt(0,4)}
+  else if(seg==='complete'){ltv=rand(1200,7500);last30=rand(180,950);msgs=randInt(150,900);ppv=randInt(12,60);tips=randInt(8,40);gifts=randInt(3,18);cust=randInt(3,20)}
+  else if(seg==='churning'){ltv=rand(200,2200);last30=rand(0,40);msgs=randInt(0,80);ppv=randInt(0,6);tips=randInt(0,2);gifts=randInt(0,2);cust=randInt(0,1)}
+  return {
+    id:`f_${i+1}`, username:pick(usernames)+randInt(10,9999),
+    modelName:m.name, segment:seg, joinedDaysAgo:randInt(15,720),
+    ltv:Math.round(ltv), last30d:Math.round(last30),
+    messagesCount:msgs, ppvBought:ppv, tipsCount:tips,
+    giftsCount:gifts, customsBought:cust,
+    lastActiveDaysAgo:seg==='churning'?randInt(14,60):randInt(0,10),
+    country:pick(['🇺🇸','🇬🇧','🇩🇪','🇫🇷','🇨🇦','🇦🇺','🇳🇱','🇸🇪','🇪🇸','🇮🇹','🇧🇷','🇲🇽']),
+    acquisitionChannel:pick(['TikTok','Instagram','Reddit','Tinder','X','YT Shorts'])
+  };
+});
+
+const revenueByDay = (()=>{
+  const arr=[];
+  for(let i=89;i>=0;i--){
+    const date=new Date(); date.setDate(date.getDate()-i);
+    const base=4200+Math.sin(i/6)*800+(89-i)*18;
+    const noise=rand(-450,450);
+    const d=date.getDate();
+    const boost=(d===1||d===15||d===30)?rand(1800,3500):0;
+    const sub=Math.round(base*0.4+noise*0.3+boost*0.3);
+    const ppv=Math.round(base*0.35+noise*0.4+boost*0.4);
+    const tips=Math.round(base*0.15+noise*0.2+boost*0.15);
+    const cust=Math.round(base*0.1+noise*0.1+boost*0.15);
+    arr.push({date:date.toISOString().slice(0,10),
+      label:date.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}),
+      sub,ppv,tips,custom:cust,total:sub+ppv+tips+cust});
+  }
+  return arr;
+})();
+
+const heatmap = Array.from({length:7},(_,dow)=>
+  Array.from({length:24},(_,h)=>{
+    const evening=Math.max(0,1-Math.abs(h-21.5)/6);
+    const lateNight=h<=2?0.6:0;
+    const wknd=dow===5||dow===6?0.3:dow===0?0.2:0;
+    return Math.min(1,evening*0.7+lateNight+wknd+rng()*0.15);
+  })
+);
+
+const acquisitionByChannel = platforms.map(p=>{
+  const subs=randInt(180,2400); const cost=randInt(800,9000);
+  const rev=subs*rand(35,95);
+  return {channel:p.name,color:p.color,subs,cost,revenue:Math.round(rev),
+    cac:Math.round((cost/subs)*100)/100,
+    roas:Math.round((rev/cost)*100)/100,
+    views:randInt(80000,4200000),
+    ctr:Math.round(rand(0.008,0.045)*10000)/10000};
+});
+
+const funnel=(()=>{
+  const v=6840000; const c=Math.round(v*0.034);
+  const lc=Math.round(c*0.62); const of=Math.round(lc*0.81);
+  const sb=Math.round(of*0.18); const pf=Math.round(sb*0.74);
+  return [{name:'Vues réseaux',value:v},{name:'Clics link-in-bio',value:c},
+    {name:'Arrivées OF',value:of},{name:'Inscriptions',value:sb},
+    {name:'Fans payants',value:pf}];
+})();
+
+const cohorts = Array.from({length:6},(_,i)=>{
+  const md=new Date(); md.setMonth(md.getMonth()-(5-i));
+  return {
+    cohort:md.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'}),
+    size:randInt(280,720),
+    months:Array.from({length:6-i},(_,m)=>Math.round(Math.pow(0.78-rng()*0.05,m)*100))
+  };
+});
+
+const recommendations=[
+  {id:'r1',priority:'high',category:'timing',title:'Lance campagne TikTok pour Luna mardi 21h',rationale:'Les gifters de Luna achètent 3.2× plus entre 21h-23h les mardis. Sur les 90 derniers jours, ce créneau a généré 38% de son revenu PPV.',expectedLift:'+18% revenu campagne',affectedModel:'Luna'},
+  {id:'r2',priority:'high',category:'creative',title:'Réplique le hook "POV girlfriend texting" sur Aria & Chloé',rationale:'Ce hook a 2.4× le watch-time moyen et 3.1× le CTR vers bio sur les comptes blondes/girl-next-door. Aria et Chloé matchent ce profil mais n\'ont jamais testé ce hook.',expectedLift:'+22% subs/vidéo',affectedModel:'Aria, Chloé'},
+  {id:'r3',priority:'high',category:'monetization',title:'Ajoute wishlist Amazon en bio pour Maya, Vex et Mila',rationale:'47 fans identifiés comme gifters non-sollicités sur ces 3 modèles. LTV moyenne segment gifter : 1 840€. Wishlist active augmente le revenu segment de 28%.',expectedLift:'+1 200€ / mois',affectedModel:'Maya, Vex, Mila'},
+  {id:'r4',priority:'medium',category:'retention',title:'Win-back automatisé sur 38 fans churning de Sasha',rationale:'38 fans n\'ont pas posté de message ni acheté depuis 14-21 jours. LTV cumulée : 24 600€. Une séquence DM personnalisée + offre -30% recouvre typiquement 22-31% du segment.',expectedLift:'+5 400€ recouvré',affectedModel:'Sasha'},
+  {id:'r5',priority:'medium',category:'audience',title:'Push budget Reddit pour Nyx (findom)',rationale:'Reddit montre un CAC à 8€ vs 22€ moyenne sur Nyx. La niche findom convertit 4.1× mieux sur Reddit. Budget actuel: 240€/mois.',expectedLift:'ROAS 4.8×',affectedModel:'Nyx'},
+  {id:'r6',priority:'medium',category:'timing',title:'Lance grosse campagne fin de mois (J-3 à J)',rationale:'Pic de revenu observé J1 et J15 de chaque mois (jours de paie). Les campagnes lancées 3 jours avant captent 2.1× plus de conversions.',expectedLift:'+34% conversions'},
+  {id:'r7',priority:'low',category:'creative',title:'Réduis production sur le hook "Outfit haul"',rationale:'ROI -42% sur les 12 dernières vidéos avec ce hook. Watch-time en chute (-31% vs Q1). Le format sature, audience habituée.',expectedLift:'-1 800€ coûts évités'},
+  {id:'r8',priority:'low',category:'monetization',title:'Active drops PPV automatiques pour content_only fans',rationale:'142 fans segment content_only chez 6 modèles. Achètent en moyenne 1.4 PPV/semaine, ne chattent pas. Drop auto J+3 augmente le taux PPV de 19%.',expectedLift:'+2 100€ / mois'},
+];
+
+const summary=(()=>{
+  const tr=models.reduce((s,m)=>s+m.totalRevenue30d,0);
+  const ts=models.reduce((s,m)=>s+m.subs,0);
+  const tc=acquisitionByChannel.reduce((s,c)=>s+c.cost,0)/acquisitionByChannel.reduce((s,c)=>s+c.subs,0);
+  const tas=campaigns.reduce((s,c)=>s+c.spent,0);
+  const tar=campaigns.reduce((s,c)=>s+c.revenue,0);
+  const ch=models.reduce((s,m)=>s+m.churnRate,0)/models.length;
+  return {totalRevenue30d:Math.round(tr),totalSubs:ts,activeModels:models.length,
+    avgCAC:Math.round(tc*100)/100,blendedRoas:Math.round((tar/tas)*100)/100,
+    avgChurn:ch,totalAdSpend:Math.round(tas),
+    activeCampaigns:campaigns.filter(c=>c.status==='active').length,
+    netProfit:Math.round(tr-tas-videos.reduce((s,v)=>s+v.cost,0)-models.reduce((s,m)=>s+m.chatterCost,0))};
+})();
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+const tooltipStyle={contentStyle:{backgroundColor:'#13131a',border:'1px solid #2e2e3a',borderRadius:8,fontSize:12},labelStyle:{color:'#8a8a99'}};
+
+function Card({children,className='',title,subtitle,action}){
+  return <div className={`bg-bg-card border border-brd rounded-xl p-5 ${className}`}>
+    {(title||action)&&<div className="flex items-start justify-between mb-4">
+      <div>{title&&<h3 className="text-sm font-semibold">{title}</h3>}{subtitle&&<p className="text-xs text-txt-muted mt-0.5">{subtitle}</p>}</div>
+      {action}
+    </div>}
+    {children}
+  </div>
+}
+
+function Kpi({label,value,delta,icon,accent='brand'}){
+  const ab={brand:'bg-brand-soft text-brand',green:'bg-ac-green/15 text-ac-green',purple:'bg-ac-purple/15 text-ac-purple',blue:'bg-ac-blue/15 text-ac-blue',yellow:'bg-ac-yellow/15 text-ac-yellow',red:'bg-ac-red/15 text-ac-red'};
+  return <div className="bg-bg-card border border-brd rounded-xl p-5 hover:border-brd-strong transition-colors">
+    <div className="flex items-start justify-between mb-3">
+      <span className="text-xs font-medium text-txt-muted uppercase tracking-wide">{label}</span>
+      {icon&&<div className={`h-8 w-8 rounded-lg flex items-center justify-center text-base ${ab[accent]}`}>{icon}</div>}
+    </div>
+    <div className="text-2xl font-bold tracking-tight">{value}</div>
+    {delta&&<div className={`text-xs font-medium mt-2 flex items-center gap-1 ${delta.positive?'text-ac-green':'text-ac-red'}`}>
+      <span>{delta.positive?'▲':'▼'}</span>{delta.value}<span className="text-txt-dim ml-1">vs 30j</span>
+    </div>}
+  </div>
+}
+
+function Badge({children,variant='default'}){
+  const v={default:'bg-bg-hover text-txt-muted border-brd',
+    brand:'bg-brand-soft text-brand border-brand/30',
+    green:'bg-ac-green/10 text-ac-green border-ac-green/30',
+    yellow:'bg-ac-yellow/10 text-ac-yellow border-ac-yellow/30',
+    red:'bg-ac-red/10 text-ac-red border-ac-red/30',
+    purple:'bg-ac-purple/10 text-ac-purple border-ac-purple/30',
+    blue:'bg-ac-blue/10 text-ac-blue border-ac-blue/30'};
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${v[variant]}`}>{children}</span>
+}
+
+function PageHeader({title,subtitle,action}){
+  return <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+      {subtitle&&<p className="text-sm text-txt-muted mt-1">{subtitle}</p>}
+    </div>
+    {action}
+  </div>
+}
+
+// ============================================================
+// PAGES
+// ============================================================
+
+function Overview(){
+  const topModels=[...models].sort((a,b)=>b.totalRevenue30d-a.totalRevenue30d).slice(0,5);
+  const channelPie=acquisitionByChannel.map(c=>({name:c.channel,value:c.subs,color:c.color}));
+  const highP=recommendations.filter(r=>r.priority==='high');
+
+  return <div className="space-y-6">
+    <PageHeader title="Bienvenue Jordan" subtitle="Vue d'ensemble — 30 derniers jours"
+      action={<div className="flex gap-2"><Badge variant="green">● Live</Badge><Badge>Synced 2min ago</Badge></div>} />
+
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <Kpi label="Revenu 30j" value={fEUR(summary.totalRevenue30d)} delta={{value:'+14.2%',positive:true}} icon="💰" accent="brand"/>
+      <Kpi label="Profit net" value={fEUR(summary.netProfit)} delta={{value:'+9.8%',positive:true}} icon="📈" accent="green"/>
+      <Kpi label="Subs actifs" value={fNum(summary.totalSubs)} delta={{value:'+3.1%',positive:true}} icon="👥" accent="purple"/>
+      <Kpi label="CAC moyen" value={fEUR(summary.avgCAC,2)} delta={{value:'-12%',positive:true}} icon="🎯" accent="blue"/>
+      <Kpi label="ROAS blended" value={`${summary.blendedRoas}×`} delta={{value:'+0.4×',positive:true}} icon="⚡" accent="yellow"/>
+      <Kpi label="Churn moyen" value={fPct(summary.avgChurn)} delta={{value:'-1.2pts',positive:true}} icon="✨" accent="red"/>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <Card className="lg:col-span-2" title="Revenu par source" subtitle="90 derniers jours — sub / PPV / tips / customs">
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={revenueByDay}>
+            <defs>
+              {[['sub','#ff2d87'],['ppv','#9d5cff'],['tips','#3b82f6'],['cust','#22c55e']].map(([k,c])=>
+                <linearGradient key={k} id={`g-${k}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={c} stopOpacity={0.6}/>
+                  <stop offset="100%" stopColor={c} stopOpacity={0}/>
+                </linearGradient>)}
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#23232e" vertical={false}/>
+            <XAxis dataKey="label" interval={14} axisLine={{stroke:'#23232e'}} tickLine={false}/>
+            <YAxis axisLine={false} tickLine={false} tickFormatter={v=>fNum(v)+'€'}/>
+            <Tooltip {...tooltipStyle} formatter={v=>fEUR(v)}/>
+            <Area isAnimationActive={false} type="monotone" dataKey="sub" stackId="1" stroke="#ff2d87" fill="url(#g-sub)" name="Subs"/>
+            <Area isAnimationActive={false} type="monotone" dataKey="ppv" stackId="1" stroke="#9d5cff" fill="url(#g-ppv)" name="PPV"/>
+            <Area isAnimationActive={false} type="monotone" dataKey="tips" stackId="1" stroke="#3b82f6" fill="url(#g-tips)" name="Tips"/>
+            <Area isAnimationActive={false} type="monotone" dataKey="custom" stackId="1" stroke="#22c55e" fill="url(#g-cust)" name="Customs"/>
+          </AreaChart>
+        </ResponsiveContainer>
+      </Card>
+
+      <Card title="Acquisition par canal" subtitle="Subs gagnés 30j">
+        <ResponsiveContainer width="100%" height={220}>
+          <PieChart>
+            <Pie isAnimationActive={false} data={channelPie} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={2}>
+              {channelPie.map(c=><Cell key={c.name} fill={c.color} stroke="none"/>)}
+            </Pie>
+            <Tooltip {...tooltipStyle}/>
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          {channelPie.map(c=><div key={c.name} className="flex items-center gap-2 text-xs">
+            <span className="h-2 w-2 rounded-full" style={{background:c.color}}></span>
+            <span className="text-txt-muted">{c.name}</span>
+            <span className="ml-auto font-medium">{fNum(c.value)}</span>
+          </div>)}
+        </div>
+      </Card>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <Card className="lg:col-span-2" title="Top modèles (revenu 30j)" subtitle="Classement par revenu total">
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={topModels} layout="vertical" margin={{left:30}}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#23232e" horizontal={false}/>
+            <XAxis type="number" axisLine={false} tickLine={false} tickFormatter={v=>fNum(v)+'€'}/>
+            <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} width={60} tick={{fill:'#e8e8ef',fontSize:12}}/>
+            <Tooltip {...tooltipStyle} formatter={v=>fEUR(v)}/>
+            <Bar isAnimationActive={false} dataKey="totalRevenue30d" fill="#ff2d87" radius={[0,6,6,0]}/>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+
+      <Card title="Actions prioritaires" subtitle="Recommandations IA — high priority">
+        <div className="space-y-3">
+          {highP.slice(0,3).map(r=><div key={r.id} className="border border-brd rounded-lg p-3 hover:border-brand/40 transition-colors cursor-pointer">
+            <div className="text-sm font-medium leading-snug mb-1">{r.title}</div>
+            <p className="text-xs text-txt-muted line-clamp-2 mb-2">{r.rationale}</p>
+            <Badge variant="brand">{r.expectedLift}</Badge>
+          </div>)}
+        </div>
+      </Card>
+    </div>
+  </div>
+}
+
+function Acquisition(){
+  const tv=acquisitionByChannel.reduce((s,c)=>s+c.views,0);
+  const ts=acquisitionByChannel.reduce((s,c)=>s+c.subs,0);
+  const tsp=acquisitionByChannel.reduce((s,c)=>s+c.cost,0);
+  const tr=acquisitionByChannel.reduce((s,c)=>s+c.revenue,0);
+  const radar=acquisitionByChannel.map(c=>({channel:c.channel,ROAS:c.roas,CAC:30-c.cac,Volume:(c.subs/ts)*100}));
+
+  return <div className="space-y-6">
+    <PageHeader title="Acquisition" subtitle="D'où viennent les fans, à quel coût, avec quel ROI"/>
+
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <Kpi label="Vues totales" value={fNum(tv)} delta={{value:'+22%',positive:true}} icon="👁" accent="purple"/>
+      <Kpi label="Subs acquis" value={fNum(ts)} delta={{value:'+18%',positive:true}} icon="📈" accent="brand"/>
+      <Kpi label="Dépense ads" value={fEUR(tsp)} delta={{value:'+8%',positive:false}} icon="🎯" accent="yellow"/>
+      <Kpi label="ROAS global" value={`${(tr/tsp).toFixed(2)}×`} delta={{value:'+0.7×',positive:true}} icon="⚡" accent="green"/>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <Card className="lg:col-span-2" title="Performance par canal" subtitle="Subs, coût, revenu">
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={acquisitionByChannel}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#23232e" vertical={false}/>
+            <XAxis dataKey="channel" axisLine={{stroke:'#23232e'}} tickLine={false} tick={{fill:'#8a8a99',fontSize:11}}/>
+            <YAxis axisLine={false} tickLine={false} tickFormatter={v=>fNum(v)+'€'}/>
+            <Tooltip {...tooltipStyle} formatter={v=>fEUR(v)}/>
+            <Bar isAnimationActive={false} dataKey="revenue" name="Revenu" radius={[6,6,0,0]}>
+              {acquisitionByChannel.map(c=><Cell key={c.channel} fill={c.color}/>)}
+            </Bar>
+            <Bar isAnimationActive={false} dataKey="cost" name="Coût" fill="#2e2e3a" radius={[6,6,0,0]}/>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+
+      <Card title="Funnel de conversion" subtitle="Vue → fan payant">
+        <div className="space-y-2 mt-2">
+          {funnel.map((s,i)=>{
+            const pct=(s.value/funnel[0].value)*100;
+            const prev=i>0?(s.value/funnel[i-1].value)*100:100;
+            return <div key={s.name}>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-txt-muted">{s.name}</span>
+                <span className="font-mono">{fNum(s.value)} <span className="text-txt-dim">{i>0&&`(${prev.toFixed(1)}%)`}</span></span>
+              </div>
+              <div className="h-7 bg-bg-hover rounded overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-brand to-ac-purple flex items-center px-2 text-[10px] font-medium" style={{width:`${pct}%`}}>{pct.toFixed(1)}%</div>
+              </div>
+            </div>
+          })}
+        </div>
+      </Card>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <Card title="Détail par canal" subtitle="Métriques clés">
+        <table className="w-full text-sm">
+          <thead><tr className="text-xs text-txt-muted border-b border-brd">
+            <th className="text-left py-2">Canal</th><th className="text-right">CAC</th><th className="text-right">ROAS</th><th className="text-right">CTR</th>
+          </tr></thead>
+          <tbody>
+            {acquisitionByChannel.map(c=><tr key={c.channel} className="border-b border-brd/50">
+              <td className="py-2.5 flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{background:c.color}}></span>{c.channel}</td>
+              <td className="text-right font-mono text-xs">{fEUR(c.cac,2)}</td>
+              <td className="text-right"><Badge variant={c.roas>=3?'green':c.roas>=2?'yellow':'red'}>{c.roas}×</Badge></td>
+              <td className="text-right font-mono text-xs text-txt-muted">{fPct(c.ctr,2)}</td>
+            </tr>)}
+          </tbody>
+        </table>
+      </Card>
+
+      <Card className="lg:col-span-2" title="Profil canaux" subtitle="CAC vs ROAS vs Volume — plus c'est large, mieux c'est">
+        <ResponsiveContainer width="100%" height={280}>
+          <RadarChart data={radar}>
+            <PolarGrid stroke="#2e2e3a"/>
+            <PolarAngleAxis dataKey="channel" tick={{fill:'#8a8a99',fontSize:11}}/>
+            <PolarRadiusAxis tick={{fill:'#5a5a68',fontSize:10}}/>
+            <Radar isAnimationActive={false} name="ROAS" dataKey="ROAS" stroke="#ff2d87" fill="#ff2d87" fillOpacity={0.3}/>
+            <Radar isAnimationActive={false} name="CAC (inversé)" dataKey="CAC" stroke="#9d5cff" fill="#9d5cff" fillOpacity={0.2}/>
+            <Radar isAnimationActive={false} name="Volume" dataKey="Volume" stroke="#22c55e" fill="#22c55e" fillOpacity={0.2}/>
+            <Tooltip {...tooltipStyle}/>
+          </RadarChart>
+        </ResponsiveContainer>
+      </Card>
+    </div>
+  </div>
+}
+
+function ContentPage(){
+  const [pf,setPf]=useState('all');
+  const filtered=useMemo(()=>pf==='all'?videos:videos.filter(v=>v.platform===pf),[pf]);
+  const tv=filtered.reduce((s,v)=>s+v.views,0);
+  const awt=filtered.reduce((s,v)=>s+v.watchTimeAvg,0)/filtered.length;
+  const tc=filtered.reduce((s,v)=>s+v.cost,0);
+  const tr=filtered.reduce((s,v)=>s+v.revenue,0);
+
+  const hookPerf=hooks.map(h=>{
+    const vs=videos.filter(v=>v.hook===h);
+    const cost=vs.reduce((s,v)=>s+v.cost,0);
+    const rev=vs.reduce((s,v)=>s+v.revenue,0);
+    return {hook:h,count:vs.length,roi:cost>0?rev/cost:0};
+  }).sort((a,b)=>b.roi-a.roi);
+
+  const scatter=filtered.map(v=>({watchTime:v.watchTimeAvg,subs:v.subsGenerated,revenue:v.revenue,platform:v.platform,hook:v.hook}));
+  const topV=[...filtered].sort((a,b)=>b.revenue-a.revenue).slice(0,10);
+
+  return <div className="space-y-6">
+    <PageHeader title="Contenus" subtitle="Performance par vidéo, hook et plateforme"
+      action={<div className="flex gap-2 items-center"><span className="text-xs text-txt-muted">Plateforme:</span>
+        <select value={pf} onChange={e=>setPf(e.target.value)} className="bg-bg-card border border-brd rounded-md text-xs px-2 py-1 outline-none">
+          <option value="all">Toutes</option>
+          {platforms.map(p=><option key={p.id} value={p.name}>{p.name}</option>)}
+        </select></div>}/>
+
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <Kpi label="Vidéos" value={String(filtered.length)} delta={{value:'+12',positive:true}} icon="🎬" accent="purple"/>
+      <Kpi label="Vues totales" value={fNum(tv)} delta={{value:'+34%',positive:true}} icon="👁" accent="brand"/>
+      <Kpi label="Watch-time" value={fTime(awt)} delta={{value:'+8%',positive:true}} icon="⏱" accent="blue"/>
+      <Kpi label="ROI contenu" value={`${(tr/tc).toFixed(1)}×`} delta={{value:'+0.4×',positive:true}} icon="⚡" accent="green"/>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Card title="ROI par hook" subtitle="Revenu / coût de production">
+        <ResponsiveContainer width="100%" height={320}>
+          <BarChart data={hookPerf.slice(0,10)} layout="vertical" margin={{left:50}}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#23232e" horizontal={false}/>
+            <XAxis type="number" axisLine={false} tickLine={false} tickFormatter={v=>`${v.toFixed(0)}×`}/>
+            <YAxis type="category" dataKey="hook" axisLine={false} tickLine={false} width={150} tick={{fill:'#e8e8ef',fontSize:11}}/>
+            <Tooltip {...tooltipStyle} formatter={v=>`${v.toFixed(2)}×`}/>
+            <Bar isAnimationActive={false} dataKey="roi" radius={[0,6,6,0]}>
+              {hookPerf.slice(0,10).map((h,i)=><Cell key={i} fill={h.roi>=300?'#22c55e':h.roi>=150?'#ff2d87':'#ef4444'}/>)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+
+      <Card title="Watch-time vs Subs générés" subtitle="Chaque point = 1 vidéo">
+        <ResponsiveContainer width="100%" height={320}>
+          <ScatterChart>
+            <CartesianGrid strokeDasharray="3 3" stroke="#23232e"/>
+            <XAxis type="number" dataKey="watchTime" name="Watch-time" axisLine={false} tickLine={false}/>
+            <YAxis type="number" dataKey="subs" name="Subs" axisLine={false} tickLine={false}/>
+            <ZAxis type="number" dataKey="revenue" range={[40,400]}/>
+            <Tooltip {...tooltipStyle} cursor={{strokeDasharray:'3 3'}}/>
+            <Scatter isAnimationActive={false} data={scatter} fill="#ff2d87" fillOpacity={0.7}/>
+          </ScatterChart>
+        </ResponsiveContainer>
+      </Card>
+    </div>
+
+    <Card title="Top vidéos par revenu" subtitle="10 meilleures">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead><tr className="text-xs text-txt-muted border-b border-brd">
+            <th className="text-left py-2">Vidéo</th><th className="text-left">Modèle</th><th className="text-left">Plateforme</th>
+            <th className="text-right">Vues</th><th className="text-right">Watch</th><th className="text-right">CTR</th>
+            <th className="text-right">Subs</th><th className="text-right">Revenu</th><th className="text-right">Coût</th><th className="text-right">ROI</th>
+          </tr></thead>
+          <tbody>
+            {topV.map(v=><tr key={v.id} className="border-b border-brd/50 hover:bg-bg-hover/30">
+              <td className="py-2.5 max-w-[200px] truncate"><span className="mr-2">{v.thumbnail}</span>{v.title}</td>
+              <td className="text-txt-muted">{v.modelName}</td>
+              <td><Badge>{v.platform}</Badge></td>
+              <td className="text-right font-mono text-xs">{fNum(v.views)}</td>
+              <td className="text-right font-mono text-xs">{fTime(v.watchTimeAvg)}</td>
+              <td className="text-right font-mono text-xs text-txt-muted">{fPct(v.ctrToBio,2)}</td>
+              <td className="text-right font-mono text-xs">{v.subsGenerated}</td>
+              <td className="text-right font-mono text-xs font-medium">{fEUR(v.revenue)}</td>
+              <td className="text-right font-mono text-xs text-txt-muted">{fEUR(v.cost)}</td>
+              <td className="text-right"><Badge variant={v.revenue/v.cost>=3?'green':v.revenue/v.cost>=1.5?'yellow':'red'}>{(v.revenue/v.cost).toFixed(1)}×</Badge></td>
+            </tr>)}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  </div>
+}
+
+function ModelsPage(){
+  const [sel,setSel]=useState(models[0].id);
+  const m=models.find(x=>x.id===sel);
+  const rb=[{name:'Subs',value:m.mrr,color:'#ff2d87'},{name:'PPV',value:m.ppvRevenue,color:'#9d5cff'},{name:'Tips',value:m.tipsRevenue,color:'#3b82f6'},{name:'Customs',value:m.customRevenue,color:'#22c55e'}];
+  const profit=m.totalRevenue30d-m.chatterCost-m.hoursWorked*25;
+  const sorted=[...models].sort((a,b)=>b.totalRevenue30d-a.totalRevenue30d);
+
+  return <div className="space-y-6">
+    <PageHeader title="Modèles" subtitle="Performance individuelle et comparaison"/>
+
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {models.map(mm=><button key={mm.id} onClick={()=>setSel(mm.id)}
+        className={`text-left p-4 rounded-xl border transition-all ${sel===mm.id?'bg-brand-soft border-brand':'bg-bg-card border-brd hover:border-brd-strong'}`}>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-2xl">{mm.avatar}</span>
+          <div><div className="font-semibold text-sm">{mm.name}</div><div className="text-[10px] text-txt-muted">{mm.niche}</div></div>
+        </div>
+        <div className="text-lg font-bold">{fEUR(mm.totalRevenue30d)}</div>
+        <div className="text-[10px] text-txt-muted">{fNum(mm.subs)} subs · {fPct(mm.churnRate)} churn</div>
+      </button>)}
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <Card className="lg:col-span-1">
+        <div className="text-center mb-4">
+          <div className="text-5xl mb-2">{m.avatar}</div>
+          <h2 className="text-xl font-bold">{m.name}</h2>
+          <p className="text-xs text-txt-muted">{m.niche}</p>
+          <p className="text-[11px] text-txt-dim mt-1">Inscrite il y a {m.joinedDaysAgo} jours</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 text-center">
+          {[['Revenu 30j',fEUR(m.totalRevenue30d)],['Subs',fNum(m.subs)],['ARPU',fEUR(m.arpu,2)],['Churn',fPct(m.churnRate)]].map(([l,v])=>
+            <div key={l} className="bg-bg-hover rounded-lg p-3"><div className="text-xs text-txt-muted">{l}</div><div className="text-lg font-bold">{v}</div></div>)}
+        </div>
+        <div className="mt-4 pt-4 border-t border-brd space-y-2 text-xs">
+          <div className="flex justify-between"><span className="text-txt-muted">Heures</span><span className="font-mono">{m.hoursWorked}h</span></div>
+          <div className="flex justify-between"><span className="text-txt-muted">Coût chatteur</span><span className="font-mono">{fEUR(m.chatterCost)}</span></div>
+          <div className="flex justify-between"><span className="text-txt-muted">Top plateforme</span><Badge variant="brand">{m.topPlatform}</Badge></div>
+          <div className="flex justify-between pt-2 border-t border-brd"><span className="font-medium">Profit estimé</span><span className="font-mono font-bold text-ac-green">{fEUR(profit)}</span></div>
+        </div>
+      </Card>
+
+      <Card className="lg:col-span-2" title="Décomposition revenu" subtitle="Par source">
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={rb}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#23232e" vertical={false}/>
+            <XAxis dataKey="name" axisLine={{stroke:'#23232e'}} tickLine={false} tick={{fill:'#8a8a99',fontSize:11}}/>
+            <YAxis axisLine={false} tickLine={false} tickFormatter={v=>fNum(v)+'€'}/>
+            <Tooltip {...tooltipStyle} formatter={v=>fEUR(v)}/>
+            <Bar isAnimationActive={false} dataKey="value" radius={[6,6,0,0]}>{rb.map(r=><Cell key={r.name} fill={r.color}/>)}</Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+    </div>
+
+    <Card title="Comparaison modèles" subtitle="Revenu, churn">
+      <ResponsiveContainer width="100%" height={300}>
+        <ComposedChart data={sorted}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#23232e" vertical={false}/>
+          <XAxis dataKey="name" axisLine={{stroke:'#23232e'}} tickLine={false} tick={{fill:'#8a8a99',fontSize:11}}/>
+          <YAxis yAxisId="l" axisLine={false} tickLine={false} tickFormatter={v=>fNum(v)+'€'}/>
+          <YAxis yAxisId="r" orientation="right" axisLine={false} tickLine={false} tickFormatter={v=>`${(v*100).toFixed(0)}%`}/>
+          <Tooltip {...tooltipStyle}/>
+          <Bar isAnimationActive={false} yAxisId="l" dataKey="totalRevenue30d" fill="#ff2d87" radius={[6,6,0,0]} name="Revenu 30j"/>
+          <Line isAnimationActive={false} yAxisId="r" type="monotone" dataKey="churnRate" stroke="#ef4444" strokeWidth={2} name="Churn" dot={{fill:'#ef4444',r:4}}/>
+        </ComposedChart>
+      </ResponsiveContainer>
+    </Card>
+
+    <Card title="Classement détaillé" subtitle="Trié par revenu 30j">
+      <div className="overflow-x-auto"><table className="w-full text-sm">
+        <thead><tr className="text-xs text-txt-muted border-b border-brd">
+          <th className="text-left py-2">#</th><th className="text-left">Modèle</th><th className="text-left">Niche</th>
+          <th className="text-right">Subs</th><th className="text-right">MRR</th><th className="text-right">PPV</th>
+          <th className="text-right">Tips</th><th className="text-right">Total</th><th className="text-right">€/h</th><th className="text-right">Churn</th>
+        </tr></thead>
+        <tbody>
+          {sorted.map((mm,i)=><tr key={mm.id} className="border-b border-brd/50 hover:bg-bg-hover/30 cursor-pointer" onClick={()=>setSel(mm.id)}>
+            <td className="py-2.5 text-txt-muted">{i+1}</td>
+            <td className="font-medium"><span className="mr-2">{mm.avatar}</span>{mm.name}</td>
+            <td className="text-txt-muted text-xs">{mm.niche}</td>
+            <td className="text-right font-mono text-xs">{fNum(mm.subs)}</td>
+            <td className="text-right font-mono text-xs">{fEUR(mm.mrr)}</td>
+            <td className="text-right font-mono text-xs">{fEUR(mm.ppvRevenue)}</td>
+            <td className="text-right font-mono text-xs">{fEUR(mm.tipsRevenue)}</td>
+            <td className="text-right font-mono text-xs font-bold">{fEUR(mm.totalRevenue30d)}</td>
+            <td className="text-right font-mono text-xs">{fEUR(mm.totalRevenue30d/mm.hoursWorked,0)}</td>
+            <td className="text-right"><Badge variant={mm.churnRate<0.08?'green':mm.churnRate<0.13?'yellow':'red'}>{fPct(mm.churnRate)}</Badge></td>
+          </tr>)}
+        </tbody>
+      </table></div>
+    </Card>
+  </div>
+}
+
+const segMeta={
+  whale:{label:'Whales',color:'#9d5cff',desc:'Top 5% — soigner'},
+  gifter:{label:'Gifters',color:'#ff2d87',desc:'Aiment offrir — wishlist en bio'},
+  chatter:{label:'Chatters',color:'#3b82f6',desc:'Parlent, achètent peu — convertir'},
+  content_only:{label:'Content only',color:'#22c55e',desc:'Achètent PPV — drops auto'},
+  complete:{label:'Complete',color:'#eab308',desc:'VIP treatment'},
+  churning:{label:'Churning',color:'#ef4444',desc:'Win-back nécessaire'},
+};
+
+function FansPage(){
+  const [segF,setSegF]=useState('all');
+  const filtered=useMemo(()=>segF==='all'?fans:fans.filter(f=>f.segment===segF),[segF]);
+  const sc=Object.keys(segMeta).map(s=>{
+    const list=fans.filter(f=>f.segment===s);
+    return {segment:s,label:segMeta[s].label,color:segMeta[s].color,
+      count:list.length,
+      ltv:list.reduce((sum,f)=>sum+f.ltv,0),
+      avgLtv:list.length?list.reduce((sum,f)=>sum+f.ltv,0)/list.length:0};
+  });
+  const totalLtv=filtered.reduce((s,f)=>s+f.ltv,0);
+  const avgLtv=filtered.length?totalLtv/filtered.length:0;
+  const t30=filtered.reduce((s,f)=>s+f.last30d,0);
+  const top=[...filtered].sort((a,b)=>b.ltv-a.ltv).slice(0,30);
+
+  return <div className="space-y-6">
+    <PageHeader title="Fans & Segmentation" subtitle="Identifie qui paye, comment, et qui décroche"/>
+
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <Kpi label="Fans" value={fNum(filtered.length)} icon="❤️" accent="brand"/>
+      <Kpi label="LTV cumulée" value={fEUR(totalLtv)} icon="👑" accent="purple"/>
+      <Kpi label="LTV moyenne" value={fEUR(avgLtv)} icon="🎁" accent="yellow"/>
+      <Kpi label="Revenu 30j" value={fEUR(t30)} delta={{value:'+12%',positive:true}} icon="📦" accent="green"/>
+    </div>
+
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
+      <button onClick={()=>setSegF('all')} className={`p-3 rounded-xl border text-left transition-all ${segF==='all'?'bg-bg-hover border-brd-strong':'bg-bg-card border-brd hover:border-brd-strong'}`}>
+        <div className="text-xs text-txt-muted mb-1">Tous</div>
+        <div className="text-lg font-bold">{fNum(fans.length)}</div>
+      </button>
+      {sc.map(s=><button key={s.segment} onClick={()=>setSegF(s.segment)}
+        className={`p-3 rounded-xl border text-left transition-all ${segF===s.segment?'':'bg-bg-card border-brd hover:border-brd-strong'}`}
+        style={segF===s.segment?{background:s.color+'15',color:s.color,borderColor:s.color}:{}}>
+        <div className="flex items-center gap-1.5 mb-1"><span className="h-2 w-2 rounded-full" style={{background:s.color}}></span><span className="text-xs text-txt-muted">{s.label}</span></div>
+        <div className="text-lg font-bold">{s.count}</div>
+        <div className="text-[10px] text-txt-dim">LTV {fEUR(s.avgLtv,0)}</div>
+      </button>)}
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <Card title="Répartition segments" subtitle="Par nombre de fans">
+        <ResponsiveContainer width="100%" height={260}>
+          <PieChart>
+            <Pie isAnimationActive={false} data={sc} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={2}>
+              {sc.map(s=><Cell key={s.segment} fill={s.color} stroke="none"/>)}
+            </Pie>
+            <Tooltip {...tooltipStyle}/>
+          </PieChart>
+        </ResponsiveContainer>
+      </Card>
+
+      <Card className="lg:col-span-2" title="LTV par segment" subtitle="Revenu cumulé total">
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={sc}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#23232e" vertical={false}/>
+            <XAxis dataKey="label" axisLine={{stroke:'#23232e'}} tickLine={false} tick={{fill:'#8a8a99',fontSize:11}}/>
+            <YAxis axisLine={false} tickLine={false} tickFormatter={v=>fNum(v)+'€'}/>
+            <Tooltip {...tooltipStyle} formatter={v=>fEUR(v)}/>
+            <Bar isAnimationActive={false} dataKey="ltv" radius={[6,6,0,0]}>{sc.map(s=><Cell key={s.segment} fill={s.color}/>)}</Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+    </div>
+
+    <Card title="Cohort retention" subtitle="% subs encore actifs après N mois">
+      <div className="overflow-x-auto"><table className="w-full text-xs">
+        <thead><tr>
+          <th className="text-left py-2 text-txt-muted">Cohort</th>
+          <th className="text-right py-2 text-txt-muted">Taille</th>
+          {Array.from({length:6}).map((_,i)=><th key={i} className="text-right py-2 text-txt-muted">M{i}</th>)}
+        </tr></thead>
+        <tbody>{cohorts.map(c=><tr key={c.cohort}>
+          <td className="py-2 font-medium">{c.cohort}</td>
+          <td className="text-right text-txt-muted">{c.size}</td>
+          {c.months.map((v,i)=>{
+            const ity=v/100;
+            return <td key={i} className="p-0.5"><div className="rounded text-center py-1.5 text-[11px] font-mono" style={{background:`rgba(255,45,135,${ity*0.8})`,color:ity>0.5?'white':'#e8e8ef'}}>{v}%</div></td>;
+          })}
+        </tr>)}</tbody>
+      </table></div>
+    </Card>
+
+    <Card title="Top fans (par LTV)" subtitle="30 plus gros payeurs">
+      <div className="overflow-x-auto"><table className="w-full text-sm">
+        <thead><tr className="text-xs text-txt-muted border-b border-brd">
+          <th className="text-left py-2">Fan</th><th className="text-left">Modèle</th><th className="text-left">Segment</th><th>Pays</th>
+          <th className="text-right">LTV</th><th className="text-right">30j</th><th className="text-right">Msg</th>
+          <th className="text-right">PPV</th><th className="text-right">Tips</th><th className="text-right">🎁</th><th className="text-right">Customs</th>
+          <th className="text-left pl-3">Acquisition</th>
+        </tr></thead>
+        <tbody>{top.map(f=>{
+          const meta=segMeta[f.segment];
+          return <tr key={f.id} className="border-b border-brd/50 hover:bg-bg-hover/30">
+            <td className="py-2.5 font-mono text-xs">@{f.username}</td>
+            <td className="text-txt-muted">{f.modelName}</td>
+            <td><span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border" style={{background:meta.color+'15',color:meta.color,borderColor:meta.color+'40'}}>{meta.label}</span></td>
+            <td className="text-center">{f.country}</td>
+            <td className="text-right font-mono text-xs font-bold">{fEUR(f.ltv)}</td>
+            <td className="text-right font-mono text-xs">{fEUR(f.last30d)}</td>
+            <td className="text-right font-mono text-xs text-txt-muted">{f.messagesCount}</td>
+            <td className="text-right font-mono text-xs">{f.ppvBought}</td>
+            <td className="text-right font-mono text-xs">{f.tipsCount}</td>
+            <td className="text-right font-mono text-xs">{f.giftsCount>0?<span className="text-ac-yellow">{f.giftsCount}</span>:<span className="text-txt-dim">—</span>}</td>
+            <td className="text-right font-mono text-xs">{f.customsBought}</td>
+            <td className="pl-3"><Badge>{f.acquisitionChannel}</Badge></td>
+          </tr>;
+        })}</tbody>
+      </table></div>
+    </Card>
+  </div>
+}
+
+function CampaignsPage(){
+  const active=campaigns.filter(c=>c.status==='active');
+  const ts=campaigns.reduce((s,c)=>s+c.spent,0);
+  const tr=campaigns.reduce((s,c)=>s+c.revenue,0);
+  const sorted=[...campaigns].sort((a,b)=>b.roas-a.roas);
+
+  return <div className="space-y-6">
+    <PageHeader title="Campagnes" subtitle="Performance, ROI et statut"
+      action={<button className="bg-brand hover:opacity-90 text-white text-sm font-medium px-3 py-1.5 rounded-md transition">+ Nouvelle campagne</button>}/>
+
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <Kpi label="Actives" value={String(active.length)} icon="📢" accent="brand"/>
+      <Kpi label="Dépense" value={fEUR(ts)} icon="💵" accent="yellow"/>
+      <Kpi label="Revenu" value={fEUR(tr)} icon="🎯" accent="green"/>
+      <Kpi label="ROAS moyen" value={`${(tr/ts).toFixed(2)}×`} delta={{value:'+0.6×',positive:true}} icon="⚡" accent="purple"/>
+    </div>
+
+    <Card title="ROAS par campagne" subtitle="Trié du meilleur au pire">
+      <ResponsiveContainer width="100%" height={320}>
+        <BarChart data={sorted} layout="vertical" margin={{left:80}}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#23232e" horizontal={false}/>
+          <XAxis type="number" axisLine={false} tickLine={false} tickFormatter={v=>`${v}×`}/>
+          <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} width={180} tick={{fill:'#e8e8ef',fontSize:10}}/>
+          <Tooltip {...tooltipStyle} formatter={v=>`${v}×`}/>
+          <Bar isAnimationActive={false} dataKey="roas" radius={[0,6,6,0]}>
+            {sorted.map(c=><Cell key={c.id} fill={c.roas>=3?'#22c55e':c.roas>=1.5?'#ff2d87':'#ef4444'}/>)}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </Card>
+
+    <Card title="Toutes les campagnes" subtitle="Détail complet">
+      <div className="overflow-x-auto"><table className="w-full text-sm">
+        <thead><tr className="text-xs text-txt-muted border-b border-brd">
+          <th className="text-left py-2">Statut</th><th className="text-left">Campagne</th><th className="text-left">Modèle</th>
+          <th className="text-left">Plateforme</th><th className="text-right">Budget</th><th className="text-right">Dépensé</th>
+          <th className="text-right">Impr.</th><th className="text-right">CTR</th><th className="text-right">Conv.</th>
+          <th className="text-right">Revenu</th><th className="text-right">ROAS</th>
+        </tr></thead>
+        <tbody>{sorted.map(c=><tr key={c.id} className="border-b border-brd/50 hover:bg-bg-hover/30">
+          <td className="py-2.5"><Badge variant={c.status==='active'?'green':c.status==='paused'?'yellow':'default'}>{c.status==='active'?'● Active':c.status==='paused'?'⏸ Pause':'Terminé'}</Badge></td>
+          <td className="font-medium max-w-[200px] truncate">{c.name}</td>
+          <td className="text-txt-muted">{c.modelName}</td>
+          <td><Badge>{c.platform}</Badge></td>
+          <td className="text-right font-mono text-xs">{fEUR(c.budget)}</td>
+          <td className="text-right font-mono text-xs">{fEUR(c.spent)}</td>
+          <td className="text-right font-mono text-xs">{fNum(c.impressions)}</td>
+          <td className="text-right font-mono text-xs text-txt-muted">{fPct(c.clicks/c.impressions,2)}</td>
+          <td className="text-right font-mono text-xs">{c.conversions}</td>
+          <td className="text-right font-mono text-xs font-medium">{fEUR(c.revenue)}</td>
+          <td className="text-right"><Badge variant={c.roas>=3?'green':c.roas>=1.5?'yellow':'red'}>{c.roas}×</Badge></td>
+        </tr>)}</tbody>
+      </table></div>
+    </Card>
+  </div>
+}
+
+function TimingPage(){
+  const days=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const mc={};
+  revenueByDay.forEach(d=>{const day=parseInt(d.date.split('-')[2]);if(!mc[day])mc[day]={sum:0,count:0};mc[day].sum+=d.total;mc[day].count++});
+  const monthlyAvg=Object.entries(mc).map(([day,v])=>({day:parseInt(day),avg:Math.round(v.sum/v.count)})).sort((a,b)=>a.day-b.day);
+
+  const dow=Array.from({length:7},(_,i)=>({day:days[i],revenue:0}));
+  revenueByDay.forEach(d=>{const dd=(new Date(d.date).getDay()+6)%7;dow[dd].revenue+=d.total});
+
+  const slots=[];
+  for(let i=0;i<7;i++)for(let h=0;h<24;h++)slots.push({dow:i,hour:h,intensity:heatmap[i][h]});
+  slots.sort((a,b)=>b.intensity-a.intensity);
+
+  return <div className="space-y-6">
+    <PageHeader title="Timing & Cycles" subtitle="Quand pusher les campagnes pour maximiser les conversions"/>
+
+    <Card title="Heatmap revenu — Jour × Heure" subtitle="Plus c'est rose, plus ça paie">
+      <div className="overflow-x-auto"><table className="w-full text-[10px]">
+        <thead><tr><th className="w-12"></th>{Array.from({length:24}).map((_,h)=><th key={h} className="text-txt-muted font-normal pb-1">{h}h</th>)}</tr></thead>
+        <tbody>{days.map((d,i)=><tr key={d}>
+          <td className="text-txt-muted pr-2 text-right font-medium">{d}</td>
+          {Array.from({length:24}).map((_,h)=>{const v=heatmap[i][h];return <td key={h} className="p-0.5"><div className="aspect-square rounded-sm w-full" title={`${d} ${h}h: ${(v*100).toFixed(0)}%`} style={{background:`rgba(255,45,135,${v.toFixed(2)})`,minWidth:18,minHeight:18}}></div></td>})}
+        </tr>)}</tbody>
+      </table></div>
+      <div className="flex items-center gap-2 mt-4 text-xs text-txt-muted">
+        <span>Faible</span>
+        <div className="flex">{[0.1,0.3,0.5,0.7,0.9].map(v=><div key={v} className="h-3 w-8" style={{background:`rgba(255,45,135,${v})`}}></div>)}</div>
+        <span>Fort</span>
+      </div>
+    </Card>
+
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Card title="Cycle mensuel" subtitle="Revenu moyen par jour — pics paie J1, J15, J30">
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={monthlyAvg}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#23232e" vertical={false}/>
+            <XAxis dataKey="day" axisLine={{stroke:'#23232e'}} tickLine={false} interval={2}/>
+            <YAxis axisLine={false} tickLine={false} tickFormatter={v=>`${(v/1000).toFixed(0)}k€`}/>
+            <Tooltip {...tooltipStyle} formatter={v=>fEUR(v)}/>
+            <Bar isAnimationActive={false} dataKey="avg" radius={[4,4,0,0]}>
+              {monthlyAvg.map(d=><Cell key={d.day} fill={d.day===1||d.day===15||d.day===30?'#ff2d87':'#9d5cff'}/>)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+
+      <Card title="Revenu par jour de semaine" subtitle="Tendance hebdo">
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={dow}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#23232e" vertical={false}/>
+            <XAxis dataKey="day" axisLine={{stroke:'#23232e'}} tickLine={false} tick={{fill:'#8a8a99',fontSize:11}}/>
+            <YAxis axisLine={false} tickLine={false} tickFormatter={v=>`${(v/1000).toFixed(0)}k€`}/>
+            <Tooltip {...tooltipStyle} formatter={v=>fEUR(v)}/>
+            <Bar isAnimationActive={false} dataKey="revenue" radius={[6,6,0,0]}>
+              {dow.map((d,i)=><Cell key={i} fill={i>=5?'#ff2d87':'#9d5cff'}/>)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+    </div>
+
+    <Card title="Top 8 créneaux à pusher" subtitle="Recommandations basées sur l'historique">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {slots.slice(0,8).map((s,i)=><div key={i} className="bg-bg-hover border border-brd rounded-lg p-3">
+          <div className="flex items-center justify-between mb-2"><span>📅</span><Badge variant="brand">{(s.intensity*100).toFixed(0)}%</Badge></div>
+          <div className="text-lg font-bold">{days[s.dow]} {s.hour.toString().padStart(2,'0')}h</div>
+          <div className="text-xs text-txt-muted mt-1">Pic d'activité</div>
+        </div>)}
+      </div>
+    </Card>
+
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Card title="📅 Prochaines opportunités" subtitle="Suggestions">
+        <div className="space-y-3 text-sm">
+          {[
+            ['⏰','Dans 2 jours — Mardi 21h','Lance campagne Luna sur TikTok. Ses gifters achètent 3.2× plus à ce créneau.','brand'],
+            ['📈','Dans 5 jours — Pic paie','Prépare drops PPV pour le jour de paie. +34% conversions vs jours normaux.','green'],
+            ['🗓','Weekend prochain','Programme contenus pour Sasha samedi nuit (0h-2h). Pic constant +28% sur 90j.','purple']
+          ].map(([ic,t,d])=><div key={t} className="border border-brd rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-1"><span>{ic}</span><span className="font-medium">{t}</span></div>
+            <p className="text-xs text-txt-muted">{d}</p>
+          </div>)}
+        </div>
+      </Card>
+
+      <Card title="🌍 Activité par fuseau" subtitle="Top pays des fans">
+        <div className="space-y-2">
+          {[['🇺🇸 États-Unis',38,'20h-23h EST'],['🇬🇧 Royaume-Uni',14,'21h-00h GMT'],['🇩🇪 Allemagne',9,'22h-01h CET'],['🇨🇦 Canada',8,'20h-23h EST'],['🇦🇺 Australie',7,'20h-23h AEDT'],['🇫🇷 France',6,'21h-00h CET']].map(([c,p,pk])=>
+            <div key={c} className="flex items-center gap-3 text-sm">
+              <span className="w-32 truncate">{c}</span>
+              <div className="flex-1 h-2 bg-bg-hover rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-brand to-ac-purple" style={{width:`${p*2.5}%`}}></div></div>
+              <span className="text-xs font-mono w-10 text-right">{p}%</span>
+              <span className="text-[10px] text-txt-muted w-28 text-right">{pk}</span>
+            </div>)}
+        </div>
+      </Card>
+    </div>
+  </div>
+}
+
+function RecommendationsPage(){
+  const [pri,setPri]=useState('all');
+  const [cat,setCat]=useState('all');
+  const catMeta={timing:{label:'Timing',icon:'⏰',color:'#3b82f6'},creative:{label:'Créatif',icon:'🎨',color:'#9d5cff'},audience:{label:'Audience',icon:'👥',color:'#22c55e'},monetization:{label:'Monétisation',icon:'💰',color:'#ff2d87'},retention:{label:'Rétention',icon:'🔄',color:'#eab308'}};
+  const filtered=recommendations.filter(r=>(pri==='all'||r.priority===pri)&&(cat==='all'||r.category===cat));
+
+  return <div className="space-y-6">
+    <PageHeader title="Recommandations IA" subtitle="Actions priorisées basées sur vos data — pas du blabla, du concret"
+      action={<button className="bg-gradient-to-r from-brand to-ac-purple text-white text-sm font-medium px-3 py-1.5 rounded-md flex items-center gap-2">✨ Régénérer</button>}/>
+
+    <div className="flex flex-wrap gap-2">
+      <button onClick={()=>{setPri('all');setCat('all')}} className={`text-xs px-3 py-1.5 rounded-md border transition ${pri==='all'&&cat==='all'?'bg-brand-soft border-brand text-brand':'border-brd text-txt-muted hover:text-txt'}`}>Toutes ({recommendations.length})</button>
+      <div className="w-px bg-brd mx-1"></div>
+      {['high','medium','low'].map(p=><button key={p} onClick={()=>setPri(p)} className={`text-xs px-3 py-1.5 rounded-md border transition ${pri===p?'bg-brand-soft border-brand text-brand':'border-brd text-txt-muted hover:text-txt'}`}>
+        {p==='high'?'Haute':p==='medium'?'Moyenne':'Basse'} ({recommendations.filter(r=>r.priority===p).length})
+      </button>)}
+      <div className="w-px bg-brd mx-1"></div>
+      {Object.keys(catMeta).map(c=><button key={c} onClick={()=>setCat(c)} className={`text-xs px-3 py-1.5 rounded-md border transition flex items-center gap-1.5 ${cat===c?'bg-brand-soft border-brand text-brand':'border-brd text-txt-muted hover:text-txt'}`}>
+        <span>{catMeta[c].icon}</span>{catMeta[c].label}
+      </button>)}
+    </div>
+
+    <div className="space-y-3">{filtered.map(r=>{
+      const meta=catMeta[r.category];
+      return <Card key={r.id} className="hover:border-brand/40 cursor-pointer transition">
+        <div className="flex items-start gap-4">
+          <div className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0 text-lg" style={{background:meta.color+'20',color:meta.color}}>{meta.icon}</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <Badge variant={r.priority==='high'?'red':r.priority==='medium'?'yellow':'default'}>{r.priority==='high'?'🔥 Priorité haute':r.priority==='medium'?'Priorité moyenne':'Faible'}</Badge>
+              <Badge>{meta.label}</Badge>
+              {r.affectedModel&&<Badge variant="purple">{r.affectedModel}</Badge>}
+            </div>
+            <h3 className="font-semibold text-base mb-1">{r.title}</h3>
+            <p className="text-sm text-txt-muted leading-relaxed">{r.rationale}</p>
+            <div className="mt-3 flex items-center gap-3 flex-wrap">
+              <Badge variant="brand">📈 {r.expectedLift}</Badge>
+              <button className="text-xs text-brand hover:underline">Appliquer cette reco ›</button>
+              <button className="text-xs text-txt-muted hover:text-txt">Voir détails</button>
+              <button className="text-xs text-txt-dim hover:text-txt-muted ml-auto">Ignorer</button>
+            </div>
+          </div>
+        </div>
+      </Card>;
+    })}</div>
+
+    <Card title="🧠 Comment l'IA recommande ?" subtitle="Sources et méthodologie">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div><div className="font-medium mb-1">Sources data</div><p className="text-xs text-txt-muted leading-relaxed">Transactions OF, watch-time réseaux, messages chat, historique campagnes, segmentation fans, cycles paie.</p></div>
+        <div><div className="font-medium mb-1">Algos</div><p className="text-xs text-txt-muted leading-relaxed">Clustering K-means sur fans, prédiction churn (gradient boosting), attribution multi-touch, séries temporelles pour timing.</p></div>
+        <div><div className="font-medium mb-1">Re-train</div><p className="text-xs text-txt-muted leading-relaxed">Modèles ré-entraînés chaque nuit. Recommandations rafraîchies toutes les 6h. Feedback boucle.</p></div>
+      </div>
+    </Card>
+  </div>
+}
+
+// ============================================================
+// LAYOUT
+// ============================================================
+const nav=[
+  {key:'overview',label:'Overview',icon:'📊'},
+  {key:'acquisition',label:'Acquisition',icon:'📈'},
+  {key:'content',label:'Contenus',icon:'🎬'},
+  {key:'models',label:'Modèles',icon:'👥'},
+  {key:'fans',label:'Fans',icon:'❤️'},
+  {key:'campaigns',label:'Campagnes',icon:'📢'},
+  {key:'timing',label:'Timing',icon:'⏰'},
+  {key:'recommendations',label:'Reco IA',icon:'✨'},
+];
+
+const pages={
+  overview:<Overview/>,
+  acquisition:<Acquisition/>,
+  content:<ContentPage/>,
+  models:<ModelsPage/>,
+  fans:<FansPage/>,
+  campaigns:<CampaignsPage/>,
+  timing:<TimingPage/>,
+  recommendations:<RecommendationsPage/>,
+};
+
+function App(){
+  const [page,setPage]=useState(()=>(window.location.hash.slice(1)||'overview'));
+  const [menuOpen,setMenuOpen]=useState(false);
+  React.useEffect(()=>{
+    const h=()=>setPage(window.location.hash.slice(1)||'overview');
+    window.addEventListener('hashchange',h);
+    return()=>window.removeEventListener('hashchange',h);
+  },[]);
+
+  return <div className="flex h-screen bg-bg">
+    <aside className={`${menuOpen?'fixed inset-y-0 left-0 z-50':'hidden'} md:flex md:static w-60 shrink-0 border-r border-brd bg-bg-card flex-col`}>
+      <div className="p-5 border-b border-brd">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand to-ac-purple flex items-center justify-center font-bold text-white">V</div>
+          <div>
+            <div className="font-bold text-sm tracking-tight">Velvet OS</div>
+            <div className="text-[10px] text-txt-muted uppercase tracking-wider">Agency Dashboard</div>
+          </div>
+        </div>
+      </div>
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        {nav.map(n=><a key={n.key} href={`#${n.key}`} onClick={()=>setMenuOpen(false)}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${page===n.key?'bg-brand-soft text-brand font-medium':'text-txt-muted hover:bg-bg-hover hover:text-txt'}`}>
+          <span>{n.icon}</span>{n.label}
+        </a>)}
+      </nav>
+      <div className="p-3 border-t border-brd">
+        <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-bg-hover cursor-pointer transition">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-ac-purple to-brand flex items-center justify-center text-xs font-bold">JM</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium truncate">Jordan M.</div>
+            <div className="text-[11px] text-txt-muted truncate">Agency Owner</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <header className="h-14 border-b border-brd bg-bg-card/50 flex items-center justify-between px-4 md:px-6 shrink-0">
+        <button onClick={()=>setMenuOpen(!menuOpen)} className="md:hidden p-2 text-txt-muted">☰</button>
+        <div className="hidden md:flex items-center gap-3 flex-1 max-w-md">
+          <span className="text-txt-muted">🔍</span>
+          <input placeholder="Rechercher un fan, modèle, campagne..." className="bg-transparent border-0 outline-none text-sm w-full placeholder:text-txt-muted"/>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="text-xs px-3 py-1.5 rounded-md bg-bg-hover text-txt-muted hover:text-txt">30 derniers jours</button>
+          <button className="relative p-2 rounded-md hover:bg-bg-hover">🔔<span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 bg-brand rounded-full"></span></button>
+        </div>
+      </header>
+      <main className="flex-1 overflow-y-auto p-4 md:p-6">{pages[page]||<Overview/>}</main>
+    </div>
+  </div>
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
