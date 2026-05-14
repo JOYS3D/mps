@@ -1,0 +1,1401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>CreatorOps — Agency Analytics Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0A12;
+    --surface: #14141F;
+    --surface-2: #1C1C2E;
+    --border: #2A2A3F;
+    --text: #F5F5FA;
+    --muted: #7A7A95;
+    --accent: #EC4899;
+    --accent-2: #A855F7;
+    --accent-3: #06B6D4;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* Aurora background */
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(236,72,153,.08), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(168,85,247,.08), transparent 40%),
+      radial-gradient(circle at 70% 30%, rgba(6,182,212,.05), transparent 40%);
+    pointer-events: none;
+  }
+  #app, #toast { position: relative; z-index: 1; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; backdrop-filter: blur(10px); }
+  .card-glow { box-shadow: 0 0 0 1px rgba(236,72,153,.2), 0 12px 40px -8px rgba(236,72,153,.15); }
+  .pill { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:600; }
+
+  /* Buttons */
+  .btn { padding:10px 16px; border-radius:10px; font-weight:600; transition:all .15s; cursor:pointer; font-size:14px; border:none; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:42px; text-decoration:none; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: linear-gradient(135deg, #EC4899, #A855F7); color:#fff; box-shadow: 0 4px 14px -2px rgba(236,72,153,.4); }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: #25253A; }
+  .btn-icon { width: 36px; height: 36px; padding: 0; }
+
+  /* Sidebar */
+  .sidebar { background: rgba(20,20,31,.9); backdrop-filter: blur(20px); border-right: 1px solid var(--border); }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .15s; }
+  .nav-item:hover { background: var(--surface-2); color: var(--text); }
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(236,72,153,.18), rgba(168,85,247,.18));
+    color: var(--text);
+    border: 1px solid rgba(236,72,153,.3);
+  }
+
+  /* Stat label */
+  .stat-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+
+  /* Gradient text */
+  .gradient-text { background: linear-gradient(135deg, #EC4899, #A855F7, #06B6D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  /* Inputs */
+  .input { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 14px; color: var(--text); }
+  .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(236,72,153,.15); }
+
+  /* Anim */
+  .anim-fade { animation: fade .35s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: none;} }
+  .pulse-dot { animation: pulseDot 2s infinite; }
+  @keyframes pulseDot { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity: .5; transform: scale(1.3);} }
+
+  /* Bar chart bars */
+  .bar { background: linear-gradient(180deg, var(--accent), var(--accent-2)); border-radius: 4px 4px 0 0; transition: all .3s; }
+  .bar.green { background: linear-gradient(180deg, #10B981, #047857); }
+  .bar.cyan { background: linear-gradient(180deg, #06B6D4, #0E7490); }
+  .bar.amber { background: linear-gradient(180deg, #F59E0B, #B45309); }
+
+  /* Model avatars */
+  .avatar-grad-1 { background: linear-gradient(135deg, #EC4899, #DB2777); }
+  .avatar-grad-2 { background: linear-gradient(135deg, #A855F7, #7C3AED); }
+  .avatar-grad-3 { background: linear-gradient(135deg, #06B6D4, #0891B2); }
+  .avatar-grad-4 { background: linear-gradient(135deg, #F59E0B, #D97706); }
+  .avatar-grad-5 { background: linear-gradient(135deg, #10B981, #047857); }
+  .avatar-grad-6 { background: linear-gradient(135deg, #EF4444, #B91C1C); }
+
+  /* Heatmap */
+  .heat-cell { aspect-ratio: 1; border-radius: 4px; }
+
+  /* Channel icons */
+  .channel-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .ch-instagram { background: linear-gradient(135deg, #E1306C, #F77737, #FCAF45); color: #fff; }
+  .ch-tiktok { background: #000; color: #fff; border: 1px solid #25F4EE; }
+  .ch-tinder { background: linear-gradient(135deg, #FD267D, #FF5864); color: #fff; }
+  .ch-reddit { background: #FF4500; color: #fff; }
+  .ch-twitter { background: #1DA1F2; color: #fff; }
+  .ch-onlyfans { background: linear-gradient(135deg, #00AFF0, #00779E); color: #fff; }
+
+  /* Tags */
+  .tag-whale { background: rgba(245,158,11,.15); color: #FCD34D; border: 1px solid rgba(245,158,11,.3); }
+  .tag-regular { background: rgba(6,182,212,.15); color: #67E8F9; border: 1px solid rgba(6,182,212,.3); }
+  .tag-lurker { background: rgba(122,122,149,.15); color: #C4C4D6; border: 1px solid rgba(122,122,149,.3); }
+  .tag-gifter { background: rgba(236,72,153,.15); color: #F9A8D4; border: 1px solid rgba(236,72,153,.3); }
+  .tag-chatter { background: rgba(168,85,247,.15); color: #D8B4FE; border: 1px solid rgba(168,85,247,.3); }
+  .tag-tipper { background: rgba(16,185,129,.15); color: #6EE7B7; border: 1px solid rgba(16,185,129,.3); }
+
+  /* Tables */
+  .table-row { transition: background .15s; }
+  .table-row:hover { background: rgba(255,255,255,.03); }
+
+  /* Insight card */
+  .insight-card { background: linear-gradient(135deg, rgba(236,72,153,.08), rgba(168,85,247,.08)); border: 1px solid rgba(236,72,153,.25); border-radius: 16px; }
+  .insight-card.critical { background: linear-gradient(135deg, rgba(245,158,11,.08), rgba(220,38,38,.08)); border-color: rgba(245,158,11,.3); }
+
+  /* Toast */
+  #toast { position:fixed; bottom:24px; left:50%; transform: translateX(-50%) translateY(120px);
+    background: linear-gradient(135deg, #EC4899, #A855F7); color:#fff; padding:12px 20px; border-radius:14px; font-weight:600;
+    box-shadow:0 10px 30px rgba(236,72,153,.4); transition: transform .3s; z-index:9999; font-size:14px; }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Funnel */
+  .funnel-step { position: relative; padding: 16px 20px; background: var(--surface-2); border-radius: 12px; border-left: 4px solid; }
+
+  /* Wishlist item */
+  .wishlist-item { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3A3A55; }
+
+  /* Sparkline */
+  .sparkline { width: 100%; height: 40px; }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   SAMPLE DATA — 6 models, multi-channel, 3 months
+   ============================================================ */
+const MODELS = [
+  { id: 1, name: 'Bella Rose', handle: '@bellarose', niche: 'Cosplay / Anime', avatar: 'avatar-grad-1', revenue: 28430, fans: 1240, churn: 4.2, ltv: 287, contentCount: 142, growth: 18.5, topChannel: 'Instagram', joined: '2024-08-15', topHook: '"POV: you walk in on me cosplaying..." • 4.2M views' },
+  { id: 2, name: 'Mia Knight', handle: '@miakn1ght', niche: 'Alt / Goth', avatar: 'avatar-grad-2', revenue: 19850, fans: 890, churn: 5.1, ltv: 312, contentCount: 98, growth: 24.1, topChannel: 'TikTok', joined: '2024-11-02', topHook: '"black eyeliner ASMR 🖤" • 8.1M views' },
+  { id: 3, name: 'Sofia Reign', handle: '@sofiareign', niche: 'Fitness / Booty', avatar: 'avatar-grad-3', revenue: 42100, fans: 1820, churn: 3.8, ltv: 421, contentCount: 187, growth: 12.3, topChannel: 'Instagram', joined: '2024-05-20', topHook: '"gym leggings squat check" • 12M views' },
+  { id: 4, name: 'Luna Sky', handle: '@lunaskyy', niche: 'Girl Next Door', avatar: 'avatar-grad-4', revenue: 15200, fans: 720, churn: 7.5, ltv: 198, contentCount: 76, growth: -3.2, topChannel: 'Tinder', joined: '2025-01-10', topHook: '"good morning text 🥰" • 2.1M views' },
+  { id: 5, name: 'Aria Stone', handle: '@ariastone', niche: 'Mature / MILF', avatar: 'avatar-grad-5', revenue: 38700, fans: 980, churn: 2.1, ltv: 542, contentCount: 121, growth: 8.7, topChannel: 'Reddit', joined: '2024-03-08', topHook: '"40 and just getting started 😏"' },
+  { id: 6, name: 'Ivy Black', handle: '@ivyblck', niche: 'Kink / BDSM', avatar: 'avatar-grad-6', revenue: 22890, fans: 540, churn: 3.5, ltv: 612, contentCount: 89, growth: 31.2, topChannel: 'Twitter', joined: '2024-09-22', topHook: '"safe word check 🔗" • 5.4M views' }
+];
+
+const TOTAL_REVENUE = MODELS.reduce((s, m) => s + m.revenue, 0);
+const TOTAL_FANS = MODELS.reduce((s, m) => s + m.fans, 0);
+const AVG_LTV = Math.round(MODELS.reduce((s, m) => s + m.ltv, 0) / MODELS.length);
+
+const CHANNELS = [
+  { id: 'instagram', name: 'Instagram', icon: '📷', class: 'ch-instagram', subs: 1420, cost: 0, revenue: 38400, cpa: 0, conv: 8.2, content: 142 },
+  { id: 'tiktok', name: 'TikTok', icon: '🎵', class: 'ch-tiktok', subs: 980, cost: 0, revenue: 19200, cpa: 0, conv: 4.1, content: 287 },
+  { id: 'tinder', name: 'Tinder', icon: '🔥', class: 'ch-tinder', subs: 320, cost: 1240, revenue: 8400, cpa: 3.88, conv: 12.4, content: 0 },
+  { id: 'reddit', name: 'Reddit', icon: '👽', class: 'ch-reddit', subs: 740, cost: 0, revenue: 28100, cpa: 0, conv: 6.7, content: 89 },
+  { id: 'twitter', name: 'Twitter/X', icon: '𝕏', class: 'ch-twitter', subs: 410, cost: 0, revenue: 14800, cpa: 0, conv: 9.3, content: 65 },
+  { id: 'paid_meta', name: 'Meta Ads', icon: '💎', class: 'ch-instagram', subs: 1130, cost: 4200, revenue: 36400, cpa: 3.72, conv: 14.8, content: 0 },
+  { id: 'paid_tiktok', name: 'TikTok Ads', icon: '💎', class: 'ch-tiktok', subs: 800, cost: 2800, revenue: 22100, cpa: 3.50, conv: 11.2, content: 0 }
+];
+
+const CONTENT = [
+  { id: 1, title: 'Cosplay reveal video', model: 'Bella Rose', platform: 'instagram', hook: '"POV: you walk in..."', cost: 180, views: 4200000, watchTime: 38, revenue: 4800, ppvSent: 412, ppvBought: 128, posted: '2026-04-28', tipsGenerated: 1240 },
+  { id: 2, title: 'Black eyeliner ASMR', model: 'Mia Knight', platform: 'tiktok', hook: '"black eyeliner ASMR 🖤"', cost: 65, views: 8100000, watchTime: 22, revenue: 3200, ppvSent: 280, ppvBought: 95, posted: '2026-05-02', tipsGenerated: 890 },
+  { id: 3, title: 'Gym leggings tutorial', model: 'Sofia Reign', platform: 'instagram', hook: '"gym leggings squat check"', cost: 220, views: 12000000, watchTime: 18, revenue: 8400, ppvSent: 720, ppvBought: 312, posted: '2026-04-15', tipsGenerated: 2100 },
+  { id: 4, title: 'Morning routine vlog', model: 'Luna Sky', platform: 'tinder', hook: '"good morning text 🥰"', cost: 45, views: 2100000, watchTime: 14, revenue: 1200, ppvSent: 180, ppvBought: 48, posted: '2026-04-22', tipsGenerated: 320 },
+  { id: 5, title: 'BDSM rope tutorial', model: 'Ivy Black', platform: 'twitter', hook: '"safe word check 🔗"', cost: 320, views: 5400000, watchTime: 41, revenue: 6900, ppvSent: 340, ppvBought: 187, posted: '2026-04-10', tipsGenerated: 1820 },
+  { id: 6, title: 'Confidence over 40', model: 'Aria Stone', platform: 'reddit', hook: '"40 and just getting started 😏"', cost: 80, views: 1800000, watchTime: 52, revenue: 7200, ppvSent: 280, ppvBought: 198, posted: '2026-04-05', tipsGenerated: 1450 }
+];
+
+const FANS_SEGMENTS = [
+  { id: 'whales', name: 'Whales', count: 312, pct: 5.0, avgSpend: 580, totalRev: 180960, color: '#F59E0B', tag: 'tag-whale', desc: 'Top 5% — $400+/month avg' },
+  { id: 'regulars', name: 'Regulars', count: 3744, pct: 60.0, avgSpend: 95, totalRev: 355680, color: '#06B6D4', tag: 'tag-regular', desc: 'Middle 60% — $50-200/month' },
+  { id: 'lurkers', name: 'Lurkers', count: 2184, pct: 35.0, avgSpend: 8, totalRev: 17472, color: '#7A7A95', tag: 'tag-lurker', desc: 'Free fans, occasional spend' },
+];
+
+const FANS_BEHAVIOR = [
+  { id: 'gifters', name: 'Gift Buyers', count: 487, avgSpend: 240, desc: 'Buy wishlist items + gift cards', tag: 'tag-gifter', tip: 'Suggest wishlist additions to all models. These fans LOVE giving.' },
+  { id: 'chatters', name: 'Chat-Heavy', count: 1240, avgSpend: 198, desc: 'High DM engagement', tag: 'tag-chatter', tip: 'Spend more chatter time here. They tip mid-conversation.' },
+  { id: 'tippers', name: 'Frequent Tippers', count: 892, avgSpend: 85, desc: 'Many small tips', tag: 'tag-tipper', tip: 'Run tip menus / goal trackers. They love micro-transactions.' },
+  { id: 'content', name: 'Content-Only', count: 1620, avgSpend: 67, desc: 'Buy PPV but don\'t chat', tag: 'tag-regular', tip: 'Push more PPV drops, less chat. Don\'t waste chatter hours.' }
+];
+
+const HOOKS = [
+  { hook: '"POV: you walk in on me..."', platform: 'instagram', model: 'Bella Rose', views: 4.2, ctr: 14.2, subs: 312, revenue: 4800, score: 92 },
+  { hook: '"gym leggings squat check"', platform: 'instagram', model: 'Sofia Reign', views: 12.0, ctr: 8.7, subs: 481, revenue: 8400, score: 89 },
+  { hook: '"black eyeliner ASMR 🖤"', platform: 'tiktok', model: 'Mia Knight', views: 8.1, ctr: 6.2, subs: 287, revenue: 3200, score: 78 },
+  { hook: '"safe word check 🔗"', platform: 'twitter', model: 'Ivy Black', views: 5.4, ctr: 11.8, subs: 198, revenue: 6900, score: 88 },
+  { hook: '"good morning text 🥰"', platform: 'tinder', model: 'Luna Sky', views: 2.1, ctr: 4.1, subs: 88, revenue: 1200, score: 52 },
+  { hook: '"40 and just getting started 😏"', platform: 'reddit', model: 'Aria Stone', views: 1.8, ctr: 15.4, subs: 142, revenue: 7200, score: 95 }
+];
+
+const CAMPAIGNS = [
+  { name: 'Bella Easter Drop', model: 'Bella Rose', spend: 1200, revenue: 8400, roas: 7.0, days: 14, status: 'completed' },
+  { name: 'Sofia Summer Push', model: 'Sofia Reign', spend: 2800, revenue: 22100, roas: 7.9, days: 21, status: 'live' },
+  { name: 'Mia TikTok Burst', model: 'Mia Knight', spend: 800, revenue: 4200, roas: 5.2, days: 7, status: 'completed' },
+  { name: 'Luna Win-Back', model: 'Luna Sky', spend: 600, revenue: 1100, roas: 1.83, status: 'live', days: 5, note: '⚠️ Underperforming' },
+  { name: 'Ivy Kink Friday', model: 'Ivy Black', spend: 1500, revenue: 9800, roas: 6.5, days: 10, status: 'scheduled' }
+];
+
+const AI_INSIGHTS = [
+  { type: 'critical', icon: '🚨', title: 'Launch big campaign Day 5-7 of June', desc: 'Across all 6 models, fans spend 67% more between day 5-9 of the month (post-payday). May data : top 100 whales each tipped within 48h of June 1st. Concentrate $4-6k in ads in that window.', action: 'Plan June campaign' },
+  { type: 'opportunity', icon: '🎁', title: 'Add wishlists to 3 models', desc: '487 fans (8% of total) have bought gifts in last 60 days. Top gift-buyers : Bella\'s, Sofia\'s, Aria\'s fans. They want to give but only 2 models have public wishlists. Adding to Bella, Sofia, Aria → projected +$8-14k/mo.', action: 'Add wishlists' },
+  { type: 'warning', icon: '⚠️', title: 'Luna Sky : churn rising fast', desc: 'Churn jumped from 3.2% → 7.5% in 60 days. Growth turned negative. Diagnosis : content frequency dropped 40% (other models maintained). Recommendation : Schedule 3 posts/week minimum OR sunset model gracefully and reallocate ad spend.', action: 'Review Luna' },
+  { type: 'opportunity', icon: '💬', title: 'Chat-heavy fans = 4× LTV', desc: 'Fans who chat 3+ msgs/week spend on average $198/month vs $52 for content-only. You have 1,240 chat-heavy fans but only 1 chatter on team. Hire 1 more chatter = projected +$18k/mo at standard 15% chatter cut.', action: 'Hire chatter' },
+  { type: 'opportunity', icon: '📈', title: 'Aria\'s niche outperforms — scale her', desc: 'Aria Stone has the LOWEST churn (2.1%) and HIGHEST LTV ($542) across portfolio. Niche : "Mature / MILF". Demand >> supply in this niche. Recruit 2-3 more 35+ models → projected portfolio +$60-90k/mo at year 1.', action: 'Recruit similar' },
+  { type: 'opportunity', icon: '🎯', title: 'Hook formula working : "POV" framing', desc: '"POV : you walk in on me..." style hooks averaging 14.2% CTR vs 6.8% average. Test on all 6 models, not just Bella. Estimated +$3-5k/mo if applied consistently.', action: 'Roll out POV format' }
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const Store = {
+  data: { activeTab: 'overview', selectedModel: null },
+  load() { const s = localStorage.getItem('creatorops_v1'); if (s) { try { this.data = JSON.parse(s); } catch {} } },
+  save() { localStorage.setItem('creatorops_v1', JSON.stringify(this.data)); }
+};
+Store.load();
+
+function switchTab(t) { Store.data.activeTab = t; Store.data.selectedModel = null; Store.save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
+
+window.addEventListener('load', render);
+
+function render() {
+  const t = Store.data.activeTab || 'overview';
+  document.getElementById('app').innerHTML = `
+    <div class="flex min-h-screen">
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar w-64 flex flex-col p-4 sticky top-0 h-screen flex-shrink-0">
+        <div class="flex items-center gap-2 px-2 py-3 mb-4">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-extrabold text-white" style="background: linear-gradient(135deg, #EC4899, #A855F7);">C</div>
+          <div>
+            <div class="font-extrabold text-base leading-none">CreatorOps</div>
+            <div class="text-[10px] font-semibold mt-0.5 gradient-text">AGENCY ANALYTICS</div>
+          </div>
+        </div>
+
+        <nav class="space-y-1 mb-2">
+          ${[
+            ['overview','📊','Overview', null],
+            ['models','💎','Models', '6'],
+            ['content','🎬','Content', null],
+            ['acquisition','🎯','Acquisition', null],
+            ['fans','👥','Fans', '6,240'],
+            ['campaigns','🚀','Campaigns', '2 live'],
+            ['hooks','🪝','Hooks Lab', null],
+            ['insights','🧠','AI Insights', '6'],
+            ['wishlist','🎁','Wishlist Hub', null],
+            ['schedule','📅','Schedule', null],
+            ['finance','💰','Finance', null],
+            ['settings','⚙️','Settings', null]
+          ].map(([id, icon, name, badge]) => `
+            <div class="nav-item ${t === id ? 'active' : ''}" onclick="switchTab('${id}')">
+              <span class="text-lg">${icon}</span>
+              <span class="flex-1">${name}</span>
+              ${badge ? `<span class="pill" style="background: rgba(236,72,153,.15); color: #F9A8D4;">${badge}</span>` : ''}
+            </div>
+          `).join('')}
+        </nav>
+
+        <div class="mt-auto">
+          <div class="card p-3 mb-3" style="background: linear-gradient(135deg, rgba(236,72,153,.15), rgba(168,85,247,.15)); border-color: rgba(236,72,153,.3);">
+            <div class="stat-label mb-1">MONTH-TO-DATE</div>
+            <div class="text-2xl font-extrabold gradient-text">$${(TOTAL_REVENUE/1000).toFixed(1)}k</div>
+            <div class="text-xs" style="color: var(--muted)">+18.4% MoM · 12 days left</div>
+          </div>
+          <div class="flex items-center gap-2 px-2 py-2 rounded-lg cursor-pointer" style="background: var(--surface-2);">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white" style="background: linear-gradient(135deg, #06B6D4, #0891B2);">DT</div>
+            <div class="flex-1">
+              <div class="text-sm font-semibold leading-none">Dave T.</div>
+              <div class="text-[11px] mt-1" style="color: var(--muted)">Agency Owner</div>
+            </div>
+            <div class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <main class="flex-1 min-w-0">
+        <div class="sticky top-0 z-10 px-8 py-4 border-b flex items-center justify-between" style="background: rgba(10,10,18,.85); backdrop-filter: blur(12px); border-color: var(--border);">
+          <div>
+            <div class="text-xs" style="color: var(--muted)">G'day Dave · ${new Date().toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+            <h1 class="text-2xl font-extrabold tracking-tight">${pageTitle(t)}</h1>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="btn btn-ghost text-sm">📅 Last 30 days</button>
+            <button class="btn btn-ghost btn-icon">🔔</button>
+            <button class="btn btn-primary text-sm">+ Quick action</button>
+          </div>
+        </div>
+
+        <div class="px-8 py-6 anim-fade">${page(t)}</div>
+      </main>
+    </div>
+  `;
+}
+
+function pageTitle(t) {
+  const titles = { overview: 'Overview', models: 'Models', content: 'Content Performance', acquisition: 'Acquisition Tracking', fans: 'Fans & Segments', campaigns: 'Campaigns', hooks: 'Hooks Laboratory', insights: 'AI Insights', wishlist: 'Wishlist Hub', schedule: 'Content Schedule', finance: 'Finance', settings: 'Settings' };
+  return titles[t] || 'Dashboard';
+}
+
+function page(t) {
+  if (Store.data.selectedModel) return pageModelDetail();
+  const fns = { overview: pageOverview, models: pageModels, content: pageContent, acquisition: pageAcquisition, fans: pageFans, campaigns: pageCampaigns, hooks: pageHooks, insights: pageInsights, wishlist: pageWishlist, schedule: pageSchedule, finance: pageFinance, settings: pageSettings };
+  return (fns[t] || pageOverview)();
+}
+
+/* ============================================================
+   OVERVIEW
+   ============================================================ */
+function pageOverview() {
+  return `
+    <!-- Top KPIs -->
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="stat-label">Revenue MTD</div>
+          <span class="pill" style="background: rgba(16,185,129,.15); color: #6EE7B7;">↑ 18.4%</span>
+        </div>
+        <div class="text-3xl font-extrabold gradient-text">$${TOTAL_REVENUE.toLocaleString()}</div>
+        <div class="text-xs mt-1" style="color: var(--muted)">vs $142,820 last month</div>
+        ${sparkline([45,52,48,61,58,67,72,68,79,84,82,88,92,95])}
+      </div>
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="stat-label">Active Fans</div>
+          <span class="pill" style="background: rgba(16,185,129,.15); color: #6EE7B7;">↑ 12.1%</span>
+        </div>
+        <div class="text-3xl font-extrabold">${TOTAL_FANS.toLocaleString()}</div>
+        <div class="text-xs mt-1" style="color: var(--muted)">487 new this month</div>
+      </div>
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="stat-label">Avg LTV</div>
+          <span class="pill" style="background: rgba(16,185,129,.15); color: #6EE7B7;">↑ $34</span>
+        </div>
+        <div class="text-3xl font-extrabold">$${AVG_LTV}</div>
+        <div class="text-xs mt-1" style="color: var(--muted)">+11% from $258</div>
+      </div>
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="stat-label">Churn Rate</div>
+          <span class="pill" style="background: rgba(245,158,11,.15); color: #FCD34D;">↑ 0.4pt</span>
+        </div>
+        <div class="text-3xl font-extrabold">4.2%</div>
+        <div class="text-xs mt-1" style="color: var(--muted)">Luna driving most churn</div>
+      </div>
+    </div>
+
+    <!-- Revenue trend + AI insights -->
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="card p-5 col-span-2">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="stat-label">Revenue · last 30 days</div>
+            <div class="text-2xl font-extrabold gradient-text">$${TOTAL_REVENUE.toLocaleString()}</div>
+          </div>
+          <div class="flex gap-2">
+            <button class="text-xs px-3 py-1.5 rounded-lg" style="background: var(--surface-2); color: var(--muted);">7d</button>
+            <button class="text-xs px-3 py-1.5 rounded-lg" style="background: var(--accent); color: #fff;">30d</button>
+            <button class="text-xs px-3 py-1.5 rounded-lg" style="background: var(--surface-2); color: var(--muted);">90d</button>
+          </div>
+        </div>
+        <div class="flex items-end gap-1 h-40">
+          ${Array.from({length: 30}, (_, i) => {
+            const v = 30 + Math.sin(i / 3.2) * 18 + (i / 30) * 35 + (i % 7 === 5 || i % 7 === 6 ? 12 : 0);
+            const isToday = i === 29;
+            return `<div class="flex-1 bar ${isToday ? '' : ''}" style="height:${Math.min(95, v)}%"></div>`;
+          }).join('')}
+        </div>
+        <div class="flex justify-between text-[10px] mt-2" style="color: var(--muted)">
+          <span>Apr 14</span><span>Apr 21</span><span>Apr 28</span><span>May 5</span><span>Today</span>
+        </div>
+      </div>
+
+      <div class="insight-card critical p-5">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-xs font-bold uppercase" style="color: #FCD34D;">🧠 TOP INSIGHT</div>
+          <span class="pill" style="background: rgba(245,158,11,.2); color: #FCD34D;">High priority</span>
+        </div>
+        <div class="font-extrabold text-base mb-2">Launch big campaign Day 5-7 of June</div>
+        <p class="text-sm leading-relaxed mb-3" style="color: var(--muted)">
+          Whales spend 67% more between day 5-9 of month (post-payday). Top 100 whales tipped within 48h of June 1st last cycle. Concentrate $4-6k in ads in that window.
+        </p>
+        <button class="btn btn-primary w-full text-sm">Plan campaign →</button>
+      </div>
+    </div>
+
+    <!-- Top performers & channels -->
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="stat-label">Top performing models</div>
+            <div class="text-base font-bold">By revenue this month</div>
+          </div>
+          <button class="text-xs font-semibold" style="color: var(--accent);" onclick="switchTab('models')">See all →</button>
+        </div>
+        <div class="space-y-3">
+          ${MODELS.sort((a,b) => b.revenue - a.revenue).slice(0,4).map((m, i) => `
+            <div class="flex items-center gap-3 cursor-pointer table-row p-2 rounded-lg" onclick="selectModel(${m.id})">
+              <div class="text-sm font-bold w-5" style="color: var(--muted)">#${i+1}</div>
+              <div class="w-10 h-10 rounded-full ${m.avatar} flex items-center justify-center font-bold">${m.name.split(' ').map(s => s[0]).join('')}</div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm truncate">${m.name}</div>
+                <div class="text-xs" style="color: var(--muted)">${m.niche} · ${m.fans} fans</div>
+              </div>
+              <div class="text-right">
+                <div class="font-bold">$${(m.revenue/1000).toFixed(1)}k</div>
+                <div class="text-xs" style="color: ${m.growth > 0 ? '#6EE7B7' : '#FCA5A5'}">${m.growth > 0 ? '↑' : '↓'} ${Math.abs(m.growth)}%</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="stat-label">Acquisition by channel</div>
+            <div class="text-base font-bold">Where fans came from</div>
+          </div>
+          <button class="text-xs font-semibold" style="color: var(--accent);" onclick="switchTab('acquisition')">See all →</button>
+        </div>
+        <div class="space-y-3">
+          ${CHANNELS.sort((a,b) => b.subs - a.subs).slice(0,5).map(c => `
+            <div class="flex items-center gap-3">
+              <div class="channel-icon ${c.class}">${c.icon}</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                  <div class="font-semibold text-sm">${c.name}</div>
+                  <div class="text-sm font-bold">${c.subs}</div>
+                </div>
+                <div class="h-1.5 rounded-full overflow-hidden" style="background: var(--surface-2);">
+                  <div class="h-1.5 rounded-full" style="width:${(c.subs/1420)*100}%; background: linear-gradient(90deg, var(--accent), var(--accent-2));"></div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Best content + Fan segments -->
+    <div class="grid grid-cols-3 gap-4">
+      <div class="card p-5 col-span-2">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="stat-label">Top performing content</div>
+            <div class="text-base font-bold">Last 30 days · ranked by revenue</div>
+          </div>
+          <button class="text-xs font-semibold" style="color: var(--accent);" onclick="switchTab('content')">All content →</button>
+        </div>
+        <div class="space-y-2">
+          ${CONTENT.sort((a,b) => b.revenue - a.revenue).slice(0,4).map(c => `
+            <div class="flex items-center gap-3 p-3 rounded-lg table-row" style="background: var(--surface-2);">
+              <div class="text-2xl">${CHANNELS.find(ch => ch.id === c.platform)?.icon}</div>
+              <div class="flex-1 min-w-0">
+                <div class="font-semibold text-sm truncate">${c.title}</div>
+                <div class="text-xs" style="color: var(--muted)">${c.model} · ${(c.views/1000000).toFixed(1)}M views · ${c.watchTime}s avg</div>
+              </div>
+              <div class="text-right">
+                <div class="font-bold text-emerald-400">+$${c.revenue.toLocaleString()}</div>
+                <div class="text-[10px]" style="color: var(--muted)">cost $${c.cost} · ${((c.revenue/c.cost)*100/100).toFixed(0)}× ROI</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="stat-label mb-3">Fan segments</div>
+        <div class="space-y-3 mb-4">
+          ${FANS_SEGMENTS.map(s => `
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded-full" style="background: ${s.color};"></div>
+                  <div class="text-sm font-semibold">${s.name}</div>
+                </div>
+                <div class="text-xs" style="color: var(--muted)">${s.pct}%</div>
+              </div>
+              <div class="h-2 rounded-full overflow-hidden" style="background: var(--surface-2);">
+                <div class="h-2 rounded-full" style="width:${s.pct}%; background: ${s.color};"></div>
+              </div>
+              <div class="text-[11px] mt-1" style="color: var(--muted)">${s.count} fans · $${s.avgSpend}/mo</div>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn btn-ghost w-full text-sm" onclick="switchTab('fans')">Segment details →</button>
+      </div>
+    </div>
+  `;
+}
+
+function sparkline(data) {
+  const max = Math.max(...data);
+  const path = data.map((v, i) => `${i === 0 ? 'M' : 'L'} ${(i / (data.length - 1)) * 100} ${100 - (v / max) * 80}`).join(' ');
+  return `
+    <svg class="sparkline mt-3" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#EC4899" stop-opacity=".4"/>
+          <stop offset="100%" stop-color="#EC4899" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${path} L 100 100 L 0 100 Z" fill="url(#sparkGrad)"/>
+      <path d="${path}" fill="none" stroke="#EC4899" stroke-width="1.5"/>
+    </svg>
+  `;
+}
+
+/* ============================================================
+   MODELS
+   ============================================================ */
+function selectModel(id) { Store.data.selectedModel = id; Store.save(); render(); window.scrollTo({top:0}); }
+function backToModels() { Store.data.selectedModel = null; Store.save(); render(); }
+
+function pageModels() {
+  return `
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-3">
+        <input type="text" placeholder="🔍 Search models..." class="input" style="width: 300px;" />
+        <button class="btn btn-ghost text-sm">Filter ▼</button>
+        <button class="btn btn-ghost text-sm">Sort: Revenue ▼</button>
+      </div>
+      <button class="btn btn-primary text-sm">+ Add model</button>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4">
+      ${MODELS.map(m => `
+        <div class="card p-5 cursor-pointer table-row" onclick="selectModel(${m.id})">
+          <div class="flex items-start gap-3 mb-4">
+            <div class="w-14 h-14 rounded-full ${m.avatar} flex items-center justify-center font-bold text-lg">${m.name.split(' ').map(s => s[0]).join('')}</div>
+            <div class="flex-1">
+              <div class="font-extrabold">${m.name}</div>
+              <div class="text-xs" style="color: var(--muted)">${m.handle} · ${m.niche}</div>
+              <div class="flex items-center gap-2 mt-2">
+                <span class="pill" style="background: rgba(6,182,212,.15); color: #67E8F9;">${m.fans} fans</span>
+                <span class="pill" style="background: ${m.growth > 0 ? 'rgba(16,185,129,.15)' : 'rgba(239,68,68,.15)'}; color: ${m.growth > 0 ? '#6EE7B7' : '#FCA5A5'};">${m.growth > 0 ? '↑' : '↓'} ${Math.abs(m.growth)}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-center mb-3 pt-3 border-t" style="border-color: var(--border);">
+            <div>
+              <div class="text-lg font-extrabold gradient-text">$${(m.revenue/1000).toFixed(1)}k</div>
+              <div class="text-[10px]" style="color: var(--muted)">REVENUE</div>
+            </div>
+            <div>
+              <div class="text-lg font-extrabold">$${m.ltv}</div>
+              <div class="text-[10px]" style="color: var(--muted)">LTV</div>
+            </div>
+            <div>
+              <div class="text-lg font-extrabold ${m.churn < 5 ? 'text-emerald-400' : 'text-amber-400'}">${m.churn}%</div>
+              <div class="text-[10px]" style="color: var(--muted)">CHURN</div>
+            </div>
+          </div>
+
+          <div class="text-xs" style="color: var(--muted)">🪝 Best hook</div>
+          <div class="text-xs truncate mt-1">${m.topHook}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function pageModelDetail() {
+  const m = MODELS.find(x => x.id === Store.data.selectedModel);
+  if (!m) return pageModels();
+  const sampleFans = [
+    { name: 'Anon4892', spend: 1240, lastActive: '2h ago', tag: 'tag-whale', tip: 'Bought 8 PPVs this month' },
+    { name: 'NightOwl_22', spend: 890, lastActive: '12h ago', tag: 'tag-whale', tip: 'Sends gifts weekly · loves chat' },
+    { name: 'BlueSky42', spend: 412, lastActive: '1d ago', tag: 'tag-gifter', tip: 'Bought Amazon wishlist item' },
+    { name: 'Quiet_Sub', spend: 320, lastActive: '3h ago', tag: 'tag-chatter', tip: 'High chat engagement' },
+    { name: 'TipperKing', spend: 280, lastActive: '6h ago', tag: 'tag-tipper', tip: 'Frequent $5-20 tips' }
+  ];
+
+  return `
+    <button class="btn btn-ghost text-sm mb-4" onclick="backToModels()">← Back to models</button>
+
+    <!-- Hero -->
+    <div class="card p-6 mb-5">
+      <div class="flex items-start gap-6">
+        <div class="w-24 h-24 rounded-full ${m.avatar} flex items-center justify-center font-extrabold text-3xl flex-shrink-0">${m.name.split(' ').map(s => s[0]).join('')}</div>
+        <div class="flex-1">
+          <div class="flex items-start justify-between">
+            <div>
+              <h2 class="text-3xl font-extrabold mb-1">${m.name}</h2>
+              <div class="text-sm" style="color: var(--muted)">${m.handle} · ${m.niche} · joined ${m.joined}</div>
+              <div class="flex items-center gap-2 mt-3">
+                <span class="pill" style="background: rgba(6,182,212,.15); color: #67E8F9;">${m.fans.toLocaleString()} fans</span>
+                <span class="pill ${m.churn < 5 ? 'tag-tipper' : 'tag-whale'}">${m.churn}% churn</span>
+                <span class="pill" style="background: ${m.growth > 0 ? 'rgba(16,185,129,.15)' : 'rgba(239,68,68,.15)'}; color: ${m.growth > 0 ? '#6EE7B7' : '#FCA5A5'};">${m.growth > 0 ? '↑' : '↓'} ${Math.abs(m.growth)}% MoM</span>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button class="btn btn-ghost text-sm">📝 Edit</button>
+              <button class="btn btn-primary text-sm">📊 Run report</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-4 gap-4 mb-5">
+      <div class="card p-5"><div class="stat-label mb-2">REVENUE MTD</div><div class="text-3xl font-extrabold gradient-text">$${m.revenue.toLocaleString()}</div></div>
+      <div class="card p-5"><div class="stat-label mb-2">LTV</div><div class="text-3xl font-extrabold">$${m.ltv}</div></div>
+      <div class="card p-5"><div class="stat-label mb-2">CONTENT POSTED</div><div class="text-3xl font-extrabold">${m.contentCount}</div></div>
+      <div class="card p-5"><div class="stat-label mb-2">TOP CHANNEL</div><div class="text-lg font-extrabold mt-2">${m.topChannel}</div></div>
+    </div>
+
+    <!-- Trend + Hook + Fans -->
+    <div class="grid grid-cols-3 gap-4 mb-5">
+      <div class="card p-5 col-span-2">
+        <div class="stat-label mb-1">Revenue trend · 90 days</div>
+        <div class="text-2xl font-extrabold gradient-text mb-3">$${(m.revenue * 2.7).toLocaleString()} total</div>
+        <div class="flex items-end gap-1 h-32">
+          ${Array.from({length: 30}, (_, i) => { const v = 25 + Math.sin(i / 2.8) * 22 + (i / 30) * 45 + (m.growth/2); return `<div class="flex-1 bar" style="height:${Math.min(95, v)}%"></div>`; }).join('')}
+        </div>
+      </div>
+      <div class="insight-card p-5">
+        <div class="text-xs font-bold uppercase mb-2" style="color: #F9A8D4;">🪝 BEST HOOK</div>
+        <div class="font-bold mb-3">${m.topHook}</div>
+        <div class="text-xs leading-relaxed mb-3" style="color: var(--muted)">
+          Top performing hook. CTR 12.4%. Drove 287 subs at $4.20 effective CPS.
+        </div>
+        <button class="btn btn-primary w-full text-sm">Use this hook pattern →</button>
+      </div>
+    </div>
+
+    <!-- Top fans -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="stat-label">Top fans · ${m.name}</div>
+          <div class="text-base font-bold">By total spend</div>
+        </div>
+        <button class="btn btn-ghost text-sm">See all ${m.fans} fans →</button>
+      </div>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-xs border-b" style="border-color: var(--border); color: var(--muted)">
+            <th class="text-left py-2 font-semibold">FAN</th>
+            <th class="text-left font-semibold">SPEND</th>
+            <th class="text-left font-semibold">LAST ACTIVE</th>
+            <th class="text-left font-semibold">TYPE</th>
+            <th class="text-left font-semibold">NOTE</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sampleFans.map(f => `
+            <tr class="table-row border-b" style="border-color: var(--border);">
+              <td class="py-3 font-semibold">${f.name}</td>
+              <td class="font-bold gradient-text">$${f.spend}</td>
+              <td class="text-xs" style="color: var(--muted)">${f.lastActive}</td>
+              <td><span class="pill ${f.tag}">${f.tag.replace('tag-','').toUpperCase()}</span></td>
+              <td class="text-xs" style="color: var(--muted)">${f.tip}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ============================================================
+   CONTENT
+   ============================================================ */
+function pageContent() {
+  return `
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-3">
+        <input type="text" placeholder="🔍 Search content..." class="input" style="width: 300px;" />
+        <button class="btn btn-ghost text-sm">Platform ▼</button>
+        <button class="btn btn-ghost text-sm">Model ▼</button>
+        <button class="btn btn-ghost text-sm">Sort: ROI ▼</button>
+      </div>
+      <button class="btn btn-primary text-sm">+ Log content</button>
+    </div>
+
+    <div class="grid grid-cols-4 gap-4 mb-5">
+      <div class="card p-4"><div class="stat-label mb-1">Total content (90d)</div><div class="text-2xl font-extrabold">${CONTENT.length * 24}</div></div>
+      <div class="card p-4"><div class="stat-label mb-1">Total production cost</div><div class="text-2xl font-extrabold">$${(CONTENT.reduce((s,c)=>s+c.cost,0) * 24).toLocaleString()}</div></div>
+      <div class="card p-4"><div class="stat-label mb-1">Avg ROI</div><div class="text-2xl font-extrabold text-emerald-400">28×</div></div>
+      <div class="card p-4"><div class="stat-label mb-1">Avg watch time</div><div class="text-2xl font-extrabold">31s</div></div>
+    </div>
+
+    <div class="card overflow-hidden">
+      <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--border);">
+        <div class="font-bold">All content · ranked by ROI</div>
+        <button class="text-xs" style="color: var(--accent);">Export CSV</button>
+      </div>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-xs border-b" style="border-color: var(--border); color: var(--muted)">
+            <th class="text-left py-3 px-4 font-semibold">CONTENT</th>
+            <th class="text-left font-semibold">MODEL</th>
+            <th class="text-left font-semibold">PLATFORM</th>
+            <th class="text-left font-semibold">HOOK</th>
+            <th class="text-right font-semibold">COST</th>
+            <th class="text-right font-semibold">VIEWS</th>
+            <th class="text-right font-semibold">WATCH</th>
+            <th class="text-right font-semibold">PPV BOUGHT</th>
+            <th class="text-right font-semibold">REVENUE</th>
+            <th class="text-right font-semibold">ROI</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${CONTENT.sort((a,b) => (b.revenue/b.cost) - (a.revenue/a.cost)).map(c => `
+            <tr class="table-row border-b" style="border-color: var(--border);">
+              <td class="py-3 px-4 font-semibold">${c.title}</td>
+              <td>${c.model}</td>
+              <td><span class="channel-icon ${CHANNELS.find(ch => ch.id === c.platform)?.class}" style="width:28px; height:28px; font-size:14px; display: inline-flex;">${CHANNELS.find(ch => ch.id === c.platform)?.icon}</span></td>
+              <td class="text-xs italic" style="color: var(--muted)">${c.hook}</td>
+              <td class="text-right">$${c.cost}</td>
+              <td class="text-right">${(c.views/1000000).toFixed(1)}M</td>
+              <td class="text-right">${c.watchTime}s</td>
+              <td class="text-right">${c.ppvBought}/${c.ppvSent} <span class="text-xs" style="color: var(--muted)">(${Math.round(c.ppvBought/c.ppvSent*100)}%)</span></td>
+              <td class="text-right font-bold gradient-text">$${c.revenue.toLocaleString()}</td>
+              <td class="text-right"><span class="pill" style="background: ${(c.revenue/c.cost) > 20 ? 'rgba(16,185,129,.15)' : 'rgba(245,158,11,.15)'}; color: ${(c.revenue/c.cost) > 20 ? '#6EE7B7' : '#FCD34D'};">${Math.round(c.revenue/c.cost)}×</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ============================================================
+   ACQUISITION
+   ============================================================ */
+function pageAcquisition() {
+  return `
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="card p-5"><div class="stat-label mb-1">Subs acquired (30d)</div><div class="text-3xl font-extrabold">5,800</div><div class="text-xs text-emerald-400">↑ 23% MoM</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Total ad spend</div><div class="text-3xl font-extrabold">$8,240</div><div class="text-xs" style="color: var(--muted)">paid only</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Blended CPS</div><div class="text-3xl font-extrabold">$1.42</div><div class="text-xs text-emerald-400">↓ from $1.85</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">ROAS</div><div class="text-3xl font-extrabold gradient-text">8.4×</div><div class="text-xs text-emerald-400">↑ 1.2× MoM</div></div>
+    </div>
+
+    <!-- Funnel -->
+    <div class="card p-6 mb-6">
+      <div class="stat-label mb-1">Acquisition funnel · last 30 days</div>
+      <div class="text-base font-bold mb-5">From content view to paying fan</div>
+      <div class="space-y-2">
+        ${[
+          { step: 'Total content views', count: 35400000, conv: 100, color: '#EC4899' },
+          { step: 'Profile clicks', count: 287000, conv: 0.81, color: '#A855F7' },
+          { step: 'Link in bio clicks', count: 41200, conv: 14.4, color: '#06B6D4' },
+          { step: 'OF page visits', count: 18800, conv: 45.6, color: '#10B981' },
+          { step: 'Free trials', count: 8200, conv: 43.6, color: '#F59E0B' },
+          { step: 'Paid subs', count: 5800, conv: 70.7, color: '#EC4899' },
+          { step: 'PPV-active fans', count: 3120, conv: 53.8, color: '#A855F7' },
+          { step: 'Whales (>$400/mo)', count: 312, conv: 10.0, color: '#FCD34D' }
+        ].map((s, i, arr) => `
+          <div class="funnel-step" style="border-color: ${s.color}; width: ${100 - i * 9}%;">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-semibold">${s.step}</div>
+                <div class="text-xs" style="color: var(--muted)">${s.count.toLocaleString()} ${i > 0 ? `· ${s.conv}% conversion from previous step` : ''}</div>
+              </div>
+              <div class="text-2xl font-extrabold" style="color: ${s.color};">${s.count > 1000000 ? (s.count/1000000).toFixed(1) + 'M' : s.count > 1000 ? (s.count/1000).toFixed(1) + 'k' : s.count}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Channels comparison -->
+    <div class="card overflow-hidden">
+      <div class="p-4 border-b" style="border-color: var(--border);">
+        <div class="font-bold">Channel comparison</div>
+        <div class="text-xs" style="color: var(--muted)">All sources · ranked by revenue</div>
+      </div>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-xs border-b" style="border-color: var(--border); color: var(--muted)">
+            <th class="text-left py-3 px-4 font-semibold">CHANNEL</th>
+            <th class="text-right font-semibold">SUBS</th>
+            <th class="text-right font-semibold">COST</th>
+            <th class="text-right font-semibold">REVENUE</th>
+            <th class="text-right font-semibold">CPS</th>
+            <th class="text-right font-semibold">CONV %</th>
+            <th class="text-right font-semibold">ROAS</th>
+            <th class="text-right font-semibold">CONTENT</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${CHANNELS.sort((a,b) => b.revenue - a.revenue).map(c => `
+            <tr class="table-row border-b" style="border-color: var(--border);">
+              <td class="py-3 px-4">
+                <div class="flex items-center gap-2">
+                  <div class="channel-icon ${c.class}" style="width:32px; height:32px; font-size:16px;">${c.icon}</div>
+                  <div class="font-semibold">${c.name}</div>
+                </div>
+              </td>
+              <td class="text-right">${c.subs}</td>
+              <td class="text-right">${c.cost > 0 ? '$' + c.cost.toLocaleString() : '<span style="color: var(--muted)">Organic</span>'}</td>
+              <td class="text-right font-bold gradient-text">$${c.revenue.toLocaleString()}</td>
+              <td class="text-right">${c.cpa > 0 ? '$' + c.cpa.toFixed(2) : '—'}</td>
+              <td class="text-right">${c.conv}%</td>
+              <td class="text-right"><span class="pill" style="background: rgba(16,185,129,.15); color: #6EE7B7;">${(c.revenue/(c.cost || 1)).toFixed(1)}×</span></td>
+              <td class="text-right text-xs" style="color: var(--muted)">${c.content || '—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ============================================================
+   FANS
+   ============================================================ */
+function pageFans() {
+  return `
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="card p-5"><div class="stat-label mb-1">Total fans</div><div class="text-3xl font-extrabold">${TOTAL_FANS.toLocaleString()}</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Whales (top 5%)</div><div class="text-3xl font-extrabold text-amber-400">312</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Gift buyers</div><div class="text-3xl font-extrabold" style="color: #F9A8D4;">487</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Chat-heavy fans</div><div class="text-3xl font-extrabold" style="color: #D8B4FE;">1,240</div></div>
+    </div>
+
+    <!-- Spend distribution -->
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="card p-5 col-span-2">
+        <div class="stat-label mb-1">Spend distribution</div>
+        <div class="text-base font-bold mb-4">Where the money actually comes from</div>
+        <div class="space-y-4">
+          ${FANS_SEGMENTS.map(s => `
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-4 h-4 rounded-full" style="background: ${s.color};"></div>
+                  <div class="font-bold">${s.name}</div>
+                  <div class="text-xs" style="color: var(--muted)">${s.desc}</div>
+                </div>
+                <div class="text-sm font-bold">$${(s.totalRev/1000).toFixed(1)}k</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center mb-2">
+                <div class="text-xs" style="color: var(--muted)"><span class="text-lg font-bold" style="color: var(--text);">${s.count.toLocaleString()}</span><br/>fans</div>
+                <div class="text-xs" style="color: var(--muted)"><span class="text-lg font-bold" style="color: var(--text);">${s.pct}%</span><br/>of base</div>
+                <div class="text-xs" style="color: var(--muted)"><span class="text-lg font-bold" style="color: var(--text);">$${s.avgSpend}</span><br/>avg/mo</div>
+              </div>
+            </div>
+          `).join('')}
+          <div class="mt-4 pt-4 border-t" style="border-color: var(--border);">
+            <div class="text-sm" style="color: var(--muted)">💡 <strong style="color: var(--text);">Pareto in action :</strong> 5% of fans (whales) drive 33% of revenue. Make sure your chatters focus there.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="stat-label mb-3">Behavior segments</div>
+        <div class="space-y-3">
+          ${FANS_BEHAVIOR.map(b => `
+            <div class="p-3 rounded-lg" style="background: var(--surface-2);">
+              <div class="flex items-center justify-between mb-1">
+                <div class="font-semibold text-sm">${b.name}</div>
+                <span class="pill ${b.tag}">${b.count}</span>
+              </div>
+              <div class="text-xs mb-2" style="color: var(--muted)">${b.desc}</div>
+              <div class="text-xs font-semibold" style="color: var(--text);">$${b.avgSpend} avg/mo</div>
+              <div class="text-xs mt-2 leading-relaxed" style="color: var(--muted);">💡 ${b.tip}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Time pattern heatmap -->
+    <div class="card p-5">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="stat-label">Spend patterns · time of month</div>
+          <div class="text-base font-bold">When do fans actually pay?</div>
+        </div>
+        <span class="pill" style="background: rgba(245,158,11,.15); color: #FCD34D;">💡 Whales peak Day 5-9</span>
+      </div>
+      <div class="grid gap-1" style="grid-template-columns: 80px repeat(30, 1fr);">
+        <div></div>
+        ${Array.from({length: 30}, (_, i) => `<div class="text-[10px] text-center" style="color: var(--muted)">${i+1}</div>`).join('')}
+        ${['Whales','Regulars','Lurkers'].map((seg, r) => `
+          <div class="text-xs flex items-center" style="color: var(--muted)">${seg}</div>
+          ${Array.from({length: 30}, (_, c) => {
+            const isPayday = (c >= 4 && c <= 8) || (c >= 14 && c <= 18) || (c >= 24 && c <= 28);
+            const intensity = isPayday ? (r === 0 ? 95 : r === 1 ? 70 : 35) : (r === 0 ? 30 : r === 1 ? 45 : 25);
+            const finalIntensity = intensity + Math.random() * 15;
+            return `<div class="heat-cell" style="background: rgba(236,72,153, ${finalIntensity / 100});" title="Day ${c+1}: ${Math.round(finalIntensity)}% intensity"></div>`;
+          }).join('')}
+        `).join('')}
+      </div>
+      <div class="mt-4 text-xs" style="color: var(--muted)">
+        💡 <strong style="color: var(--text);">Insight :</strong> Whales tip 67% more between day 5-9 (post-payday). Schedule your big PPV drops + ad pushes in this window for max ROAS.
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   CAMPAIGNS
+   ============================================================ */
+function pageCampaigns() {
+  return `
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="card p-5"><div class="stat-label mb-1">Total spend MTD</div><div class="text-3xl font-extrabold">$${CAMPAIGNS.reduce((s,c)=>s+c.spend,0).toLocaleString()}</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Total revenue</div><div class="text-3xl font-extrabold gradient-text">$${CAMPAIGNS.reduce((s,c)=>s+c.revenue,0).toLocaleString()}</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Blended ROAS</div><div class="text-3xl font-extrabold text-emerald-400">${(CAMPAIGNS.reduce((s,c)=>s+c.revenue,0)/CAMPAIGNS.reduce((s,c)=>s+c.spend,0)).toFixed(1)}×</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Live campaigns</div><div class="text-3xl font-extrabold">${CAMPAIGNS.filter(c=>c.status==='live').length}</div></div>
+    </div>
+
+    <div class="card overflow-hidden">
+      <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--border);">
+        <div>
+          <div class="font-bold">All campaigns</div>
+          <div class="text-xs" style="color: var(--muted)">Active + historical</div>
+        </div>
+        <button class="btn btn-primary text-sm">+ New campaign</button>
+      </div>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-xs border-b" style="border-color: var(--border); color: var(--muted)">
+            <th class="text-left py-3 px-4 font-semibold">CAMPAIGN</th>
+            <th class="text-left font-semibold">MODEL</th>
+            <th class="text-left font-semibold">STATUS</th>
+            <th class="text-right font-semibold">SPEND</th>
+            <th class="text-right font-semibold">REVENUE</th>
+            <th class="text-right font-semibold">ROAS</th>
+            <th class="text-right font-semibold">DAYS</th>
+            <th class="text-left font-semibold">NOTE</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${CAMPAIGNS.sort((a,b) => b.roas - a.roas).map(c => `
+            <tr class="table-row border-b" style="border-color: var(--border);">
+              <td class="py-3 px-4 font-semibold">${c.name}</td>
+              <td>${c.model}</td>
+              <td><span class="pill" style="background: ${c.status === 'live' ? 'rgba(16,185,129,.15)' : c.status === 'scheduled' ? 'rgba(6,182,212,.15)' : 'rgba(122,122,149,.15)'}; color: ${c.status === 'live' ? '#6EE7B7' : c.status === 'scheduled' ? '#67E8F9' : '#C4C4D6'};">${c.status === 'live' ? '🟢 Live' : c.status === 'scheduled' ? '📅 Scheduled' : '✓ Done'}</span></td>
+              <td class="text-right">$${c.spend.toLocaleString()}</td>
+              <td class="text-right font-bold gradient-text">$${c.revenue.toLocaleString()}</td>
+              <td class="text-right"><span class="pill" style="background: ${c.roas > 5 ? 'rgba(16,185,129,.15)' : c.roas > 2 ? 'rgba(245,158,11,.15)' : 'rgba(239,68,68,.15)'}; color: ${c.roas > 5 ? '#6EE7B7' : c.roas > 2 ? '#FCD34D' : '#FCA5A5'};">${c.roas.toFixed(1)}×</span></td>
+              <td class="text-right">${c.days}d</td>
+              <td class="text-xs" style="color: ${c.note ? '#FCA5A5' : 'var(--muted)'}">${c.note || ''}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ============================================================
+   HOOKS LAB
+   ============================================================ */
+function pageHooks() {
+  return `
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="card p-5"><div class="stat-label mb-1">Hooks tested</div><div class="text-3xl font-extrabold">142</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Avg CTR</div><div class="text-3xl font-extrabold">9.8%</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Top hook score</div><div class="text-3xl font-extrabold gradient-text">95</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Avg revenue/hook</div><div class="text-3xl font-extrabold">$2,890</div></div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="insight-card p-5 col-span-2">
+        <div class="text-xs font-bold uppercase mb-2" style="color: #F9A8D4;">🧠 PATTERN DETECTED</div>
+        <div class="text-xl font-extrabold mb-2">"POV : you walk in on me..." structure → 14% CTR</div>
+        <p class="text-sm leading-relaxed mb-3" style="color: var(--muted)">
+          Hooks using <strong style="color: var(--text);">2nd person + curiosity gap + situational framing</strong> outperform direct hooks by 2.1× on Instagram and TikTok. Try across all 6 models. Templates ready :
+        </p>
+        <div class="space-y-2 mb-3">
+          <div class="p-2 rounded-lg text-sm" style="background: var(--surface-2);">"POV : you find me [doing X]..."</div>
+          <div class="p-2 rounded-lg text-sm" style="background: var(--surface-2);">"Wait until you see what happens at [time/place]..."</div>
+          <div class="p-2 rounded-lg text-sm" style="background: var(--surface-2);">"[Number] reasons you'd never guess about me..."</div>
+        </div>
+        <button class="btn btn-primary text-sm">Apply to all models →</button>
+      </div>
+      <div class="card p-5">
+        <div class="stat-label mb-3">Hook performance by platform</div>
+        <div class="space-y-3">
+          ${[
+            { p: 'Instagram', avg: 14.2, color: '#EC4899', count: 42 },
+            { p: 'TikTok', avg: 6.2, color: '#06B6D4', count: 67 },
+            { p: 'Reddit', avg: 15.4, color: '#F59E0B', count: 18 },
+            { p: 'Twitter', avg: 11.8, color: '#A855F7', count: 23 },
+            { p: 'Tinder', avg: 4.1, color: '#EF4444', count: 12 }
+          ].map(p => `
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>${p.p}</span>
+                <span class="font-bold">${p.avg}% CTR</span>
+              </div>
+              <div class="h-2 rounded-full" style="background: var(--surface-2);">
+                <div class="h-2 rounded-full" style="width:${p.avg * 6}%; background: ${p.color};"></div>
+              </div>
+              <div class="text-[10px] mt-1" style="color: var(--muted)">${p.count} hooks tested</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="card overflow-hidden">
+      <div class="p-4 border-b flex items-center justify-between" style="border-color: var(--border);">
+        <div>
+          <div class="font-bold">All hooks · ranked by score</div>
+          <div class="text-xs" style="color: var(--muted)">CTR × Revenue impact</div>
+        </div>
+        <button class="btn btn-primary text-sm">+ Test new hook</button>
+      </div>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-xs border-b" style="border-color: var(--border); color: var(--muted)">
+            <th class="text-left py-3 px-4 font-semibold">SCORE</th>
+            <th class="text-left font-semibold">HOOK</th>
+            <th class="text-left font-semibold">PLATFORM</th>
+            <th class="text-left font-semibold">MODEL</th>
+            <th class="text-right font-semibold">VIEWS</th>
+            <th class="text-right font-semibold">CTR</th>
+            <th class="text-right font-semibold">SUBS</th>
+            <th class="text-right font-semibold">REVENUE</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${HOOKS.sort((a,b) => b.score - a.score).map(h => `
+            <tr class="table-row border-b" style="border-color: var(--border);">
+              <td class="py-3 px-4"><div class="text-2xl font-extrabold gradient-text">${h.score}</div></td>
+              <td class="font-semibold italic">${h.hook}</td>
+              <td><span class="channel-icon ${CHANNELS.find(c => c.id === h.platform)?.class}" style="width:28px; height:28px; font-size:14px; display: inline-flex;">${CHANNELS.find(c => c.id === h.platform)?.icon}</span></td>
+              <td>${h.model}</td>
+              <td class="text-right">${h.views}M</td>
+              <td class="text-right font-bold">${h.ctr}%</td>
+              <td class="text-right">${h.subs}</td>
+              <td class="text-right font-bold gradient-text">$${h.revenue.toLocaleString()}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ============================================================
+   AI INSIGHTS
+   ============================================================ */
+function pageInsights() {
+  return `
+    <div class="mb-6">
+      <div class="text-sm mb-2" style="color: var(--muted)">Your AI strategist has analysed 90 days of data across all models, channels, fans, content, and campaigns. Here are <strong style="color: var(--text);">${AI_INSIGHTS.length} actionable insights</strong> ranked by potential revenue impact.</div>
+    </div>
+
+    <div class="space-y-4">
+      ${AI_INSIGHTS.map((insight, i) => `
+        <div class="insight-card ${insight.type === 'critical' ? 'critical' : ''} p-6">
+          <div class="flex items-start gap-4">
+            <div class="text-4xl">${insight.icon}</div>
+            <div class="flex-1">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <div class="text-xs font-bold uppercase mb-1" style="color: ${insight.type === 'critical' ? '#FCD34D' : '#F9A8D4'};">${insight.type === 'critical' ? '🚨 HIGH PRIORITY' : insight.type === 'warning' ? '⚠️ ATTENTION' : '💡 OPPORTUNITY'}</div>
+                  <h3 class="text-xl font-extrabold">${insight.title}</h3>
+                </div>
+                <span class="pill" style="background: rgba(236,72,153,.15); color: #F9A8D4;">#${i+1}</span>
+              </div>
+              <p class="text-sm leading-relaxed mb-4" style="color: var(--muted)">${insight.desc}</p>
+              <div class="flex items-center gap-3">
+                <button class="btn btn-primary text-sm">${insight.action} →</button>
+                <button class="btn btn-ghost text-sm">Dismiss</button>
+                <button class="btn btn-ghost text-sm">Show data</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="card p-5 mt-6" style="background: linear-gradient(135deg, rgba(168,85,247,.1), rgba(6,182,212,.1)); border-color: rgba(168,85,247,.3);">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="text-3xl">🧠</div>
+        <div>
+          <div class="text-xs font-bold uppercase" style="color: #D8B4FE;">CONTINUOUS LEARNING</div>
+          <div class="text-base font-bold">Your AI strategist learns from your actions</div>
+        </div>
+      </div>
+      <p class="text-sm leading-relaxed" style="color: var(--muted)">
+        Every campaign you launch, every fan you tag, every content piece you log — the AI builds a model of your specific agency. By month 3, recommendations become 87% more precise than month 1. <strong style="color: var(--text);">Just keep using it.</strong>
+      </p>
+    </div>
+  `;
+}
+
+/* ============================================================
+   WISHLIST HUB
+   ============================================================ */
+function pageWishlist() {
+  return `
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="card p-5"><div class="stat-label mb-1">Gift buyers</div><div class="text-3xl font-extrabold" style="color: #F9A8D4;">487</div><div class="text-xs" style="color: var(--muted)">Bought a gift in last 60d</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Avg gift value</div><div class="text-3xl font-extrabold">$78</div><div class="text-xs" style="color: var(--muted)">across all platforms</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Gift revenue MTD</div><div class="text-3xl font-extrabold gradient-text">$32,400</div><div class="text-xs text-emerald-400">↑ 42% MoM</div></div>
+    </div>
+
+    <div class="insight-card p-6 mb-6">
+      <div class="flex items-start gap-4">
+        <div class="text-4xl">🎁</div>
+        <div class="flex-1">
+          <div class="text-xs font-bold uppercase mb-1" style="color: #F9A8D4;">💡 KEY OPPORTUNITY</div>
+          <h3 class="text-xl font-extrabold mb-2">487 fans want to give you money via gifts</h3>
+          <p class="text-sm leading-relaxed mb-4" style="color: var(--muted)">
+            Only 2/6 models have a public Amazon wishlist linked in bio. Across the agency, <strong style="color: var(--text);">487 fans have a "gifter" tag</strong> (bought gift card or wishlist item in last 60 days). They want to give. They prefer giving over tipping. We're leaving $8-14k/month on the table.
+          </p>
+          <button class="btn btn-primary text-sm">Auto-add wishlists to all bios →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="card p-5">
+        <div class="stat-label mb-3">Wishlist coverage by model</div>
+        <div class="space-y-3">
+          ${MODELS.map((m, i) => `
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full ${m.avatar} flex items-center justify-center font-bold text-sm">${m.name.split(' ').map(s => s[0]).join('')}</div>
+              <div class="flex-1">
+                <div class="font-semibold text-sm">${m.name}</div>
+                <div class="text-xs" style="color: var(--muted)">${[1,3].includes(i) ? `Wishlist active · ${Math.round(m.fans * 0.08)} gift buyers` : 'No wishlist — missing opportunity'}</div>
+              </div>
+              <span class="pill ${[1,3].includes(i) ? 'tag-tipper' : 'tag-whale'}">${[1,3].includes(i) ? '✓ Live' : '⚠️ Missing'}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="stat-label mb-3">Suggested wishlist items</div>
+        <div class="text-xs mb-3" style="color: var(--muted)">Based on what gifters bought across similar agencies</div>
+        <div class="space-y-2">
+          ${[
+            { item: 'Lingerie sets ($30-80)', demand: 92, color: '#EC4899' },
+            { item: 'Sephora gift cards ($50)', demand: 88, color: '#A855F7' },
+            { item: 'Cosplay accessories', demand: 76, color: '#06B6D4' },
+            { item: 'Workout gear (Sofia)', demand: 71, color: '#10B981' },
+            { item: 'Beauty / skincare', demand: 68, color: '#F59E0B' },
+            { item: 'Books / journals', demand: 42, color: '#7A7A95' }
+          ].map(s => `
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>${s.item}</span>
+                <span class="font-bold">${s.demand}% demand</span>
+              </div>
+              <div class="h-1.5 rounded-full" style="background: var(--surface-2);">
+                <div class="h-1.5 rounded-full" style="width:${s.demand}%; background: ${s.color};"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="card overflow-hidden">
+      <div class="p-4 border-b" style="border-color: var(--border);">
+        <div class="font-bold">Top gifters · push chatter time here</div>
+        <div class="text-xs" style="color: var(--muted)">Fans who bought a gift in last 60 days</div>
+      </div>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-xs border-b" style="border-color: var(--border); color: var(--muted)">
+            <th class="text-left py-3 px-4 font-semibold">FAN</th>
+            <th class="text-left font-semibold">MODEL</th>
+            <th class="text-right font-semibold">LAST GIFT</th>
+            <th class="text-right font-semibold">TOTAL GIFTS</th>
+            <th class="text-left font-semibold">PREFERS</th>
+            <th class="text-left font-semibold">ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${[
+            { name: 'Anon4892', model: 'Bella Rose', last: '$120', total: '$890', prefers: 'Cosplay items + lingerie', action: 'Push chatter time' },
+            { name: 'NightOwl_22', model: 'Mia Knight', last: '$80', total: '$420', prefers: 'Goth accessories', action: 'Suggest new wishlist' },
+            { name: 'GiftMaster69', model: 'Sofia Reign', last: '$200', total: '$1,240', prefers: 'Workout gear + supplements', action: '⭐ Whale-tier · VIP chat' },
+            { name: 'BlueSky42', model: 'Bella Rose', last: '$45', total: '$310', prefers: 'Books + small items', action: 'Build longer convos' }
+          ].map(g => `
+            <tr class="table-row border-b" style="border-color: var(--border);">
+              <td class="py-3 px-4 font-semibold">${g.name}</td>
+              <td>${g.model}</td>
+              <td class="text-right gradient-text font-bold">${g.last}</td>
+              <td class="text-right font-bold">${g.total}</td>
+              <td class="text-xs" style="color: var(--muted)">${g.prefers}</td>
+              <td class="text-xs"><span class="pill tag-gifter">${g.action}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ============================================================
+   SCHEDULE
+   ============================================================ */
+function pageSchedule() {
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  return `
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-3">
+        <button class="btn btn-ghost btn-icon">←</button>
+        <div>
+          <div class="text-lg font-bold">Week of May 11-17, 2026</div>
+          <div class="text-xs" style="color: var(--muted)">All models · all platforms</div>
+        </div>
+        <button class="btn btn-ghost btn-icon">→</button>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost text-sm">By model ▼</button>
+        <button class="btn btn-primary text-sm">+ Schedule content</button>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <div class="grid grid-cols-7 gap-3">
+        ${days.map((d, i) => `
+          <div class="text-center">
+            <div class="text-xs font-bold uppercase mb-2" style="color: var(--muted)">${d} ${11+i}</div>
+            <div class="space-y-2 min-h-[300px]">
+              ${[
+                i === 0 ? { time: '9AM', m: 'Bella Rose', p: 'IG', color: 'avatar-grad-1' } : null,
+                i === 1 ? { time: '11AM', m: 'Mia Knight', p: 'TikTok', color: 'avatar-grad-2' } : null,
+                i === 1 ? { time: '7PM', m: 'Sofia Reign', p: 'IG', color: 'avatar-grad-3' } : null,
+                i === 2 ? { time: '12PM', m: 'Aria Stone', p: 'Reddit', color: 'avatar-grad-5' } : null,
+                i === 3 ? { time: '8AM', m: 'Ivy Black', p: 'Twitter', color: 'avatar-grad-6' } : null,
+                i === 4 ? { time: '6PM', m: 'Bella Rose', p: 'TikTok', color: 'avatar-grad-1' } : null,
+                i === 4 ? { time: '9PM', m: 'Sofia Reign', p: 'IG', color: 'avatar-grad-3' } : null,
+                i === 5 ? { time: '11AM', m: 'Mia Knight', p: 'TikTok', color: 'avatar-grad-2' } : null,
+                i === 5 ? { time: '2PM', m: 'Ivy Black', p: 'Twitter', color: 'avatar-grad-6' } : null,
+                i === 6 ? { time: '10AM', m: 'Aria Stone', p: 'Reddit', color: 'avatar-grad-5' } : null
+              ].filter(Boolean).map(p => `
+                <div class="p-2 rounded-lg text-left" style="background: var(--surface-2); border: 1px solid var(--border);">
+                  <div class="text-[10px] font-bold" style="color: var(--muted)">${p.time}</div>
+                  <div class="flex items-center gap-1 mt-1">
+                    <div class="w-5 h-5 rounded-full ${p.color} flex items-center justify-center text-[9px] font-bold">${p.m.split(' ').map(s => s[0]).join('')}</div>
+                    <div class="text-[10px] truncate">${p.m.split(' ')[0]}</div>
+                  </div>
+                  <div class="text-[9px] mt-1" style="color: var(--muted)">📱 ${p.p}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 mt-5">
+      <div class="card p-5"><div class="stat-label mb-1">Posts this week</div><div class="text-2xl font-bold">42</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Coverage</div><div class="text-2xl font-bold">6/6 models</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Optimal times hit</div><div class="text-2xl font-bold text-emerald-400">38/42 (90%)</div></div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   FINANCE
+   ============================================================ */
+function pageFinance() {
+  return `
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="card p-5"><div class="stat-label mb-1">Gross revenue</div><div class="text-3xl font-extrabold gradient-text">$${TOTAL_REVENUE.toLocaleString()}</div><div class="text-xs" style="color: var(--muted)">before platform cuts</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">OnlyFans cut (20%)</div><div class="text-3xl font-extrabold">-$${Math.round(TOTAL_REVENUE * 0.2).toLocaleString()}</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Net to agency</div><div class="text-3xl font-extrabold text-emerald-400">$${Math.round(TOTAL_REVENUE * 0.8).toLocaleString()}</div></div>
+      <div class="card p-5"><div class="stat-label mb-1">Agency profit (40%)</div><div class="text-3xl font-extrabold gradient-text">$${Math.round(TOTAL_REVENUE * 0.32).toLocaleString()}</div></div>
+    </div>
+
+    <div class="card overflow-hidden">
+      <div class="p-4 border-b" style="border-color: var(--border);">
+        <div class="font-bold">Revenue split by model</div>
+      </div>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-xs border-b" style="border-color: var(--border); color: var(--muted)">
+            <th class="text-left py-3 px-4 font-semibold">MODEL</th>
+            <th class="text-right font-semibold">GROSS</th>
+            <th class="text-right font-semibold">OF FEE (20%)</th>
+            <th class="text-right font-semibold">NET</th>
+            <th class="text-right font-semibold">MODEL SHARE (60%)</th>
+            <th class="text-right font-semibold">AGENCY (40%)</th>
+            <th class="text-right font-semibold">PRODUCTION COST</th>
+            <th class="text-right font-semibold">AGENCY PROFIT</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${MODELS.map(m => {
+            const ofFee = m.revenue * 0.2;
+            const net = m.revenue - ofFee;
+            const modelShare = net * 0.6;
+            const agencyShare = net * 0.4;
+            const prodCost = m.contentCount * 75;
+            const profit = agencyShare - prodCost;
+            return `
+              <tr class="table-row border-b" style="border-color: var(--border);">
+                <td class="py-3 px-4">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full ${m.avatar} flex items-center justify-center text-xs font-bold">${m.name.split(' ').map(s => s[0]).join('')}</div>
+                    <div class="font-semibold">${m.name}</div>
+                  </div>
+                </td>
+                <td class="text-right">$${m.revenue.toLocaleString()}</td>
+                <td class="text-right" style="color: var(--muted)">-$${Math.round(ofFee).toLocaleString()}</td>
+                <td class="text-right font-semibold">$${Math.round(net).toLocaleString()}</td>
+                <td class="text-right" style="color: var(--muted)">$${Math.round(modelShare).toLocaleString()}</td>
+                <td class="text-right gradient-text font-bold">$${Math.round(agencyShare).toLocaleString()}</td>
+                <td class="text-right" style="color: var(--muted)">-$${prodCost.toLocaleString()}</td>
+                <td class="text-right font-bold ${profit > 0 ? 'text-emerald-400' : 'text-rose-400'}">$${Math.round(profit).toLocaleString()}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+function pageSettings() {
+  return `
+    <div class="max-w-3xl space-y-4">
+      <div class="card p-6">
+        <div class="font-bold text-lg mb-1">Agency profile</div>
+        <div class="text-xs mb-5" style="color: var(--muted)">Your agency info</div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="text-xs font-bold mb-1 block" style="color: var(--muted)">AGENCY NAME</label><input class="input" value="CreatorOps Agency" /></div>
+          <div><label class="text-xs font-bold mb-1 block" style="color: var(--muted)">OWNER</label><input class="input" value="Dave T." /></div>
+          <div><label class="text-xs font-bold mb-1 block" style="color: var(--muted)">REVENUE SPLIT</label><input class="input" value="40% agency / 60% model" /></div>
+          <div><label class="text-xs font-bold mb-1 block" style="color: var(--muted)">TIMEZONE</label><input class="input" value="Australia/Brisbane" /></div>
+        </div>
+      </div>
+
+      <div class="card p-6">
+        <div class="font-bold text-lg mb-1">Integrations</div>
+        <div class="text-xs mb-5" style="color: var(--muted)">Where your data comes from</div>
+        <div class="space-y-3">
+          ${[
+            ['🔗','OnlyFans','Auto-pull revenue, fan data, content stats','connected'],
+            ['📷','Instagram','Reels analytics + DM data','connected'],
+            ['🎵','TikTok','Video performance + view time','connected'],
+            ['👽','Reddit','Subreddit post analytics','connected'],
+            ['🔥','Tinder','Match-to-sub funnel tracking','disconnected'],
+            ['𝕏','Twitter/X','Engagement + impressions','connected'],
+            ['💎','Meta Ads','Campaign spend + attribution','connected'],
+            ['💳','Stripe','Payment flow + invoicing','connected']
+          ].map(([icon, name, meta, status]) => `
+            <div class="flex items-center gap-3 p-3 rounded-lg border" style="border-color: var(--border); background: var(--surface-2);">
+              <div class="text-2xl">${icon}</div>
+              <div class="flex-1"><div class="font-semibold text-sm">${name}</div><div class="text-xs" style="color: var(--muted)">${meta}</div></div>
+              ${status === 'connected' ? '<span class="pill" style="background: rgba(16,185,129,.15); color: #6EE7B7;">✓ Connected</span>' : '<button class="btn btn-ghost text-xs">Connect</button>'}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card p-6">
+        <div class="font-bold text-lg mb-1">Team</div>
+        <div class="text-xs mb-5" style="color: var(--muted)">Chatters, content creators, admins</div>
+        <div class="space-y-2">
+          ${[
+            ['DT', 'Dave T.', 'Owner', 'avatar-grad-3'],
+            ['SC', 'Sarah C.', 'Head Chatter', 'avatar-grad-1'],
+            ['MK', 'Mike K.', 'Content Manager', 'avatar-grad-2'],
+            ['AL', 'Alex L.', 'Chatter (PM shift)', 'avatar-grad-4']
+          ].map(([init, name, role, color]) => `
+            <div class="flex items-center gap-3 p-3 rounded-lg" style="background: var(--surface-2);">
+              <div class="w-10 h-10 rounded-full ${color} flex items-center justify-center font-bold">${init}</div>
+              <div class="flex-1"><div class="font-semibold">${name}</div><div class="text-xs" style="color: var(--muted)">${role}</div></div>
+              <button class="btn btn-ghost text-xs">Manage</button>
+            </div>
+          `).join('')}
+          <button class="btn btn-primary w-full text-sm mt-2">+ Add team member</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>
